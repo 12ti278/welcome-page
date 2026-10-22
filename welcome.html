@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome My World · 幻境回廊</title>
+<style>
+  /* ============================================================
+     莫兰迪绿 · 复古核配色（与 总作业1.html 保持一致）
+     ============================================================ */
+  :root{
+    --bg:           #1e241d;
+    --bg-soft:      #262c24;
+    --surface:      #2c332a;
+    --surface-2:    #363d33;
+    --border:       #465042;
+    --border-soft:  #38402f;
+
+    --text:         #e6e3d4;
+    --text-muted:   #99a08c;
+
+    --accent:       #b8c4a3;
+    --accent-deep:  #8a9a76;
+    --accent-soft:  rgba(184,196,163,.14);
+
+    --vintage:      #c9b98a;
+    --stamp:        #9a8556;
+
+    /* 模块卡片配色（米白色） */
+    --ink:#3b382f;
+    --ink-muted:#7c7666;
+    --cream:#f4eee0;
+    --cream-2:#eee6d2;
+    --line:#d9cfa9;
+    --line-soft:#e6ddc4;
+    --green:#6f7d5e;
+    --green-deep:#57634a;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  body{
+    font-family:"Courier New","Songti SC","STSong","PingFang SC","Microsoft YaHei",monospace;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.8;
+    letter-spacing:.4px;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+
+  /* 复古核 1：全局胶片颗粒 */
+  body::before{
+    content:""; position:fixed; inset:0;
+    pointer-events:none; z-index:9998; opacity:.07; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  /* 复古核 2：纸张暗角 */
+  body::after{
+    content:""; position:fixed; inset:0;
+    pointer-events:none; z-index:9997;
+    background:radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.42) 100%);
+  }
+
+  /* 慢呼吸的光晕背景 */
+  .glow{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(ellipse 60% 45% at 50% 42%, rgba(184,196,163,.10), transparent 70%),
+      radial-gradient(ellipse 40% 30% at 50% 78%, rgba(201,185,138,.07), transparent 70%);
+    animation:breathe 7s ease-in-out infinite;
+  }
+  @keyframes breathe{
+    0%,100%{opacity:.7;transform:scale(1);}
+    50%{opacity:1;transform:scale(1.05);}
+  }
+
+  .stage{
+    position:relative; z-index:1;
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; gap:20px;
+    padding:56px 24px;
+  }
+
+  .eyebrow{
+    display:inline-block; font-size:11px; letter-spacing:6px;
+    color:var(--vintage); font-weight:600;
+    text-transform:uppercase;
+    padding:5px 16px; border:1px solid var(--border-soft);
+    background:rgba(201,185,138,.05);
+    animation:rise 1s ease both;
+  }
+  .eyebrow::before{content:"✦  "; color:var(--vintage);}
+  .eyebrow::after{content:"  ✦"; color:var(--vintage);}
+
+  .title{
+    font-family:"Courier New",monospace;
+    font-size:clamp(42px, 9vw, 96px);
+    font-weight:800; letter-spacing:5px; line-height:1.02;
+    color:var(--text);
+    animation:rise 1s .15s ease both;
+  }
+  .title em{
+    display:block; font-style:normal;
+    color:var(--vintage);
+    letter-spacing:2px;
+    text-shadow:0 0 26px rgba(201,185,138,.28);
+  }
+
+  .sub{
+    color:var(--text-muted); font-size:13px; letter-spacing:4px;
+    animation:rise 1s .3s ease both;
+  }
+
+  /* ---------- 相框（复古双线框 + 胶带 + 角标） ---------- */
+  .frame{
+    position:relative; width:min(600px, 88vw); aspect-ratio:16/10;
+    margin-top:8px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    box-shadow:0 24px 60px rgba(0,0,0,.6);
+    animation:rise 1s .42s ease both;
+  }
+  .frame::before{ /* 内嵌细线框 */
+    content:""; position:absolute; inset:9px; z-index:3;
+    border:1px solid var(--border-soft); pointer-events:none;
+  }
+  .frame::after{ /* 照片上的做旧渐变 */
+    content:""; position:absolute; inset:0; z-index:2; pointer-events:none;
+    background:linear-gradient(180deg, rgba(201,185,138,.09) 0%, transparent 38%, rgba(30,36,29,.5) 100%);
+  }
+  /* 复古核：四角标记 */
+  .corners{position:absolute; inset:-1px; z-index:4; pointer-events:none;}
+  .corners i{position:absolute; width:18px; height:18px; border:1px solid var(--vintage); opacity:.6;}
+  .corners i:nth-child(1){top:8px;left:8px;border-right:0;border-bottom:0;}
+  .corners i:nth-child(2){top:8px;right:8px;border-left:0;border-bottom:0;}
+  .corners i:nth-child(3){bottom:8px;left:8px;border-right:0;border-top:0;}
+  .corners i:nth-child(4){bottom:8px;right:8px;border-left:0;border-top:0;}
+
+  .slides{position:absolute; inset:0; z-index:1; overflow:hidden; cursor:pointer;}
+  .slides img{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; object-position:center;
+    opacity:0; transition:opacity .8s ease;
+    filter:sepia(.16) saturate(.86) contrast(.99);
+  }
+  .slides img.active{opacity:1;}
+
+  /* 胶带 */
+  .tape{position:absolute; z-index:5; width:96px; height:26px;
+    background:rgba(201,185,138,.55); pointer-events:none;
+    box-shadow:0 1px 3px rgba(0,0,0,.3);
+  }
+  .tape.t1{top:-12px; left:50%; transform:translateX(-50%) rotate(-3deg);}
+  .tape.t2{bottom:-12px; left:50%; transform:translateX(-50%) rotate(2deg);}
+
+  /* 左右箭头 */
+  .arrow{
+    position:absolute; top:50%; transform:translateY(-50%);
+    z-index:6; width:44px; height:44px;
+    background:rgba(30,36,29,.72);
+    border:1px solid var(--border); color:var(--text);
+    cursor:pointer; font-size:22px; line-height:1;
+    display:grid; place-items:center;
+    transition:all .3s ease;
+  }
+  .arrow:hover{background:var(--accent); color:var(--bg); border-color:var(--accent);}
+  .arrow.left{left:-58px;}
+  .arrow.right{right:-58px;}
+  @media (max-width:760px){
+    .arrow.left{left:8px;}
+    .arrow.right{right:8px;}
+  }
+
+  /* 圆点 */
+  .dots{
+    position:absolute; z-index:6; left:50%; bottom:-34px; transform:translateX(-50%);
+    display:flex; gap:8px;
+  }
+  .dot{
+    width:9px; height:9px; border-radius:50%;
+    border:1px solid var(--border); background:transparent;
+    cursor:pointer; transition:all .3s ease;
+  }
+  .dot.active{background:var(--vintage); border-color:var(--vintage);}
+  .dot:hover{background:var(--accent-soft);}
+
+  /* ---------- 章节目录（六个部分标题） ---------- */
+  .chapters-label{
+    margin-top:16px; color:var(--text-muted);
+    font-size:10.5px; letter-spacing:5px;
+    animation:rise 1s .5s ease both;
+  }
+  .chapters{
+    display:flex; flex-wrap:wrap; justify-content:center;
+    gap:10px; max-width:820px;
+    animation:rise 1s .54s ease both;
+  }
+  .chapters a{
+    font-size:12px; letter-spacing:2px; color:var(--text-muted);
+    border:1px solid var(--border); padding:7px 16px;
+    text-decoration:none; transition:all .25s ease;
+    cursor:pointer;
+  }
+  .chapters a::before{content:"#"; color:var(--vintage); margin-right:6px;}
+  .chapters a:hover{color:var(--accent); border-color:var(--accent);}
+
+  /* ---------- 印章式进入按钮 ---------- */
+  .enter{
+    margin-top:44px;
+    display:inline-flex; align-items:center; gap:12px;
+    padding:14px 34px; font-size:13px; font-weight:700;
+    color:var(--vintage); border:1px solid var(--vintage);
+    letter-spacing:4px; text-decoration:none;
+    position:relative; transition:all .3s ease;
+    font-family:"Courier New",monospace;
+    animation:rise 1s .56s ease both;
+  }
+  .enter::before{
+    content:""; position:absolute; inset:4px;
+    border:1px solid rgba(201,185,138,.35); pointer-events:none;
+    transition:border-color .3s ease;
+  }
+  .enter:hover{background:var(--vintage); color:var(--bg);}
+  .enter:hover::before{border-color:rgba(30,36,29,.3);}
+  .enter .arr{transition:transform .3s ease;}
+  .enter:hover .arr{transform:translateX(5px);}
+
+  .hint{color:var(--text-muted); font-size:10.5px; letter-spacing:4px; margin-top:-8px;
+    animation:rise 1s .66s ease both;}
+
+  .slide-caption{
+    margin-top:22px; color:var(--text); font-size:13px; letter-spacing:3px;
+    animation:rise 1s .6s ease both;
+  }
+  .slide-caption b{color:var(--vintage); font-weight:700; margin:0 2px;}
+
+  @keyframes rise{
+    from{opacity:0; transform:translateY(18px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+
+  /* ============================================================
+     模块详情弹层（米白色卡片）
+     ============================================================ */
+  .modal{
+    position:fixed; inset:0; z-index:1000;
+    display:none;
+    align-items:center; justify-content:center;
+    padding:60px 20px;
+  }
+  .modal.open{display:flex;}
+
+  .modal-overlay{
+    position:absolute; inset:0;
+    background:rgba(30,36,29,.75);
+    backdrop-filter:blur(6px);
+    opacity:0;
+    transition:opacity .3s ease;
+  }
+  .modal.open .modal-overlay{opacity:1;}
+
+  .modal-bg{
+    position:absolute; inset:0;
+    background-size:cover; background-position:center;
+    filter:saturate(.92) sepia(.06) brightness(.55);
+    opacity:0;
+    transition:opacity .5s ease;
+  }
+  .modal.open .modal-bg{opacity:1;}
+
+  .modal-close{
+    position:fixed; top:18px; right:24px; z-index:1002;
+    width:38px; height:38px;
+    background:rgba(30,36,29,.6);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-size:20px; line-height:1;
+    cursor:pointer;
+    display:grid; place-items:center;
+    transition:all .3s ease;
+    opacity:0;
+    font-family:inherit;
+  }
+  .modal.open .modal-close{opacity:1; transition-delay:.15s;}
+  .modal-close:hover{background:var(--vintage); color:var(--bg); border-color:var(--vintage);}
+
+  .modal-sheet{
+    position:relative; z-index:1001;
+    width:min(720px, 92vw);
+    max-height:calc(100vh - 120px);
+    overflow-y:auto;
+    background:var(--cream); color:var(--ink);
+    padding:56px 48px 48px;
+    border:1px solid var(--line);
+    box-shadow:0 30px 70px rgba(0,0,0,.55);
+    transform:translateY(24px) scale(.97);
+    opacity:0;
+    transition:all .35s cubic-bezier(.25,.8,.25,1);
+  }
+  .modal.open .modal-sheet{
+    transform:translateY(0) scale(1);
+    opacity:1;
+  }
+  .modal-sheet::before{
+    content:""; position:absolute; inset:10px; pointer-events:none;
+    border:1px solid var(--line-soft);
+  }
+  .sheet-corners{position:absolute; inset:0; pointer-events:none;}
+  .sheet-corners i{position:absolute; width:18px; height:18px; border:1px solid var(--vintage); opacity:.55;}
+  .sheet-corners i:nth-child(1){top:12px;left:12px;border-right:0;border-bottom:0;}
+  .sheet-corners i:nth-child(2){top:12px;right:12px;border-left:0;border-bottom:0;}
+  .sheet-corners i:nth-child(3){bottom:12px;left:12px;border-right:0;border-top:0;}
+  .sheet-corners i:nth-child(4){bottom:12px;right:12px;border-left:0;border-top:0;}
+  .sheet-tape{position:absolute; width:110px; height:28px; z-index:2;
+    background:rgba(201,185,138,.6); box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  .sheet-tape.t1{top:-14px; left:50%; transform:translateX(-50%) rotate(-3deg);}
+  .sheet-tape.t2{bottom:-14px; left:50%; transform:translateX(-50%) rotate(2deg);}
+
+  .sheet-eyebrow{display:inline-flex; align-items:center; gap:10px; font-size:11px; letter-spacing:4px;
+    color:var(--vintage); font-weight:700; text-transform:uppercase;}
+  .sheet-stamp{display:inline-grid; place-items:center; width:40px; height:40px; border:2px solid var(--vintage);
+    border-radius:50%; color:var(--vintage); font-size:12px; letter-spacing:0; transform:rotate(-6deg);
+    box-shadow:inset 0 0 0 2px var(--cream), inset 0 0 0 3px var(--vintage);}
+
+  .sheet-title{font-size:clamp(26px,5vw,40px); font-weight:800; letter-spacing:4px; line-height:1.2; margin-top:16px; color:var(--ink);}
+  .sheet-desc{color:var(--ink-muted); font-size:13.5px; margin-top:12px;}
+
+  .sheet-rule{height:1px; background:linear-gradient(90deg, transparent, var(--line) 20%, var(--line) 80%, transparent);
+    margin:24px 0; border:0;}
+
+  /* 内容块 */
+  .block{
+    border:1px solid var(--line-soft); background:var(--cream-2);
+    padding:16px 18px; margin-bottom:14px;
+  }
+  .b-title{font-size:12px; letter-spacing:2px; font-weight:700; color:var(--green-deep); margin-bottom:6px;}
+  .b-text{font-size:13.5px; color:var(--ink);}
+  .tags{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;}
+  .tags span{font-size:12px; letter-spacing:1px; color:var(--green-deep);
+    border:1px solid var(--line); padding:3px 12px; background:var(--cream);}
+  .entry{display:block; font-size:12.5px; letter-spacing:1px; color:var(--vintage); margin-top:10px;}
+  .tl{position:relative; padding-left:16px; border-left:1px solid var(--line);}
+  .tl-item{position:relative; padding-bottom:14px;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-item::before{content:"◆"; position:absolute; left:-22px; top:2px; font-size:9px; color:var(--vintage);}
+
+  .sheet-actions{margin-top:26px; display:flex; flex-wrap:wrap; gap:14px; align-items:center;}
+  .sheet-btn{display:inline-flex; align-items:center; gap:10px; text-decoration:none;
+    font-size:12.5px; letter-spacing:3px; font-weight:700; padding:12px 24px;
+    color:var(--cream); background:var(--green); border:1px solid var(--green);
+    transition:all .3s ease; cursor:pointer; font-family:inherit;}
+  .sheet-btn:hover{background:var(--green-deep); border-color:var(--green-deep);}
+  .sheet-btn.ghost{background:transparent; color:var(--green-deep); border:1px solid var(--line);}
+  .sheet-btn.ghost:hover{color:var(--cream); background:var(--green-deep); border-color:var(--green-deep);}
+  .sheet-btn .arr{transition:transform .3s ease;}
+  .sheet-btn:hover .arr{transform:translateX(5px);}
+
+  @media (max-width:640px){
+    .modal-sheet{padding:44px 26px 36px; max-height:calc(100vh - 80px);}
+    .modal{padding:40px 16px;}
+    .stage{gap:14px; padding:40px 18px;}
+    .frame{width:92vw;}
+    .enter{margin-top:36px;}
+  }
+
+  /* 防止弹层打开时背景滚动 */
+  body.modal-open{overflow:hidden;}
+</style>
+</head>
+<body>
+
+<div class="glow" aria-hidden="true"></div>
+
+<main class="stage">
+  <span class="eyebrow">Course Portfolio</span>
+
+  <h1 class="title">Welcome<em>My World</em></h1>
+
+  <p class="sub">欢迎来到我的世界 —— 幻境回廊</p>
+
+  <div class="frame">
+    <div class="slides" id="slides" aria-label="作品照片轮播"></div>
+    <span class="corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span class="tape t1" aria-hidden="true"></span>
+    <span class="tape t2" aria-hidden="true"></span>
+    <button class="arrow left" id="prev" aria-label="上一张">‹</button>
+    <button class="arrow right" id="next" aria-label="下一张">›</button>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <p class="slide-caption" id="slideCaption"></p>
+
+  <p class="chapters-label">章节目录 · CONTENTS</p>
+  <nav class="chapters" aria-label="章节目录">
+    <a data-mod="about">个人简介</a>
+    <a data-mod="homework">阶段作业</a>
+    <a data-mod="projects">项目成果</a>
+    <a data-mod="evidence">过程证据</a>
+    <a data-mod="iterations">迭代记录</a>
+    <a data-mod="review">学习复盘</a>
+  </nav>
+
+  <a class="enter" href="总作业1.html">进入作品集 <span class="arr">→</span></a>
+  <p class="hint">ENTER THE GALLERY · 点击进入</p>
+</main>
+
+<!-- ========== 模块详情弹层 ========== -->
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modTitle">
+  <div class="modal-bg" id="modalBg"></div>
+  <div class="modal-overlay" id="modalOverlay"></div>
+  <button class="modal-close" id="modalClose" aria-label="关闭">×</button>
+  <article class="modal-sheet">
+    <span class="sheet-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span class="sheet-tape t1" aria-hidden="true"></span>
+    <span class="sheet-tape t2" aria-hidden="true"></span>
+
+    <span class="sheet-eyebrow"><span class="sheet-stamp" id="modStamp">01</span> Course Module</span>
+    <h2 class="sheet-title" id="modTitle">个人简介</h2>
+    <p class="sheet-desc" id="modDesc"></p>
+
+    <hr class="sheet-rule">
+
+    <div id="modContent"></div>
+
+    <div class="sheet-actions" id="modActions"></div>
+  </article>
+</div>
+
+<script>
+/* ============================================================
+   模块数据
+   ============================================================ */
+var DIR = '作业素材/';
+var MODS = {
+  about: { num:'01', name:'个人简介', img:'12f6de95993b201be67c7d5267645f42.jpg',
+    desc:'个人背景、方向与核心能力，以及数字名片入口。',
+    html:'<div class="block"><p class="b-title">关于我</p><p class="b-text">专注于产品设计与前端开发，热爱用技术创造有温度的数字体验。欢迎交流合作，一起探索更多可能性。</p></div>' +
+         '<div class="block"><p class="b-title">能力标签</p><div class="tags"><span>产品设计</span><span>UI/UX</span><span>前端开发</span><span>全栈开发</span><span>交互叙事</span></div></div>' +
+         '<div class="block"><p class="b-title">数字名片</p><p class="b-text">已生成专属个人数字名片，支持一键拨号、邮件直达、vCard 通讯录保存，移动端体验流畅。可直接分享给他人。</p></div>',
+    action:'<a class="sheet-btn" href="card.html">查看数字名片 <span class="arr">→</span></a>' },
+  homework: { num:'02', name:'阶段作业', img:'3e0555ad74af257cc2fdb44bc26ba4a2.jpg',
+    desc:'进入胶带画廊查看全部作业作品。',
+    html:'<div class="block"><p class="b-title">作品画廊</p><p class="b-text">共 3 件作业作品，以 3D 胶带卷形式陈列，可拖拽胶带留痕、切换视角、截图存档。</p></div>',
+    action:'<a class="sheet-btn" href="总作业1.html#works">打开 3D 胶带画廊 <span class="arr">→</span></a>' },
+  projects: { num:'03', name:'项目成果', img:'monet_garden.jpg',
+    desc:'放置课程相关项目，含功能说明、技术与项目入口。',
+    html:'<div class="block"><p class="b-title">项目 A</p><p class="b-text">功能说明 —— 待填写。</p><div class="tags"><span>技术占位</span><span>技术占位</span></div><span class="entry">项目入口待填 →</span></div>' +
+         '<div class="block"><p class="b-title">项目 B</p><p class="b-text">功能说明 —— 待填写。</p><div class="tags"><span>技术占位</span></div><span class="entry">项目入口待填 →</span></div>' +
+         '<div class="block"><p class="b-title">项目 C</p><p class="b-text">功能说明 —— 待填写。</p><div class="tags"><span>技术占位</span></div><span class="entry">项目入口待填 →</span></div>' },
+  evidence: { num:'04', name:'过程证据', img:'5e1338cb48c7a7a75e04f9943fbd9220.jpg',
+    desc:'放置需求、原型与问题解决记录等过程性材料。',
+    html:'<div class="block"><p class="b-title">需求</p><p class="b-text">需求内容 —— 待填写</p></div>' +
+         '<div class="block"><p class="b-title">原型</p><p class="b-text">原型内容 —— 待填写</p></div>' +
+         '<div class="block"><p class="b-title">问题解决记录</p><p class="b-text">问题解决记录 —— 待填写</p></div>' },
+  iterations: { num:'05', name:'迭代记录', img:'6fa9a6ad8446f1d4856543adf430ee73.jpg',
+    desc:'按时间顺序记录每一次迭代的变化与原因。',
+    html:'<div class="block"><div class="tl">' +
+         '<div class="tl-item"><p class="b-title">第 1 次迭代</p><p class="b-text">迭代内容说明 —— 待填写。</p></div>' +
+         '<div class="tl-item"><p class="b-title">第 2 次迭代</p><p class="b-text">迭代内容说明 —— 待填写。</p></div>' +
+         '<div class="tl-item"><p class="b-title">第 3 次迭代</p><p class="b-text">迭代内容说明 —— 待填写。</p></div>' +
+         '</div></div>' },
+  review: { num:'06', name:'学习复盘', img:'d31aa0ed5bb7239c9398c0404c2a69bd.jpg',
+    desc:'回顾整段课程：能力变化、学习方法、失败经历与未来计划。',
+    html:'<div class="block"><p class="b-title">能力变化</p><p class="b-text">能力变化 —— 待填写</p></div>' +
+         '<div class="block"><p class="b-title">学习方法</p><p class="b-text">学习方法 —— 待填写</p></div>' +
+         '<div class="block"><p class="b-title">失败经历</p><p class="b-text">失败经历 —— 待填写</p></div>' +
+         '<div class="block"><p class="b-title">未来计划</p><p class="b-text">未来计划 —— 待填写</p></div>' }
+};
+
+/* ============================================================
+   照片轮播
+   ============================================================ */
+(function(){
+  var IMGS = [
+    { f:'12f6de95993b201be67c7d5267645f42.jpg', id:'about',      name:'个人简介' },
+    { f:'3e0555ad74af257cc2fdb44bc26ba4a2.jpg', id:'homework',   name:'阶段作业' },
+    { f:'monet_garden.jpg', id:'projects',   name:'项目成果' },
+    { f:'5e1338cb48c7a7a75e04f9943fbd9220.jpg', id:'evidence',   name:'过程证据' },
+    { f:'6fa9a6ad8446f1d4856543adf430ee73.jpg', id:'iterations', name:'迭代记录' },
+    { f:'d31aa0ed5bb7239c9398c0404c2a69bd.jpg', id:'review',     name:'学习复盘' }
+  ];
+  var slides = document.getElementById('slides');
+  var dots = document.getElementById('dots');
+  var idx = 0, timer = null;
+
+  var caption = document.getElementById('slideCaption');
+  IMGS.forEach(function(m, i){
+    var im = document.createElement('img');
+    im.src = DIR + m.f;
+    im.alt = m.name;
+    im.title = '点击进入「' + m.name + '」';
+    slides.appendChild(im);
+
+    var d = document.createElement('span');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', function(){ go(i); restart(); });
+    dots.appendChild(d);
+  });
+  caption.innerHTML = '点击进入 <b>' + IMGS[0].name + '</b>';
+
+  function go(n){
+    idx = (n + IMGS.length) % IMGS.length;
+    var imgs = slides.children, ds = dots.children;
+    for (var i = 0; i < imgs.length; i++) imgs[i].classList.toggle('active', i === idx);
+    for (var j = 0; j < ds.length; j++) ds[j].classList.toggle('active', j === idx);
+    caption.innerHTML = '点击进入 <b>' + IMGS[idx].name + '</b>';
+  }
+  function next(){ go(idx + 1); }
+  function prev(){ go(idx - 1); }
+  function restart(){ if (timer) clearInterval(timer); timer = setInterval(next, 3200); }
+
+  document.getElementById('next').addEventListener('click', function(){ next(); restart(); });
+  document.getElementById('prev').addEventListener('click', function(){ prev(); restart(); });
+
+  document.addEventListener('keydown', function(e){
+    if (document.getElementById('modal').classList.contains('open')) return;
+    if (e.key === 'ArrowRight'){ next(); restart(); }
+    else if (e.key === 'ArrowLeft'){ prev(); restart(); }
+    else if (e.key === 'Enter'){ location.href = '总作业1.html'; }
+  });
+
+  /* 点击照片 → 打开模块详情弹层 */
+  slides.addEventListener('click', function(){ openModal(IMGS[idx].id); });
+
+  restart();
+
+  /* 章节目录点击 → 打开弹层 */
+  document.querySelectorAll('.chapters a').forEach(function(a){
+    a.addEventListener('click', function(e){
+      e.preventDefault();
+      openModal(this.getAttribute('data-mod'));
+    });
+  });
+})();
+
+/* ============================================================
+   模块详情弹层控制
+   ============================================================ */
+function openModal(key){
+  var m = MODS[key];
+  if (!m) return;
+
+  document.getElementById('modalBg').style.backgroundImage = "url('" + DIR + m.img + "')";
+  document.getElementById('modStamp').textContent = m.num;
+  document.getElementById('modTitle').textContent = m.name;
+  document.getElementById('modDesc').textContent = m.desc;
+  document.getElementById('modContent').innerHTML = m.html;
+
+  var acts = document.getElementById('modActions');
+  acts.innerHTML = '';
+  if (m.action) acts.insertAdjacentHTML('beforeend', m.action);
+  acts.insertAdjacentHTML('beforeend', '<button class="sheet-btn ghost" id="modCloseBtn" type="button">关闭 <span class="arr">×</span></button>');
+
+  document.getElementById('modal').classList.add('open');
+  document.body.classList.add('modal-open');
+  history.replaceState(null, '', '?mod=' + key);
+
+  document.getElementById('modCloseBtn').addEventListener('click', closeModal);
+}
+
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  document.body.classList.remove('modal-open');
+  history.replaceState(null, '', location.pathname);
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', closeModal);
+
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && document.getElementById('modal').classList.contains('open')){
+    closeModal();
+  }
+});
+
+/* 页面加载时检查 URL 参数，自动打开对应模块 */
+(function(){
+  var q = location.search.match(/[?&]mod=([a-z]+)/i);
+  if (q && MODS[q[1]]){
+    setTimeout(function(){ openModal(q[1]); }, 100);
+  }
+})();
+</script>
+
+</body>
+</html>
