@@ -326,6 +326,10 @@
       <span class="icon">↗</span>
       <span>访问个人网站</span>
     </a>
+    <a class="btn" href="#" id="btnHabit" target="_blank" rel="noopener">
+      <span class="icon">☑</span>
+      <span>我的书斋 · 习惯打卡</span>
+    </a>
     <button class="btn" id="btnVcard" type="button">
       <span class="icon">❖</span>
       <span>保存至通讯录</span>
@@ -364,6 +368,7 @@
     title:     '产品经理',
     address:   '',
     website:   'https://12ti278.github.io/personal-website/',
+    habit:     'https://12ti278.github.io/habit-tracker/',
     note:      '专注于产品设计与前端开发',
     bio:       '专注于<b>产品设计</b>与<b>前端开发</b>，热爱用技术创造有温度的数字体验。<br>欢迎交流合作，一起探索更多可能性。'
   };
@@ -379,6 +384,7 @@
   document.getElementById('btnCall').href = 'tel:' + CARD.phone;
   document.getElementById('btnEmail').href = 'mailto:' + CARD.email;
   document.getElementById('btnWebsite').href = CARD.website;
+  document.getElementById('btnHabit').href = CARD.habit;
 
   // ===== vCard 生成与下载 =====
   function generateVCard(){
