@@ -36,6 +36,10 @@
 
   *{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth;}
+  /* Lenis 平滑滚动（加载失败自动退回原生） */
+  html.lenis, html.lenis body{height:auto;}
+  .lenis.lenis-smooth{scroll-behavior:auto !important;}
+  .lenis.lenis-stopped{overflow:hidden;}
 
   body{
     font-family:"Courier New","Songti SC","STSong","PingFang SC","Microsoft YaHei",monospace;
@@ -625,11 +629,13 @@ function openWorks(){
   worksOverlay.classList.add('open');
   worksOverlay.setAttribute('aria-hidden', 'false');
   document.body.style.overflow = 'hidden';
+  if (window.lenis) window.lenis.stop();
 }
 function closeWorks(){
   worksOverlay.classList.remove('open');
   worksOverlay.setAttribute('aria-hidden', 'true');
   document.body.style.overflow = '';
+  if (window.lenis) window.lenis.start();
 }
 /* 通过 #works 锚点自动打开画廊（从阶段作业详情页跳转而来） */
 if (location.hash === '#works') openWorks();
@@ -739,7 +745,8 @@ function initWorks3D(){
   // 偏转一个角度，让卷纸侧壁更朝镜头，露出细密同心卷纸纹（参考图的角度）
   rollGroup.rotation.y = -0.55;
   const rollBaseQuat = rollGroup.quaternion.clone();   // 基础朝向（不变）
-  let rollTurn = 0;                                    // 屏幕平面内的额外转角（任意角度）
+  let rollTurn = 0;                                    // 屏幕平面内的额外转角（当前值，带阻尼）
+  let rollTurnTarget = 0;                              // 目标转角（拖动/滚轮累加到这里）
   const _viewDir = new THREE.Vector3();
   const _turnQ = new THREE.Quaternion();
 
@@ -1264,8 +1271,8 @@ function initWorks3D(){
         // 放开俯仰限制：可绕整圈球面 360° 查看、无死角
         orbit.phi = Math.max(0.08, Math.min(Math.PI - 0.08, orbit.phi - dy * 0.005));
       } else if (rotatingRoll){
-        // 卷筒在屏幕平面内任意角度旋转
-        rollTurn += dx * 0.01 + dy * 0.0026;
+        // 卷筒在屏幕平面内任意角度旋转（累加到目标，帧循环里阻尼跟随）
+        rollTurnTarget += dx * 0.01 + dy * 0.0026;
       } else {
         raycaster.setFromCamera(ndc, camera);
         if (raycaster.ray.intersectPlane(rollPlane, _rollHit)) rollTarget.copy(_rollHit);
@@ -1274,12 +1281,8 @@ function initWorks3D(){
   });
   stage.addEventListener('pointerdown', function(e){
     dragging = true; startX = downX = e.clientX; startY = downY = e.clientY;
-    // 点中卷筒 = 旋转卷筒；点空白 = 移动 + 留痕
-    const r = canvas.getBoundingClientRect();
-    ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
-    ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
-    raycaster.setFromCamera(ndc, camera);
-    rotatingRoll = !orbitMode && raycaster.intersectObject(roll, false).length > 0;
+    // 默认拖拽 = 移动胶带 + 留痕；按住 Shift 拖拽 = 旋转卷筒（用滚轮也能转）
+    rotatingRoll = !orbitMode && e.shiftKey;
     canvas.classList.add('grabbing');
     try{ stage.setPointerCapture(e.pointerId); }catch(_){}
   });
@@ -1326,7 +1329,7 @@ function initWorks3D(){
   stage.addEventListener('wheel', function(e){
     e.preventDefault();
     if (orbitMode){ orbit.radius = Math.max(5, Math.min(16, orbit.radius * (1 + e.deltaY * 0.001))); }
-    else { rollTurn += e.deltaY * 0.0016; }
+    else { rollTurnTarget += e.deltaY * 0.0016; }
   }, { passive: false });
 
   document.addEventListener('keydown', function(e){
@@ -1375,6 +1378,9 @@ function initWorks3D(){
     if (dragging && !orbitMode && !rotatingRoll){
       addTrailPoint(rollGroup.position.x, rollGroup.position.y);
     }
+
+    // 旋转阻尼：平滑缓动到目标角（laxspace 式顺滑，帧率无关）
+    rollTurn += (rollTurnTarget - rollTurn) * (1 - Math.exp(-dt * 8));
 
     // 卷筒在屏幕平面内任意角度旋转：基础朝向 + 绕相机视线轴（屏幕法线）旋转 rollTurn
     rollGroup.quaternion.copy(rollBaseQuat);
@@ -1829,6 +1835,29 @@ window.__monetCardBoot = function(){
     };
   });
 };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<script>
+/* ---------- Lenis 平滑阻尼滚动（模仿 laxspace 的滚动手感） ---------- */
+(function(){
+  if (typeof Lenis === 'undefined') return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var lenis = new Lenis({ lerp: 0.1, smoothWheel: true, wheelMultiplier: 1 });
+  window.lenis = lenis;
+  function raf(t){ lenis.raf(t); requestAnimationFrame(raf); }
+  requestAnimationFrame(raf);
+  document.addEventListener('click', function(e){
+    var a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a) return;
+    var id = a.getAttribute('href').slice(1);
+    if (id === 'works' || !id) return;
+    var el = document.getElementById(id);
+    if (!el) return;
+    e.preventDefault();
+    lenis.scrollTo(el, { offset: -80 });
+  });
+})();
 </script>
 
 </body>
