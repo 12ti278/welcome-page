@@ -389,6 +389,27 @@
   .tl-item:last-child{padding-bottom:0;}
   .tl-item::before{content:"◆"; position:absolute; left:-22px; top:2px; font-size:9px; color:var(--vintage);}
 
+  /* —— 个人简介：照片 + 纸感排版 + p5 微尘 —— */
+  .about-hero{position:relative; display:grid; grid-template-columns:210px 1fr; gap:26px; align-items:center; margin-bottom:16px;}
+  .about-fx{position:absolute; inset:-18px; z-index:0; pointer-events:none;}
+  .about-fx canvas{display:block;}
+  .about-hero > .about-portrait, .about-hero > .about-intro{position:relative; z-index:1;}
+  .about-portrait{position:relative; margin:0; padding:9px 9px 26px; background:#fbf8ef;
+    border:1px solid var(--line); box-shadow:0 16px 34px rgba(0,0,0,.18); transform:rotate(-2.2deg);}
+  .about-portrait img{display:block; width:100%; aspect-ratio:3/4; object-fit:cover;
+    filter:sepia(.12) contrast(.98);}
+  .about-portrait figcaption{position:absolute; left:0; right:0; bottom:7px; text-align:center;
+    font-size:10px; letter-spacing:2px; color:var(--green-deep); font-family:"Courier New",monospace;}
+  .about-portrait::after{content:""; position:absolute; top:-11px; left:50%; transform:translateX(-50%) rotate(4deg);
+    width:74px; height:20px; background:rgba(201,185,138,.62); box-shadow:0 1px 3px rgba(0,0,0,.22);}
+  .about-intro .b-title{font-size:13px; margin-bottom:8px;}
+  .about-intro .b-text{font-family:"Songti SC","STSong","Georgia",serif; font-size:15.5px; line-height:2.05; letter-spacing:.4px; color:var(--ink);}
+  @media (max-width:560px){
+    .about-hero{grid-template-columns:1fr; gap:18px;}
+    .about-portrait{width:168px; margin:0 auto;}
+    .about-intro .b-text{font-size:14.5px;}
+  }
+
   .sheet-actions{margin-top:26px; display:flex; flex-wrap:wrap; gap:14px; align-items:center;}
   .sheet-btn{display:inline-flex; align-items:center; gap:10px; text-decoration:none;
     font-size:12.5px; letter-spacing:3px; font-weight:700; padding:12px 24px;
@@ -497,7 +518,11 @@ var DIR = '作业素材/';
 var MODS = {
   about: { num:'01', name:'个人简介', img:'12f6de95993b201be67c7d5267645f42.jpg',
     desc:'个人背景、方向与核心能力，以及数字名片入口。',
-    html:'<div class="block"><p class="b-title">关于我</p><p class="b-text">武汉理工大学数字经济专业在读。平时喜欢做手工、看电视剧、听音乐、吃面包、吃各种好吃的。MBTI 是 ENFP，很喜欢和别人聊天交流。</p></div>' +
+    html:'<div class="about-hero">' +
+           '<div class="about-fx" id="aboutFx" aria-hidden="true"></div>' +
+           '<figure class="about-portrait"><img src="作业素材/portrait.jpg" alt="在庭院木窗前的个人照片" loading="lazy"><figcaption>ENFP · 数字经济</figcaption></figure>' +
+           '<div class="about-intro"><p class="b-title">关于我</p><p class="b-text">武汉理工大学数字经济专业在读。平时喜欢做手工、看电视剧、听音乐、吃面包、吃各种好吃的。MBTI 是 ENFP，很喜欢和别人聊天交流。</p></div>' +
+         '</div>' +
          '<div class="block"><p class="b-title">能力标签</p><div class="tags"><span>数字经济</span><span>ENFP</span><span>手工</span><span>追剧</span><span>音乐</span><span>美食</span><span>沟通交流</span></div></div>' +
          '<div class="block"><p class="b-title">数字名片</p><p class="b-text">已生成专属个人数字名片，支持一键拨号、邮件直达、vCard 通讯录保存，移动端体验流畅。可直接分享给他人。</p></div>',
     action:'<a class="sheet-btn" href="https://12ti278.github.io/personal-website/" target="_blank" rel="noopener">查看数字名片 <span class="arr">→</span></a>' },
@@ -624,6 +649,159 @@ var MODS = {
 /* ============================================================
    模块详情弹层控制
    ============================================================ */
+/* 个人简介：p5.js 纸面微尘 + 暖光晕（打开时启动，关闭时清理）
+   概念：旧照片用胶带贴在纸上，细小的纸屑与尘埃在暖光里缓慢上浮。 */
+var __aboutFx = null, __aboutFxRO = null, __aboutFxDetach = null, __aboutFxWait = null, __aboutFxTries = 0;
+function removeAboutFx(){
+  clearTimeout(__aboutFxWait); __aboutFxWait = null;
+  if (__aboutFxDetach){ try{ __aboutFxDetach(); }catch(e){} __aboutFxDetach = null; }
+  if (__aboutFxRO){ try{ __aboutFxRO.disconnect(); }catch(e){} __aboutFxRO = null; }
+  if (__aboutFx){ try{ __aboutFx.remove(); }catch(e){} __aboutFx = null; }
+}
+function initAboutFx(){
+  var host = document.getElementById('aboutFx');
+  if (!host){ __aboutFxTries = 0; removeAboutFx(); return; }   // 弹层已关闭
+  if (!window.p5){                                 // CDN 可能晚于弹窗动画到达
+    if (__aboutFxTries++ > 50){ __aboutFxTries = 0; return; }  // 约 6s 后放弃
+    clearTimeout(__aboutFxWait);
+    __aboutFxWait = setTimeout(initAboutFx, 120);
+    return;
+  }
+  __aboutFxTries = 0;
+  removeAboutFx();
+  var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var COLORS = { ink:[59,56,47], green:[111,125,94], gold:[201,185,138] };  // 取自页面 :root 配色
+
+  __aboutFx = new p5(function(p){
+    var W = 0, H = 0, hx = 0, hy = 0, hr = 200;
+    var motes = [], sprite = null, t0 = 0;
+    var px = 0, py = 0, tx = 0, ty = 0;   // 指针视差（缓动）
+    var LAYERS = 3;
+
+    function measure(){
+      W = Math.max(180, host.clientWidth || 0);
+      H = Math.max(180, host.clientHeight || 0);
+      var ph = host.parentNode && host.parentNode.querySelector('.about-portrait');
+      if (ph){
+        var hb = host.getBoundingClientRect(), pb = ph.getBoundingClientRect();
+        hx = pb.left - hb.left + pb.width / 2;
+        hy = pb.top - hb.top + pb.height / 2;
+        hr = Math.max(pb.height * 0.72, 150);
+      } else {
+        hx = W * 0.24; hy = H * 0.5; hr = Math.max(H * 0.65, 150);
+      }
+    }
+    /* 一次性生成柔边光点精灵，避免每帧用 filter:blur */
+    function makeSprite(){
+      var g = p.createGraphics(64, 64);
+      g.pixelDensity(1);
+      g.clear();
+      var ctx = g.drawingContext;
+      var grd = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grd.addColorStop(0, 'rgba(255,255,255,1)');
+      grd.addColorStop(0.4, 'rgba(255,255,255,0.6)');
+      grd.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, 64, 64);
+      sprite = g;
+    }
+    function seed(){
+      motes = [];
+      for (var i = 0; i < 64; i++){
+        var z = i % LAYERS;                 // 0 近 / 2 远，远层更虚更慢
+        motes.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          z: z,
+          r: (z === 0 ? 6 : z === 1 ? 13 : 24) * (0.55 + Math.random() * 0.9),
+          sp: 0.10 + z * 0.10 + Math.random() * 0.08,
+          a: 0.05 + Math.random() * 0.07 + z * 0.015,
+          s: Math.random() * 1000
+        });
+      }
+    }
+    function halo(t){
+      var breathe = 0.5 + 0.5 * Math.sin(t * 0.55);
+      var ctx = p.drawingContext;
+      var cx = hx + px * 5, cy = hy + py * 4;
+      ctx.save();
+      var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, hr);
+      g.addColorStop(0, 'rgba(201,185,138,' + (0.13 + breathe * 0.05).toFixed(3) + ')');
+      g.addColorStop(0.5, 'rgba(201,185,138,0.045)');
+      g.addColorStop(1, 'rgba(201,185,138,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    p.setup = function(){
+      measure();
+      p.pixelDensity(1);                    // 环境动效不需要 retina 过采样
+      var c = p.createCanvas(W, H);
+      c.parent(host);
+      c.style('position', 'absolute');
+      c.style('left', '0');
+      c.style('top', '0');
+      p.frameRate(30);
+      p.noStroke();
+      makeSprite();
+      seed();
+      t0 = p.millis();
+
+      if (reduce){
+        p.noLoop();
+        p.redraw();                         // 仅静止渲染一帧
+      } else {
+        var hero = host.parentNode;
+        if (hero){
+          var onMove = function(e){
+            var b = host.getBoundingClientRect();
+            tx = ((e.clientX - b.left) / Math.max(1, b.width) - 0.5) * 2;
+            ty = ((e.clientY - b.top) / Math.max(1, b.height) - 0.5) * 2;
+          };
+          hero.addEventListener('pointermove', onMove);
+          __aboutFxDetach = function(){ hero.removeEventListener('pointermove', onMove); };
+        }
+      }
+
+      if (window.ResizeObserver){
+        __aboutFxRO = new ResizeObserver(function(){
+          var nw = Math.max(180, host.clientWidth || 0);
+          var nh = Math.max(180, host.clientHeight || 0);
+          if (Math.abs(nw - W) > 2 || Math.abs(nh - H) > 2){
+            measure(); p.resizeCanvas(W, H); seed();
+            if (reduce) p.redraw();
+          }
+        });
+        __aboutFxRO.observe(host);
+      }
+    };
+
+    p.draw = function(){
+      var t = (p.millis() - t0) / 1000;
+      px += (tx - px) * 0.045;
+      py += (ty - py) * 0.045;
+      p.clear();
+      halo(t);
+
+      for (var i = 0; i < motes.length; i++){
+        var m = motes[i];
+        m.y -= m.sp * (0.55 + p.noise(m.s, t * 0.22) * 0.9);
+        m.x += (p.noise(m.s + 37, t * 0.18) - 0.5) * 0.9 * (m.z + 1);
+        if (m.y < -40){ m.y = H + 40; m.x = Math.random() * W; }
+        if (m.x < -40) m.x = W + 40; else if (m.x > W + 40) m.x = -40;
+
+        var off = (m.z + 1) * 2.6;
+        var col = m.z === 0 ? COLORS.ink : (m.z === 1 ? COLORS.green : COLORS.gold);
+        var tw = 0.7 + 0.3 * Math.sin(t * 1.3 + m.s);
+        p.tint(col[0], col[1], col[2], m.a * tw * 255);
+        p.image(sprite, m.x + px * off - m.r, m.y + py * off - m.r, m.r * 2, m.r * 2);
+      }
+      p.noTint();
+    };
+  });
+}
+
 function openModal(key){
   var m = MODS[key];
   if (!m) return;
@@ -633,6 +811,7 @@ function openModal(key){
   document.getElementById('modTitle').textContent = m.name;
   document.getElementById('modDesc').textContent = m.desc;
   document.getElementById('modContent').innerHTML = m.html;
+  if (key === 'about') setTimeout(initAboutFx, 120); else removeAboutFx();
 
   var acts = document.getElementById('modActions');
   acts.innerHTML = '';
@@ -651,6 +830,7 @@ function closeModal(){
   document.getElementById('modal').classList.remove('open');
   document.body.classList.remove('modal-open');
   if (window.lenis) window.lenis.start();
+  removeAboutFx();
   history.replaceState(null, '', location.pathname);
 }
 
@@ -671,6 +851,10 @@ document.addEventListener('keydown', function(e){
   }
 })();
 </script>
+
+<!-- ========== p5.js（个人简介微尘效果） ========== -->
+<script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js"></script>
+<script>if (window.p5) p5.disableFriendlyErrors = true;</script>
 
 <!-- ========== Lenis 全局平滑阻尼滚动 ========== -->
 <script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
