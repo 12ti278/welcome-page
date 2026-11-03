@@ -398,16 +398,17 @@
     border:1px solid var(--line); box-shadow:0 16px 34px rgba(0,0,0,.18); transform:rotate(-2.2deg);}
   .about-portrait img{display:block; width:100%; aspect-ratio:3/4; object-fit:cover;
     filter:sepia(.12) contrast(.98);}
-  .about-portrait figcaption{position:absolute; left:0; right:0; bottom:7px; text-align:center;
-    font-size:10px; letter-spacing:2px; color:var(--green-deep); font-family:"Courier New",monospace;}
+  .about-portrait figcaption{position:absolute; left:0; right:0; bottom:6px; text-align:center;
+    font-size:11px; font-weight:700; letter-spacing:2.5px; color:var(--green-deep);
+    font-family:"Courier New",monospace;}
   .about-portrait::after{content:""; position:absolute; top:-11px; left:50%; transform:translateX(-50%) rotate(4deg);
     width:74px; height:20px; background:rgba(201,185,138,.62); box-shadow:0 1px 3px rgba(0,0,0,.22);}
-  .about-intro .b-title{font-size:13px; margin-bottom:8px;}
-  .about-intro .b-text{font-family:"Songti SC","STSong","Georgia",serif; font-size:15.5px; line-height:2.05; letter-spacing:.4px; color:var(--ink);}
+  .about-intro .b-title{font-size:12px; letter-spacing:2px; margin-bottom:8px;}
+  .about-intro .b-text{font-size:14px; line-height:2; letter-spacing:.5px; color:var(--ink);}
   @media (max-width:560px){
     .about-hero{grid-template-columns:1fr; gap:18px;}
     .about-portrait{width:168px; margin:0 auto;}
-    .about-intro .b-text{font-size:14.5px;}
+    .about-intro .b-text{font-size:13.5px;}
   }
 
   .sheet-actions{margin-top:26px; display:flex; flex-wrap:wrap; gap:14px; align-items:center;}
