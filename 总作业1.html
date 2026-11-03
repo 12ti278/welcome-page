@@ -736,8 +736,14 @@ function initWorks3D(){
   const rollGroup = new THREE.Group();
   scene.add(rollGroup);
   rollGroup.rotation.z = Math.PI / 2;
+  // 偏转一个角度，让卷纸侧壁更朝镜头，露出细密同心卷纸纹（参考图的角度）
+  rollGroup.rotation.y = -0.55;
+  const rollBaseQuat = rollGroup.quaternion.clone();   // 基础朝向（不变）
+  let rollTurn = 0;                                    // 屏幕平面内的额外转角（任意角度）
+  const _viewDir = new THREE.Vector3();
+  const _turnQ = new THREE.Quaternion();
 
-  const R = 1.25, W = 1.9;          // 胶带更小
+  const R = 1.2, W = 1.5;           // 胶带更细长：带面收窄、卷体略小
   const CORE_R = R * 0.58;          // 镂空纸芯半径（孔更大）
 
   /* ---------- 拼接三张截图（小贴纸：缩到胶带中间，四周露出牛皮纸底色） ---------- */
@@ -772,6 +778,28 @@ function initWorks3D(){
     for (let i = 0, n = Math.floor(totalW * STRIP_H / 800); i < n; i++){
       ctx.fillStyle = 'rgba(90,90,88,' + (Math.random() * 0.04) + ')';
       ctx.fillRect(Math.random() * totalW, Math.random() * STRIP_H, 1, 1);
+    }
+    // 纸张纤维：细短纤维（以纵向为主）+ 少量横向压痕，让胶带表面像纸而不像塑料/布
+    for (let i = 0, n = Math.floor(totalW * STRIP_H / 1200); i < n; i++){
+      const fx = Math.random() * totalW, fy = Math.random() * STRIP_H;
+      const len = 3 + Math.random() * 14;
+      const ang = (Math.random() < 0.7 ? 0 : Math.PI / 2) + (Math.random() - 0.5) * 0.5;
+      const light = Math.random() < 0.5;
+      ctx.strokeStyle = 'rgba(' + (light ? '250,250,246' : '96,96,92') + ',' + (0.05 + Math.random() * 0.11) + ')';
+      ctx.lineWidth = 0.5 + Math.random() * 0.9;
+      ctx.beginPath();
+      ctx.moveTo(fx, fy);
+      ctx.lineTo(fx + Math.cos(ang) * len, fy + Math.sin(ang) * len);
+      ctx.stroke();
+    }
+    for (let i = 0; i < 36; i++){
+      const fy = Math.random() * STRIP_H;
+      ctx.strokeStyle = 'rgba(120,120,116,' + (0.04 + Math.random() * 0.05) + ')';
+      ctx.lineWidth = 0.6 + Math.random() * 1.2;
+      ctx.beginPath();
+      ctx.moveTo(0, fy);
+      ctx.bezierCurveTo(totalW * 0.33, fy + (Math.random() - 0.5) * 16, totalW * 0.66, fy + (Math.random() - 0.5) * 16, totalW, fy + (Math.random() - 0.5) * 8);
+      ctx.stroke();
     }
 
     function rr(x, y, w, h, r){
@@ -925,49 +953,65 @@ function initWorks3D(){
 
   /* ---------- 卷芯端面：牛皮纸螺旋卷纸 ---------- */
   function makeCapTexture(){
-    const S = 256;
+    const S = 512;
     const c = document.createElement('canvas'); c.width = c.height = S;
     const x = c.getContext('2d');
-    const base = x.createRadialGradient(S/2, S/2, 10, S/2, S/2, S/2);
-    base.addColorStop(0, '#f2f2f0');
-    base.addColorStop(0.7, '#d4d4d2');
-    base.addColorStop(1, '#a8a8a6');
+    const cx = S/2, cy = S/2;
+    const holeR = (S/2) * (CORE_R / R);
+
+    // 中性灰底：侧壁受光——越靠近孔越暗，外缘略亮
+    const base = x.createRadialGradient(cx, cy, holeR, cx, cy, S/2);
+    base.addColorStop(0.0, '#8d8d8a');
+    base.addColorStop(0.45, '#b8b8b5');
+    base.addColorStop(0.8, '#d3d3d0');
+    base.addColorStop(1.0, '#cbcbc8');
     x.fillStyle = base; x.fillRect(0, 0, S, S);
 
-    const cx = S/2, cy = S/2, N = 2400;
-    for (let pass = 0; pass < 2; pass++){
+    // 细密同心卷纸圈：一圈圈明暗相间（对标参考图的侧面卷纸纹）
+    let k = 0;
+    for (let r = holeR; r <= S/2; r += 1.8 + Math.random() * 1.1){
+      const dark = (k % 2 === 0);
       x.beginPath();
-      x.strokeStyle = pass === 0 ? 'rgba(130,130,128,0.5)' : 'rgba(248,248,246,0.55)';
-      x.lineWidth = pass === 0 ? 5 : 2;
-      const off = pass === 0 ? 0 : 3;
-      for (let i = 0; i <= N; i++){
-        const th = (i/N) * 9 * Math.PI;
-        const rr = 14 + (i/N) * (S/2 - 10);
-        const px = cx + (rr + off) * Math.cos(th), py = cy + (rr + off) * Math.sin(th);
-        if (i === 0) x.moveTo(px, py); else x.lineTo(px, py);
-      }
+      x.arc(cx, cy, r + (Math.random() - 0.5) * 0.7, 0, Math.PI * 2);
+      x.strokeStyle = dark
+        ? 'rgba(70,70,68,' + (0.15 + Math.random() * 0.16) + ')'
+        : 'rgba(250,250,248,' + (0.18 + Math.random() * 0.18) + ')';
+      x.lineWidth = 0.8 + Math.random() * 1.0;
+      x.stroke();
+      k++;
+    }
+    // 局部断口 / 叠边，增强真实卷纸感
+    for (let i = 0; i < 70; i++){
+      const rr = holeR + Math.random() * (S/2 - holeR);
+      const a0 = Math.random() * Math.PI * 2, span = 0.05 + Math.random() * 0.4;
+      x.beginPath();
+      x.arc(cx, cy, rr, a0, a0 + span);
+      x.strokeStyle = 'rgba(58,58,56,' + (0.08 + Math.random() * 0.16) + ')';
+      x.lineWidth = 1.0 + Math.random() * 1.6;
       x.stroke();
     }
-    for (let i = 0; i < 5000; i++){
-      x.fillStyle = 'rgba(85,85,83,' + (Math.random() * 0.04) + ')';
+    // 细颗粒
+    for (let i = 0; i < 16000; i++){
+      x.fillStyle = 'rgba(' + (Math.random() < 0.5 ? '60,60,58' : '250,250,248') + ',' + (Math.random() * 0.05) + ')';
       x.fillRect(Math.random() * S, Math.random() * S, 1, 1);
     }
-    // 镂空中心：擦成透明（纸芯孔）
-    const holeR = (S / 2) * (CORE_R / R);
+    // 镂空中心（纸芯孔）
     x.globalCompositeOperation = 'destination-out';
-    x.fillStyle = 'rgba(0,0,0,1)';   // 必须不透明，才能把中心擦成透明
+    x.fillStyle = 'rgba(0,0,0,1)';
     x.beginPath();
-    x.arc(S / 2, S / 2, holeR, 0, Math.PI * 2);
+    x.arc(cx, cy, holeR, 0, Math.PI * 2);
     x.fill();
     x.globalCompositeOperation = 'source-over';
-    // 孔缘一圈浅棕描边，暗示纸芯厚度
+    // 孔缘描边，暗示纸芯厚度
     x.beginPath();
-    x.arc(S / 2, S / 2, holeR, 0, Math.PI * 2);
-    x.strokeStyle = 'rgba(110,110,108,.65)';
-    x.lineWidth = 5;
+    x.arc(cx, cy, holeR, 0, Math.PI * 2);
+    x.strokeStyle = 'rgba(90,90,88,.7)';
+    x.lineWidth = 6;
     x.stroke();
+
     const t = new THREE.CanvasTexture(c);
     if (t.encoding !== undefined) t.encoding = THREE.sRGBEncoding;
+    t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
     return t;
   }
 
@@ -1086,12 +1130,16 @@ function initWorks3D(){
     if (!trailCtx) return;
     const dx = p1.x - p0.x, dy = p1.y - p0.y;
     const len = Math.hypot(dx, dy);
-    if (len < 0.5) return;
+    if (len < 0.3) return;
     const ang = Math.atan2(dy, dx);
-    // 银灰底衬：连续圆角，填满拐角与接缝，让痕迹连贯
+    const halfH = trailHalfWpx;
+
+    // 银灰底衬：用 destination-over 垫到「已有贴纸之下」，只补贴纸纹理的透明撕边，
+    // 既保留连续胶带底，又不会盖掉此前已铺好的贴纸。
     trailCtx.save();
+    trailCtx.globalCompositeOperation = 'destination-over';
     trailCtx.strokeStyle = '#c8c8c6';
-    trailCtx.lineWidth = trailHalfWpx * 2;
+    trailCtx.lineWidth = halfH * 2;
     trailCtx.lineCap = 'round';
     trailCtx.lineJoin = 'round';
     trailCtx.beginPath();
@@ -1099,33 +1147,38 @@ function initWorks3D(){
     trailCtx.lineTo(p1.x, p1.y);
     trailCtx.stroke();
     trailCtx.restore();
-    if (stripData){
-      const texW = stripData.canvas.width, texH = stripData.canvas.height;
-      const du = len / trailPeriodPx;
-      let remaining = len, px = p0.x, py = p0.y, u = trailU % 1;
-      while (remaining > 0.5){
-        const avail = Math.max((1 - u) * trailPeriodPx, 1);
-        const segLen = Math.min(remaining, avail);
-        const sx = u * texW;
-        const srcW = Math.min((segLen / trailPeriodPx) * texW, texW - sx);
+
+    if (!stripData) return;
+
+    const texW = stripData.canvas.width, texH = stripData.canvas.height;
+    const period = trailPeriodPx;
+    // 相邻贴片左右各重叠 OVERLAP 像素，盖住小数坐标的抗锯齿透明缝，避免断断续续
+    const OVERLAP = 1.5;
+    let remaining = len, px = p0.x, py = p0.y, u = trailU % 1;
+    while (remaining > 0.01){
+      const avail = Math.max((1 - u) * period, 1);
+      const segLen = Math.min(remaining, avail);
+      const sx = u * texW;
+      const srcW = Math.min((segLen / period) * texW, texW - sx);
+      const k = srcW / segLen;
+      let sxA = sx - OVERLAP * k;
+      let sWA = srcW + OVERLAP * k * 2;
+      let dxA = -OVERLAP;
+      let dWA = segLen + OVERLAP * 2;
+      if (sxA < 0){ const sh = -sxA, dsh = sh / k; sxA = 0; sWA -= sh; dxA += dsh; dWA -= dsh; }
+      if (sxA + sWA > texW){ const ov = sxA + sWA - texW; sWA -= ov; dWA -= ov / k; }
+      if (sWA > 0 && dWA > 0){
         trailCtx.save();
         trailCtx.translate(px, py);
         trailCtx.rotate(ang);
-        trailCtx.drawImage(stripData.canvas, sx, 0, srcW, texH, 0, -trailHalfWpx, segLen, trailHalfWpx * 2);
+        trailCtx.drawImage(stripData.canvas, sxA, 0, sWA, texH, dxA, -halfH, dWA, halfH * 2);
         trailCtx.restore();
-        px += Math.cos(ang) * segLen; py += Math.sin(ang) * segLen;
-        remaining -= segLen;
-        u = 0;
       }
-      trailU += du;
-    } else {
-      trailCtx.save();
-      trailCtx.translate(p0.x, p0.y);
-      trailCtx.rotate(ang);
-      trailCtx.fillStyle = '#c8c8c6';
-      trailCtx.fillRect(0, -trailHalfWpx, len, trailHalfWpx * 2);
-      trailCtx.restore();
+      px += Math.cos(ang) * segLen; py += Math.sin(ang) * segLen;
+      remaining -= segLen;
+      u = 0;
     }
+    trailU = (trailU + len / period) % 1000;
   }
 
   function addTrailPoint(wx, wy){
@@ -1143,17 +1196,10 @@ function initWorks3D(){
     }
     const last = trailPts[trailPts.length - 1];
     const d = Math.hypot(sp.x - last.x, sp.y - last.y);
-    if (d < 2) return false;
-    const steps = Math.min(Math.ceil(d / 2), 40);
-    let cx = last.x, cy = last.y;
-    for (let s = 1; s <= steps; s++){
-      const t = s / steps;
-      const nx = last.x + (sp.x - last.x) * t;
-      const ny = last.y + (sp.y - last.y) * t;
-      drawTexSegment({x:cx, y:cy}, {x:nx, y:ny});
-      trailPts.push({x:nx, y:ny});
-      cx = nx; cy = ny;
-    }
+    if (d < 1) return false;
+    // 每帧只画一整段（内部按纹理周期切片），减少 drawImage 次数，滑动更跟手
+    drawTexSegment(last, sp);
+    trailPts.push(sp);
     if (trailPts.length > MAX_TRAIL_PTS) trailPts.splice(0, trailPts.length - MAX_TRAIL_PTS);
     return true;
   }
@@ -1203,6 +1249,7 @@ function initWorks3D(){
 
   const raycaster = new THREE.Raycaster();
   let dragging = false, downX = 0, downY = 0, startX = 0, startY = 0;
+  let rotatingRoll = false;
 
   stage.addEventListener('pointermove', function(e){
     const r = canvas.getBoundingClientRect();
@@ -1214,7 +1261,11 @@ function initWorks3D(){
       downX = e.clientX; downY = e.clientY;
       if (orbitMode){
         orbit.theta += dx * 0.005;
-        orbit.phi = Math.max(0.3, Math.min(1.5, orbit.phi - dy * 0.005));
+        // 放开俯仰限制：可绕整圈球面 360° 查看、无死角
+        orbit.phi = Math.max(0.08, Math.min(Math.PI - 0.08, orbit.phi - dy * 0.005));
+      } else if (rotatingRoll){
+        // 卷筒在屏幕平面内任意角度旋转
+        rollTurn += dx * 0.01 + dy * 0.0026;
       } else {
         raycaster.setFromCamera(ndc, camera);
         if (raycaster.ray.intersectPlane(rollPlane, _rollHit)) rollTarget.copy(_rollHit);
@@ -1223,6 +1274,12 @@ function initWorks3D(){
   });
   stage.addEventListener('pointerdown', function(e){
     dragging = true; startX = downX = e.clientX; startY = downY = e.clientY;
+    // 点中卷筒 = 旋转卷筒；点空白 = 移动 + 留痕
+    const r = canvas.getBoundingClientRect();
+    ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+    raycaster.setFromCamera(ndc, camera);
+    rotatingRoll = !orbitMode && raycaster.intersectObject(roll, false).length > 0;
     canvas.classList.add('grabbing');
     try{ stage.setPointerCapture(e.pointerId); }catch(_){}
   });
@@ -1251,9 +1308,11 @@ function initWorks3D(){
 
   function endDrag(e){
     if (!dragging) return;
-    dragging = false;
+    const wasRotate = rotatingRoll;
+    dragging = false; rotatingRoll = false;
     canvas.classList.remove('grabbing');
     try{ if (e && e.pointerId != null) stage.releasePointerCapture(e.pointerId); }catch(_){}
+    if (wasRotate) return;
     if (Math.hypot(e.clientX - startX, e.clientY - startY) >= 6) return;
     const r = canvas.getBoundingClientRect();
     ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
@@ -1267,7 +1326,7 @@ function initWorks3D(){
   stage.addEventListener('wheel', function(e){
     e.preventDefault();
     if (orbitMode){ orbit.radius = Math.max(5, Math.min(16, orbit.radius * (1 + e.deltaY * 0.001))); }
-    else { autoSpin = false; spinTarget += e.deltaY * 0.004; }
+    else { rollTurn += e.deltaY * 0.0016; }
   }, { passive: false });
 
   document.addEventListener('keydown', function(e){
@@ -1286,26 +1345,41 @@ function initWorks3D(){
     resizeTrailCanvas();
   }
   let frames = 0, fpsT = performance.now();
+  let prevT = performance.now();
   function frame(){
     requestAnimationFrame(frame);
-    if (autoSpin) spinTarget += 0.0035;
-    spin += (spinTarget - spin) * 0.1;
+    const nowT = performance.now();
+    let dt = (nowT - prevT) / 1000;
+    prevT = nowT;
+    if (!(dt > 0)) dt = 1 / 60;
+    dt = Math.min(dt, 0.05);
+    const kSpin = 1 - Math.exp(-dt * 6);
+    const kRoll = 1 - Math.exp(-dt * 10);
+    const kCam  = 1 - Math.exp(-dt * 7.5);
+
+    if (autoSpin) spinTarget += dt * 0.21;
+    spin += (spinTarget - spin) * kSpin;
     roll.rotation.y = spin;
 
     const rx = orbitMode ? 0 : rollTarget.x;
     const ry = orbitMode ? 0 : rollTarget.y;
-    rollGroup.position.x += (rx - rollGroup.position.x) * 0.14;
-    rollGroup.position.y += (ry - rollGroup.position.y) * 0.14;
+    rollGroup.position.x += (rx - rollGroup.position.x) * kRoll;
+    rollGroup.position.y += (ry - rollGroup.position.y) * kRoll;
 
     applyCamera();
-    camPos.lerp(camTarget, 0.12);
-    camLook.lerp(lookTarget, 0.12);
+    camPos.lerp(camTarget, kCam);
+    camLook.lerp(lookTarget, kCam);
     camera.position.copy(camPos);
     camera.lookAt(camLook);
 
-    if (dragging && !orbitMode){
+    if (dragging && !orbitMode && !rotatingRoll){
       addTrailPoint(rollGroup.position.x, rollGroup.position.y);
     }
+
+    // 卷筒在屏幕平面内任意角度旋转：基础朝向 + 绕相机视线轴（屏幕法线）旋转 rollTurn
+    rollGroup.quaternion.copy(rollBaseQuat);
+    camera.getWorldDirection(_viewDir);
+    rollGroup.quaternion.premultiply(_turnQ.setFromAxisAngle(_viewDir, rollTurn));
 
     // 变化影子：跟随胶带、随自转/拖拽而变
     shadow.position.set(rollGroup.position.x - 0.55, rollGroup.position.y - 0.78, -0.18);

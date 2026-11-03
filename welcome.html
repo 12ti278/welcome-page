@@ -50,6 +50,10 @@
     overflow-x:hidden;
   }
 
+  /* Lenis 平滑滚动 */
+  html.lenis, html.lenis body { height:auto; }
+  .lenis.lenis-smooth { scroll-behavior:auto !important; }
+
   /* 复古核 1：全局胶片颗粒 */
   body::before{
     content:""; position:fixed; inset:0;
@@ -121,7 +125,14 @@
     background:var(--surface);
     border:1px solid var(--border);
     box-shadow:0 24px 60px rgba(0,0,0,.6);
-    animation:rise 1s .42s ease both;
+    animation:rise 1s .42s ease backwards;
+    will-change:transform;                 /* 独立合成层：img/贴纸/胶带同层渲染，不撕裂 */
+    transition:transform .2s ease-out, box-shadow .2s ease-out;
+  }
+  /* 卡片 hover：动画只写在 .frame 上（仅 transform: scale），
+     贴纸/胶带作为子元素完全继承缩放，保证三者同步不漂移；触屏不触发 */
+  @media (hover:hover){
+    .frame:hover{ transform:scale(1.02); box-shadow:0 30px 74px rgba(0,0,0,.72); }
   }
   .frame::before{ /* 内嵌细线框 */
     content:""; position:absolute; inset:9px; z-index:3;
@@ -148,13 +159,44 @@
   }
   .slides img.active{opacity:1;}
 
-  /* 胶带 */
-  .tape{position:absolute; z-index:5; width:96px; height:26px;
-    background:rgba(201,185,138,.55); pointer-events:none;
-    box-shadow:0 1px 3px rgba(0,0,0,.3);
+  /* ---------- 贴纸（印在画上）+ 边角胶带 ----------
+     层级顺序：油画 img → 贴纸 → 胶带；胶带在最上层，只压住贴纸两个对角。
+     贴纸/胶带不写任何 transform，完全继承 .frame 的 scale，保证三者同步不分家。 */
+  .frame{
+    --sticker-w:184px; --sticker-h:64px;
+    --sticker-r:30px;  --sticker-b:30px;
   }
-  .tape.t1{top:-12px; left:50%; transform:translateX(-50%) rotate(-3deg);}
-  .tape.t2{bottom:-12px; left:50%; transform:translateX(-50%) rotate(2deg);}
+  .sticker{
+    position:absolute; z-index:5;
+    right:var(--sticker-r); bottom:var(--sticker-b);
+    width:var(--sticker-w); height:var(--sticker-h);
+    padding:8px 12px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    mix-blend-mode:multiply;                          /* 与油画底色融合，像印在画上 */
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,.28));    /* 柔和阴影（不用 box-shadow） */
+    background:rgba(244,238,224,.5);                  /* 半透明奶油底 */
+    border:1px solid rgba(59,56,47,.42);
+    color:#3b382f; font-family:"Courier New",monospace;
+    text-align:center; line-height:1.35; pointer-events:none;
+  }
+  .sticker::before{ /* 内嵌细线（复古核） */
+    content:""; position:absolute; inset:4px;
+    border:1px solid rgba(59,56,47,.25); pointer-events:none;
+  }
+  .sticker .s-num{ font-size:9px; letter-spacing:3px; opacity:.68; }
+  .sticker .s-name{ font-size:12px; letter-spacing:2px; font-weight:700; }
+
+  /* 边角胶带：只压贴纸两对角，位于最上层；旋转烧进 SVG，不用 CSS transform */
+  .tape{position:absolute; z-index:7; width:56px; height:56px; pointer-events:none;
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,.3));}
+  .tape.t1{ /* 贴纸左上角 */
+    right:calc(var(--sticker-r) + var(--sticker-w) - 28px);
+    bottom:calc(var(--sticker-b) + var(--sticker-h) - 28px);
+  }
+  .tape.t2{ /* 贴纸右下角 */
+    right:calc(var(--sticker-r) - 28px);
+    bottom:calc(var(--sticker-b) - 28px);
+  }
 
   /* 左右箭头 */
   .arrow{
@@ -362,7 +404,9 @@
     .modal-sheet{padding:44px 26px 36px; max-height:calc(100vh - 80px);}
     .modal{padding:40px 16px;}
     .stage{gap:14px; padding:40px 18px;}
-    .frame{width:92vw;}
+    .frame{width:92vw; --sticker-w:136px; --sticker-h:52px; --sticker-r:18px; --sticker-b:14px;}
+    .sticker .s-num{font-size:8px;}
+    .sticker .s-name{font-size:10px; letter-spacing:1px;}
     .enter{margin-top:36px;}
   }
 
@@ -384,8 +428,24 @@
   <div class="frame">
     <div class="slides" id="slides" aria-label="作品照片轮播"></div>
     <span class="corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-    <span class="tape t1" aria-hidden="true"></span>
-    <span class="tape t2" aria-hidden="true"></span>
+
+    <div class="sticker" aria-hidden="true">
+      <span class="s-num" id="stickerNum">No.01</span>
+      <span class="s-name" id="stickerName">个人简介</span>
+    </div>
+
+    <svg class="tape t1" viewBox="0 0 56 56" aria-hidden="true" focusable="false">
+      <g transform="rotate(-40 28 28)">
+        <rect x="-6" y="20" width="68" height="16" rx="2" fill="rgba(201,185,138,.62)"/>
+        <rect x="-6" y="20" width="68" height="2.5" fill="rgba(255,255,255,.18)"/>
+      </g>
+    </svg>
+    <svg class="tape t2" viewBox="0 0 56 56" aria-hidden="true" focusable="false">
+      <g transform="rotate(40 28 28)">
+        <rect x="-6" y="20" width="68" height="16" rx="2" fill="rgba(201,185,138,.62)"/>
+        <rect x="-6" y="20" width="68" height="2.5" fill="rgba(255,255,255,.18)"/>
+      </g>
+    </svg>
     <button class="arrow left" id="prev" aria-label="上一张">‹</button>
     <button class="arrow right" id="next" aria-label="下一张">›</button>
     <div class="dots" id="dots"></div>
@@ -412,7 +472,7 @@
   <div class="modal-bg" id="modalBg"></div>
   <div class="modal-overlay" id="modalOverlay"></div>
   <button class="modal-close" id="modalClose" aria-label="关闭">×</button>
-  <article class="modal-sheet">
+  <article class="modal-sheet" data-lenis-prevent>
     <span class="sheet-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     <span class="sheet-tape t1" aria-hidden="true"></span>
     <span class="sheet-tape t2" aria-hidden="true"></span>
@@ -506,6 +566,8 @@ var MODS = {
   var idx = 0, timer = null;
 
   var caption = document.getElementById('slideCaption');
+  var stickerNum = document.getElementById('stickerNum');
+  var stickerName = document.getElementById('stickerName');
   IMGS.forEach(function(m, i){
     var im = document.createElement('img');
     im.src = DIR + m.f;
@@ -519,6 +581,8 @@ var MODS = {
     dots.appendChild(d);
   });
   caption.innerHTML = '点击进入 <b>' + IMGS[0].name + '</b>';
+  if (stickerNum) stickerNum.textContent = 'No.01';
+  if (stickerName) stickerName.textContent = IMGS[0].name;
 
   function go(n){
     idx = (n + IMGS.length) % IMGS.length;
@@ -526,6 +590,8 @@ var MODS = {
     for (var i = 0; i < imgs.length; i++) imgs[i].classList.toggle('active', i === idx);
     for (var j = 0; j < ds.length; j++) ds[j].classList.toggle('active', j === idx);
     caption.innerHTML = '点击进入 <b>' + IMGS[idx].name + '</b>';
+    if (stickerNum) stickerNum.textContent = 'No.0' + (idx + 1);
+    if (stickerName) stickerName.textContent = IMGS[idx].name;
   }
   function next(){ go(idx + 1); }
   function prev(){ go(idx - 1); }
@@ -575,6 +641,7 @@ function openModal(key){
 
   document.getElementById('modal').classList.add('open');
   document.body.classList.add('modal-open');
+  if (window.lenis) window.lenis.stop();
   history.replaceState(null, '', '?mod=' + key);
 
   document.getElementById('modCloseBtn').addEventListener('click', closeModal);
@@ -583,6 +650,7 @@ function openModal(key){
 function closeModal(){
   document.getElementById('modal').classList.remove('open');
   document.body.classList.remove('modal-open');
+  if (window.lenis) window.lenis.start();
   history.replaceState(null, '', location.pathname);
 }
 
@@ -601,6 +669,39 @@ document.addEventListener('keydown', function(e){
   if (q && MODS[q[1]]){
     setTimeout(function(){ openModal(q[1]); }, 100);
   }
+})();
+</script>
+
+<!-- ========== Lenis 全局平滑阻尼滚动 ========== -->
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<script>
+/* ============================================================
+   Lenis · 全局平滑阻尼滚动（参考 laxspace.co 的滚动手感）
+   ============================================================ */
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!window.Lenis || reduce) return;    // CDN 未加载 / 系统减少动效 → 回退原生滚动
+
+  window.lenis = new Lenis({
+    duration: 1.2,                        // 阻尼时长，越小越跟手
+    easing: function(t){ return Math.min(1, 1.001 - Math.pow(2, -10 * t)); },
+    smoothWheel: true
+  });
+
+  function raf(time){ window.lenis.raf(time); requestAnimationFrame(raf); }
+  requestAnimationFrame(raf);
+
+  /* 同页锚点平滑滚动 */
+  document.addEventListener('click', function(e){
+    var el = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
+    if (!el) return;
+    var hash = el.getAttribute('href');
+    if (!hash || hash.length < 2) return;
+    var target = document.querySelector(hash);
+    if (!target) return;
+    e.preventDefault();
+    window.lenis.scrollTo(target, { duration: 1.4 });
+  });
 })();
 </script>
 
