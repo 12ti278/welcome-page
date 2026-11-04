@@ -405,10 +405,19 @@
     width:74px; height:20px; background:rgba(201,185,138,.62); box-shadow:0 1px 3px rgba(0,0,0,.22);}
   .about-intro .b-title{font-size:12px; letter-spacing:2px; margin-bottom:8px;}
   .about-intro .b-text{font-size:14px; line-height:2; letter-spacing:.5px; color:var(--ink);}
+  .about-stats{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
+  .about-stat{flex:1 1 0; min-width:80px; padding:8px 8px 7px; text-align:center;
+    border:1px solid var(--line-soft); background:rgba(251,248,239,.75);}
+  .about-stat b{display:block; font-size:19px; line-height:1.15; font-weight:800; letter-spacing:1px;
+    color:var(--green-deep); font-family:"Courier New",monospace;}
+  .about-stat b .stat-slash{font-weight:400; opacity:.55; margin:0 1px;}
+  .about-stat > span{display:block; margin-top:2px; font-size:9.5px; letter-spacing:2px;
+    color:var(--ink-muted); font-family:"Courier New",monospace;}
   @media (max-width:560px){
     .about-hero{grid-template-columns:1fr; gap:18px;}
     .about-portrait{width:168px; margin:0 auto;}
     .about-intro .b-text{font-size:13.5px;}
+    .about-stat b{font-size:17px;}
   }
 
   .sheet-actions{margin-top:26px; display:flex; flex-wrap:wrap; gap:14px; align-items:center;}
@@ -518,13 +527,22 @@
 var DIR = '作业素材/';
 var MODS = {
   about: { num:'01', name:'个人简介', img:'12f6de95993b201be67c7d5267645f42.jpg',
-    desc:'个人背景、方向与核心能力，以及数字名片入口。',
+    desc:'个人背景、学业表现、学习经历与能力爱好，以及数字名片入口。',
     html:'<div class="about-hero">' +
            '<div class="about-fx" id="aboutFx" aria-hidden="true"></div>' +
            '<figure class="about-portrait"><img src="作业素材/portrait.jpg" alt="在庭院木窗前的个人照片" loading="lazy"><figcaption>ENFP · 数字经济</figcaption></figure>' +
-           '<div class="about-intro"><p class="b-title">关于我</p><p class="b-text">武汉理工大学数字经济专业在读。平时喜欢做手工、看电视剧、听音乐、吃面包、吃各种好吃的。MBTI 是 ENFP，很喜欢和别人聊天交流。</p></div>' +
+           '<div class="about-intro">' +
+             '<p class="b-title">关于我</p>' +
+             '<p class="b-text">武汉理工大学数字经济专业在读，GPA 4.070，专业排名 10/72。喜欢做手工、看电视剧、听音乐、吃面包和各种好吃的，也会弹钢琴。MBTI 是 ENFP，很喜欢和别人聊天交流。</p>' +
+             '<div class="about-stats">' +
+               '<div class="about-stat"><b>4.070</b><span>GPA</span></div>' +
+               '<div class="about-stat"><b>10<span class="stat-slash">/</span>72</b><span>专业排名</span></div>' +
+               '<div class="about-stat"><b>钢琴</b><span>特长</span></div>' +
+             '</div>' +
+           '</div>' +
          '</div>' +
-         '<div class="block"><p class="b-title">能力标签</p><div class="tags"><span>数字经济</span><span>ENFP</span><span>手工</span><span>追剧</span><span>音乐</span><span>美食</span><span>沟通交流</span></div></div>' +
+         '<div class="block"><p class="b-title">学习经历</p><p class="b-text">武汉理工大学 · 数字经济专业（本科在读）</p></div>' +
+         '<div class="block"><p class="b-title">能力与爱好</p><div class="tags"><span>钢琴</span><span>数字经济</span><span>手工</span><span>音乐</span><span>追剧</span><span>美食</span><span>沟通交流</span></div></div>' +
          '<div class="block"><p class="b-title">数字名片</p><p class="b-text">已生成专属个人数字名片，支持一键拨号、邮件直达、vCard 通讯录保存，移动端体验流畅。可直接分享给他人。</p></div>',
     action:'<a class="sheet-btn" href="https://12ti278.github.io/personal-website/" target="_blank" rel="noopener">查看数字名片 <span class="arr">→</span></a>' },
   homework: { num:'02', name:'阶段作业', img:'3e0555ad74af257cc2fdb44bc26ba4a2.jpg',
@@ -663,7 +681,7 @@ function initAboutFx(){
   var host = document.getElementById('aboutFx');
   if (!host){ __aboutFxTries = 0; removeAboutFx(); return; }   // 弹层已关闭
   if (!window.p5){                                 // CDN 可能晚于弹窗动画到达
-    if (__aboutFxTries++ > 50){ __aboutFxTries = 0; return; }  // 约 6s 后放弃
+    if (__aboutFxTries++ > 300){ __aboutFxTries = 0; return; } // 兜底等待约 36s
     clearTimeout(__aboutFxWait);
     __aboutFxWait = setTimeout(initAboutFx, 120);
     return;
@@ -854,7 +872,7 @@ document.addEventListener('keydown', function(e){
 </script>
 
 <!-- ========== p5.js（个人简介微尘效果） ========== -->
-<script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js" onload="if (window.initAboutFx && document.getElementById('aboutFx')) initAboutFx();"></script>
 <script>if (window.p5) p5.disableFriendlyErrors = true;</script>
 
 <!-- ========== Lenis 全局平滑阻尼滚动 ========== -->
