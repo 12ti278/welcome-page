@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人网站 · 迭代记录 | 幻境回廊</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  :root{
+    --bg:#1e241d;
+    --bg-soft:#262c24;
+    --text:#e6e3d4;
+    --text-muted:#99a08c;
+    --vintage:#c9b98a;
+    --ink:#3b382f;
+    --ink-muted:#7c7666;
+    --cream:#f4eee0;
+    --cream-2:#eee6d2;
+    --line:#d9cfa9;
+    --line-soft:#e6ddc4;
+    --green:#6f7d5e;
+    --green-deep:#57634a;
+  }
+
+  body{
+    font-family:"Courier New","Songti SC","STSong","PingFang SC","Microsoft YaHei",monospace;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.8;
+    letter-spacing:.4px;
+    min-height:100vh;
+    padding-bottom:64px;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* 胶片颗粒 + 纸张暗角，与首页一致 */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:9;opacity:.07;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:8;
+    background:radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.42) 100%);
+  }
+
+  /* 顶部栏 */
+  .topbar{
+    position:relative;z-index:2;max-width:1060px;margin:0 auto;
+    padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;
+    font-size:11px;letter-spacing:3px;color:var(--text-muted);
+  }
+  .back{color:var(--vintage);text-decoration:none;transition:opacity .3s;}
+  .back:hover{opacity:.72;}
+  .topbar-title span{color:var(--vintage);margin:0 6px;}
+  .topbar-meta{color:var(--vintage);}
+
+  .wrap{position:relative;z-index:2;max-width:1060px;margin:0 auto;padding:8px 24px 0;}
+
+  /* 米白纸张 */
+  .sheet{
+    position:relative;background:var(--cream);color:var(--ink);
+    border:1px solid var(--line);padding:clamp(28px,5vw,58px);
+    box-shadow:0 32px 72px rgba(0,0,0,.46);
+  }
+  .sheet::before{
+    content:"";position:absolute;inset:10px;border:1px solid var(--line-soft);
+    pointer-events:none;
+  }
+  .corner{position:absolute;width:18px;height:18px;border:1px solid var(--vintage);opacity:.55;pointer-events:none;}
+  .corner.tl{top:12px;left:12px;border-right:0;border-bottom:0;}
+  .corner.tr{top:12px;right:12px;border-left:0;border-bottom:0;}
+  .corner.bl{bottom:12px;left:12px;border-right:0;border-top:0;}
+  .corner.br{bottom:12px;right:12px;border-left:0;border-top:0;}
+  .tape{position:absolute;width:110px;height:28px;background:rgba(201,185,138,.6);
+    box-shadow:0 1px 3px rgba(0,0,0,.25);pointer-events:none;}
+  .tape.t1{top:-14px;left:50%;transform:translateX(-50%) rotate(-3deg);}
+  .tape.t2{bottom:-14px;left:50%;transform:translateX(-50%) rotate(2deg);}
+
+  .eyebrow{display:inline-flex;align-items:center;gap:12px;font-size:11px;letter-spacing:4px;
+    color:var(--vintage);font-weight:700;text-transform:uppercase;}
+  .stamp{display:inline-grid;place-items:center;width:40px;height:40px;border:2px solid var(--vintage);
+    border-radius:50%;color:var(--vintage);font-size:12px;letter-spacing:0;transform:rotate(-6deg);
+    box-shadow:inset 0 0 0 2px var(--cream),inset 0 0 0 3px var(--vintage);}
+
+  h1{font-size:clamp(30px,6vw,50px);font-weight:800;letter-spacing:8px;line-height:1.16;
+    color:var(--ink);margin-top:18px;}
+  .lede{max-width:760px;margin-top:14px;color:var(--ink-muted);font-size:13.5px;line-height:2;}
+  .lede b{color:var(--green-deep);}
+
+  .rule{height:1px;border:0;margin:26px 0;
+    background:linear-gradient(90deg,transparent,var(--line) 15%,var(--line) 85%,transparent);}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px;margin-bottom:32px;}
+  .stats div{border:1px solid var(--line-soft);background:var(--cream-2);padding:12px 14px;}
+  .stats b{display:block;font-size:20px;line-height:1.2;letter-spacing:1px;color:var(--green-deep);font-weight:800;}
+  .stats span{display:block;margin-top:3px;font-size:9.5px;letter-spacing:2px;color:var(--ink-muted);
+    text-transform:uppercase;}
+
+  /* 时间线 */
+  .timeline{position:relative;padding-left:28px;}
+  .timeline::before{content:"";position:absolute;left:7px;top:8px;bottom:8px;width:1px;background:var(--line);}
+  .it{position:relative;padding-bottom:30px;}
+  .it:last-child{padding-bottom:0;}
+  .it::before{content:"";position:absolute;left:-28px;top:10px;width:9px;height:9px;
+    background:var(--cream);border:1px solid var(--vintage);transform:rotate(45deg);}
+  .it-head{display:flex;align-items:flex-start;gap:14px;}
+  .it-num{flex:none;font-family:"Courier New",monospace;font-size:22px;line-height:1.1;
+    font-weight:800;color:var(--vintage);letter-spacing:0;}
+  .it-title h2{font-size:16px;font-weight:800;letter-spacing:2px;color:var(--ink);line-height:1.4;}
+  .it-title p{margin-top:2px;font-family:"Courier New",monospace;font-size:10px;letter-spacing:1.6px;
+    color:var(--ink-muted);}
+  .it-desc{margin-top:8px;font-size:13.5px;line-height:1.95;color:var(--ink);}
+  .commits{margin-top:10px;padding-left:12px;border-left:1px solid var(--line-soft);display:grid;gap:4px;}
+  .commits div{display:flex;gap:10px;font-size:11.5px;line-height:1.7;color:var(--ink-muted);}
+  .commits code{flex:none;font-family:"Courier New",monospace;font-size:11px;color:var(--green-deep);
+    letter-spacing:.4px;}
+  .commits .now{color:var(--vintage);font-weight:700;}
+
+  .foot{margin-top:32px;padding-top:16px;border-top:1px solid var(--line-soft);
+    font-size:10px;letter-spacing:1.6px;color:var(--ink-muted);text-transform:uppercase;}
+
+  @media (max-width:680px){
+    .topbar{padding:16px 16px;}
+    .topbar-title{display:none;}
+    .wrap{padding:6px 12px 0;}
+    .sheet{padding:26px 20px 30px;}
+    .stats{grid-template-columns:1fr 1fr;}
+    .timeline{padding-left:20px;}
+    .it::before{left:-20px;}
+    .it-head{gap:10px;}
+    .commits div{flex-direction:column;gap:0;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="back" href="welcome.html">← 返回幻境回廊</a>
+  <div class="topbar-title">幻境回廊 <span>·</span> WELCOME PAGE</div>
+  <div class="topbar-meta">迭代记录</div>
+</header>
+
+<main class="wrap">
+  <article class="sheet">
+    <span class="corner tl" aria-hidden="true"></span>
+    <span class="corner tr" aria-hidden="true"></span>
+    <span class="corner bl" aria-hidden="true"></span>
+    <span class="corner br" aria-hidden="true"></span>
+    <span class="tape t1" aria-hidden="true"></span>
+    <span class="tape t2" aria-hidden="true"></span>
+
+    <p class="eyebrow"><span class="stamp">05</span> Course Module</p>
+    <h1>迭 代 记 录</h1>
+    <p class="lede">基于 GitHub 仓库 <b>12ti278/welcome-page</b> 的提交记录整理：从欢迎页初版，到 3D 胶带画廊、个人介绍型定位与项目成果扩充，个人网站一共走过 <b>7 个迭代阶段</b>、<b>32 次提交</b>。<br>下面按时间顺序记录每个阶段做了什么、为什么改。</p>
+
+    <hr class="rule">
+
+    <div class="stats">
+      <div><b>7</b><span>迭代阶段</span></div>
+      <div><b>32</b><span>提交总数</span></div>
+      <div><b>2026.10.22</b><span>首次提交</span></div>
+      <div><b>2026.11.05</b><span>本次更新</span></div>
+    </div>
+
+    <div class="timeline">
+
+      <!-- 00 -->
+      <section class="it">
+        <div class="it-head">
+          <span class="it-num">00</span>
+          <div class="it-title">
+            <h2>初版上线</h2>
+            <p>2026.10.22 · 3 次提交</p>
+          </div>
+        </div>
+        <p class="it-desc">欢迎页面、作品集、数字名片三大基础板块成型。作业素材图片同步入库，为后续作品画廊和模块背景准备素材。</p>
+        <div class="commits">
+          <div><code>6418b9f</code><span>Initial commit：欢迎页面 + 作品集 + 数字名片</span></div>
+          <div><code>018fc26</code><span>添加作业素材图片</span></div>
+          <div><code>3d5e9f5</code><span>补充两张缺失的素材图片</span></div>
+        </div>
+      </section>
+
+      <!-- 01 -->
+      <section class="it">
+        <div class="it-head">
+          <span class="it-num">01</span>
+          <div class="it-title">
+            <h2>名片入口与内容补全</h2>
+            <p>2026.10.26 · 6 次提交</p>
+          </div>
+        </div>
+        <p class="it-desc">数字名片新增「我的书斋 · 习惯打卡」入口，个人简介的「查看数字名片」改为直接跳转独立网站，删除废弃的 card.html；作品画廊补充习惯打卡截图。当晚补全学习复盘的 7 大模块、3 大思维转变与行动计划。</p>
+        <div class="commits">
+          <div><code>b3edc5a</code><span>数字名片新增「我的书斋 · 习惯打卡」入口</span></div>
+          <div><code>9312cf5</code><span>个人简介「查看数字名片」改为直接跳转 personal-website</span></div>
+          <div><code>f25d9c8</code><span>删除废弃的 card.html</span></div>
+          <div><code>3486817</code><span>作品画廊添加习惯打卡截图</span></div>
+          <div><code>87ef573</code><span>学习复盘内容补全：7 大模块 / 3 大转变 / 行动计划</span></div>
+          <div><code>408b583</code><span>学习复盘内容同步</span></div>
+        </div>
+      </section>
+
+      <!-- 02 -->
+      <section class="it">
+        <div class="it-head">
+          <span class="it-num">02</span>
+          <div class="it-title">
+            <h2>子页面与内容扩充</h2>
+            <p>2026.10.27 · 6 次提交</p>
+          </div>
+        </div>
+        <p class="it-desc">塔罗项目的过程证据页与迭代记录页上线，先后提供中文文件名和英文文件名两版；首页与欢迎页同步调整模块文案和入口，站点从单页扩展为多页面结构。</p>
+        <div class="commits">
+          <div><code>11c025f</code><span>上传塔罗过程证据与迭代记录页面</span></div>
+          <div><code>55a9164</code><span>欢迎页文案与模块入口微调</span></div>
+          <div><code>e43775b</code><span>补充上传页面文件</span></div>
+          <div><code>500ac9a</code><span>上传英文文件名版本：tarot-evidence / tarot-iterations</span></div>
+          <div><code>0e670e2</code><span>欢迎页结构同步</span></div>
+          <div><code>bcb4574</code><span>首页模块信息同步</span></div>
+        </div>
+      </section>
+
+      <!-- 03 -->
+      <section class="it">
+        <div class="it-head">
+          <span class="it-num">03</span>
+          <div class="it-title">
+            <h2>交互动效与照片简介</h2>
+            <p>2026.11.03 · 4 次提交</p>
+          </div>
+        </div>
+        <p class="it-desc">3D 胶带卷支持屏幕平面内任意角度旋转，修正留痕接缝并加入旋转阻尼；接入 Lenis 平滑滚动。个人简介加入照片、p5.js 纸面微尘与暖光晕，并把文字字体统一回页面既有的 Courier New + 宋体体系。</p>
+        <div class="commits">
+          <div><code>20ec7b5</code><span>胶带卷任意角度旋转；修正留痕接缝与阻尼</span></div>
+          <div><code>a6ffed9</code><span>个人简介改为数字经济 / ENFP；Lenis 平滑滚动；修复拖拽留痕</span></div>
+          <div><code>3243b38</code><span>个人简介加入照片与 p5.js 纸面微尘光晕</span></div>
+          <div><code>07c847a</code><span>简介文字与照片标注回归页面字体体系</span></div>
+        </div>
+      </section>
+
+      <!-- 04 -->
+      <section class="it">
+        <div class="it-head">
+          <span class="it-num">04</span>
+          <div class="it-title">
+            <h2>个人介绍型定位</h2>
+            <p>2026.11.04 · 1 次提交</p>
+          </div>
+        </div>
+        <p class="it-desc">网站明确定位为个人介绍型展示站。个人简介加入 GPA 4.070、专业排名 10/72、钢琴特长，新增学习经历与能力爱好板块，简介正文同步重写。</p>
+        <div class="commits">
+          <div><code>d71fb65</code><span>个人简介加入 GPA 4.070 / 排名 10/72 / 钢琴</span></div>
+        </div>
+      </section>
+
+      <!-- 05 -->
+      <section class="it">
+        <div class="it-head">
+          <span class="it-num">05</span>
+          <div class="it-title">
+            <h2>项目成果与过程证据</h2>
+            <p>2026.11.04 · 11 次提交</p>
+          </div>
+        </div>
+        <p class="it-desc">新增静思博客与全栈问答社区两套「项目成果 + 过程证据」页面，作品画廊补入对应截图和个人主页入口；阶段作业弹层精简为作品画廊概览并更新为 5 件作品；数字名片链接迁移到 digital-card。</p>
+        <div class="commits">
+          <div><code>43bfe1c</code><span>添加静思博客过程证据页面</span></div>
+          <div><code>80553ee</code><span>添加静思博客项目成果页面</span></div>
+          <div><code>def40cb</code><span>作品画廊添加静思博客卡片</span></div>
+          <div><code>dfd4adc</code><span>添加博客预览截图</span></div>
+          <div><code>a2dcfe3</code><span>个人主页添加静思博客项目成果与过程证据入口</span></div>
+          <div><code>d829221</code><span>添加全栈问答社区项目页面与博客截图</span></div>
+          <div><code>86008ba</code><span>完善博客与问答社区的项目成果和过程证据页面</span></div>
+          <div><code>0a21b02</code><span>首页内容同步</span></div>
+          <div><code>8d5a4bf</code><span>阶段作业弹层仅保留作品画廊概览，作品数更新为 5</span></div>
+          <div><code>16d9458</code><span>胶带画廊添加问答社区与幻境回廊博客截图</span></div>
+          <div><code>7b5c75b</code><span>个人简介数字名片链接更新为 digital-card</span></div>
+        </div>
+      </section>
+
+      <!-- 06 -->
+      <section class="it">
+        <div class="it-head">
+          <span class="it-num">06</span>
+          <div class="it-title">
+            <h2>迭代记录改版</h2>
+            <p>2026.11.05 · 本次提交</p>
+          </div>
+        </div>
+        <p class="it-desc">迭代记录从塔罗项目切换为个人网站本身：依据 GitHub 的 31 次历史提交梳理出 7 个阶段，新增独立迭代记录页，并从首页「迭代记录」模块直达。</p>
+        <div class="commits">
+          <div><code class="now">本次提交</code><span>个人网站迭代记录上线：7 个阶段 / 32 次提交</span></div>
+        </div>
+      </section>
+
+    </div>
+
+    <p class="foot">数据来源：GitHub · 12ti278/welcome-page　|　统计截至 2026-11-05</p>
+  </article>
+</main>
+
+</body>
+</html>
