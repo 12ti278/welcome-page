@@ -1048,23 +1048,36 @@ function initWorks3D(){
     return t;
   }
 
-  /* ---------- 胶带卷主体 ---------- */
-  const roll = new THREE.Mesh(
-    new THREE.CylinderGeometry(R, R, W, 96, 1, false),
-    [
-      new THREE.MeshBasicMaterial({ map: makeSideTexture(), side: THREE.DoubleSide, transparent: true }),
-      new THREE.MeshBasicMaterial({ map: makeCapTexture(),  side: THREE.DoubleSide, transparent: true }),
-      new THREE.MeshBasicMaterial({ map: makeCapTexture(),  side: THREE.DoubleSide, transparent: true })
-    ]
-  );
-  rollGroup.add(roll);
+  /* ---------- 胶带卷主体（多圈层叠效果） ---------- */
+  const LAYERS = 4;           // 胶卷圈数
+  const layerRolls = [];      // 所有层（最外层 = 主交互层）
+  for (let li = 0; li < LAYERS; li++){
+    const t = li / (LAYERS - 1);           // 0 = 最外, 1 = 最内
+    const rL = R * (1 - t * 0.22);         // 半径逐层缩小
+    const wL = W * (1 - t * 0.12);         // 宽度逐层收窄（内圈更短，卷得更紧）
+    const sideTex = (li === 0) ? makeSideTexture() : makeKraftTapeTexture();
+    const rollL = new THREE.Mesh(
+      new THREE.CylinderGeometry(rL, rL, wL, li === 0 ? 96 : 48, 1, false),
+      [
+        new THREE.MeshBasicMaterial({ map: sideTex, side: THREE.DoubleSide, transparent: true }),
+        new THREE.MeshBasicMaterial({ map: makeCapTexture(),  side: THREE.DoubleSide, transparent: true, opacity: 0.85 }),
+        new THREE.MeshBasicMaterial({ map: makeCapTexture(),  side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+      ]
+    );
+    // 每层沿 Y 轴稍微偏移，形成错落的卷绕感
+    rollL.position.y = (li - (LAYERS - 1) / 2) * 0.02;
+    rollGroup.add(rollL);
+    layerRolls.push(rollL);
+  }
+  const roll = layerRolls[0];   // 最外层 = 主交互引用
 
-  // 中间镂空纸芯管（开口圆柱，内壁可见 = 镂空）
+  // 中间镂空纸芯管（挂在最内层，宽度与最内层匹配）
+  const coreW = W * (1 - 1 * 0.12);
   const core = new THREE.Mesh(
-    new THREE.CylinderGeometry(CORE_R, CORE_R, W, 64, 1, true),
+    new THREE.CylinderGeometry(CORE_R, CORE_R, coreW, 64, 1, true),
     new THREE.MeshBasicMaterial({ map: makeCoreTexture(), side: THREE.DoubleSide })
   );
-  roll.add(core);
+  layerRolls[LAYERS - 1].add(core);
 
   /* ---------- 变化影子：跟随胶带、随自转/拖拽/轨道而变 ---------- */
   const shadowTex = (function makeShadowTexture(){
@@ -1365,7 +1378,11 @@ function initWorks3D(){
 
     if (autoSpin) spinTarget += dt * 0.21;
     spin += (spinTarget - spin) * kSpin;
-    roll.rotation.y = spin;
+    // 所有层一起自转，内圈稍微快一点（真实卷绕感）
+    for (let li = 0; li < layerRolls.length; li++){
+      const speedMult = 1 + li * 0.08;   // 内圈转速略快
+      layerRolls[li].rotation.y = spin * speedMult;
+    }
 
     const rx = orbitMode ? 0 : rollTarget.x;
     const ry = orbitMode ? 0 : rollTarget.y;
