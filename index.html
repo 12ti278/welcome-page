@@ -81,6 +81,12 @@
     50%{transform:scale(1.075) translate3d(.8%, -.6%, 0);}
     100%{transform:scale(1.04) translate3d(-.5%, -1%, 0);}
   }
+  /* 首页叶影风动：canvas 按竖条重绘背景，鼠标带动局部风场 */
+  .wind-fx{
+    position:fixed; inset:0; z-index:-1;
+    width:100%; height:100%; pointer-events:none; display:block;
+  }
+  .wind-on .bg-art{animation:none;}
   /* 首页 p5 微尘层：固定在背景之上、内容之下 */
   .home-fx{
     position:fixed !important; inset:0; z-index:-1;
@@ -383,6 +389,8 @@
     background:rgba(201,185,138,.6); box-shadow:0 1px 3px rgba(0,0,0,.25);}
   .sheet-tape.t1{top:-14px; left:50%; transform:translateX(-50%) rotate(-3deg);}
   .sheet-tape.t2{bottom:-14px; left:50%; transform:translateX(-50%) rotate(2deg);}
+  /* 底部胶带在可滚动弹层里会随内容上移压住文字，隐藏 */
+  .modal-sheet .sheet-tape.t2{display:none;}
 
   .sheet-eyebrow{display:inline-flex; align-items:center; gap:10px; font-size:11px; letter-spacing:4px;
     color:var(--vintage); font-weight:700; text-transform:uppercase;}
@@ -562,6 +570,26 @@
   .about-stat > span{display:block; margin-top:2px; font-size:9.5px; letter-spacing:2px;
     color:var(--ink-muted); font-family:"Courier New",monospace;}
 
+  /* 个人简介：夜百合照片带 */
+  .about-lily{position:relative; margin:2px 0 18px; border:1px solid var(--line);
+    background:#12160f; overflow:hidden;}
+  .about-lily img{display:block; width:100%; height:196px; object-fit:cover; object-position:center 42%;
+    filter:saturate(.92) contrast(1.03); transition:transform 1.1s cubic-bezier(.2,.8,.2,1);}
+  .about-lily:hover img{transform:scale(1.035);}
+  .about-lily::after{content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(180deg, rgba(9,13,8,.02) 30%, rgba(9,13,8,.82) 100%);}
+  .about-lily figcaption{position:absolute; left:18px; right:18px; bottom:14px; z-index:1;
+    display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; color:var(--cream);}
+  .about-lily figcaption b{font-size:14px; letter-spacing:4px; color:#f4eee0;}
+  .about-lily figcaption span{font-size:11px; letter-spacing:2px; color:rgba(230,227,212,.75);}
+  .about-lily .lily-tag{position:absolute; top:12px; right:14px; z-index:1;
+    font-family:"Courier New",monospace; font-size:9px; letter-spacing:3px; color:rgba(230,227,212,.8);
+    border:1px solid rgba(201,185,138,.55); padding:3px 8px; background:rgba(9,13,8,.35);}
+  @media (max-width:560px){
+    .about-lily img{height:160px;}
+    .about-lily figcaption{left:14px; right:14px; bottom:11px;}
+  }
+
   /* 关于我：放大成主标题，下划线从左往右画出来 */
   .about-intro .about-heading{
     display:inline-block; margin:0 0 12px;
@@ -634,6 +662,7 @@
 <body>
 
 <div class="bg-art" aria-hidden="true"></div>
+<canvas class="wind-fx" id="windFx" aria-hidden="true"></canvas>
 <div class="glow" aria-hidden="true"></div>
 
 <main class="stage">
@@ -738,6 +767,11 @@ var MODS = {
              '</div>' +
            '</div>' +
          '</div>' +
+         '<figure class="about-lily">' +
+           '<img src="assets/lilies.webp" alt="深色背景中的百合花" loading="lazy">' +
+           '<span class="lily-tag" aria-hidden="true">LILIES · No.02</span>' +
+           '<figcaption><b>夜百合</b><span>在暗处，也能安静地开花。</span></figcaption>' +
+         '</figure>' +
          '<div class="block"><p class="b-title">学习经历</p><p class="b-text">武汉理工大学 · 数字经济专业（本科在读）</p></div>' +
          '<div class="block"><p class="b-title">能力与爱好<span class="b-hint">悬停 / 轻触标签看照片</span></p><div class="tags tags-hobby">' +
            '<span class="hobby-chip" style="--i:0">钢琴</span><span class="hobby-chip" style="--i:1">数字经济</span><span class="hobby-chip" style="--i:2">手工</span><span class="hobby-chip" style="--i:3">音乐</span>' +
@@ -765,13 +799,15 @@ var MODS = {
          '<div class="block"><p class="b-title">🕰️ 时光商社 · 过程证据</p><p class="b-text">中古商城项目从需求梳理、信息架构、视觉风格到页面落地与问题解决的完整过程记录。</p><div class="tags"><span>需求研究</span><span>视觉设计</span><span>页面实现</span><span>问题解决</span></div><a class="entry" href="https://share.traecontent.cn/artifact/ZRF1QSCK57TEC8" target="_blank" rel="noopener">查看完整过程证据 →</a></div>' },
   iterations: { num:'05', name:'迭代记录', img:'6fa9a6ad8446f1d4856543adf430ee73.jpg',
     desc:'依据 GitHub 提交记录，回看个人网站从初版到现在的迭代过程。',
-    html:'<div class="block"><p class="b-title">🌿 幻境回廊 · 个人网站迭代记录</p><p class="b-text">基于 GitHub 仓库 <b>12ti278/welcome-page</b> 的真实提交记录整理：从初版上线、多页面扩充、交互动效，到个人介绍型定位与项目成果补全，共 <b>7 个迭代阶段</b>、<b>32 次提交</b>。每一次改动都标注了日期、提交哈希与改动原因。</p><div class="tags"><span>7 个阶段</span><span>32 次提交</span><span>GitHub 记录</span><span>持续迭代</span></div><a class="entry" href="site-iterations.html">查看完整迭代记录 →</a></div>' +
+    html:'<div class="block"><p class="b-title">🌿 幻境回廊 · 个人网站迭代记录</p><p class="b-text">基于 GitHub 仓库 <b>12ti278/welcome-page</b> 的真实提交记录整理：从初版上线、多页面扩充、交互动效，到个人介绍型定位、项目成果补全与 3D 胶带画廊，共 <b>9 个迭代阶段</b>、<b>54 次提交</b>。每一次改动都标注了日期、提交哈希与改动原因。</p><div class="tags"><span>9 个阶段</span><span>54 次提交</span><span>GitHub 记录</span><span>持续迭代</span></div><a class="entry" href="site-iterations.html">查看完整迭代记录 →</a></div>' +
          '<div class="block"><div class="tl">' +
          '<div class="tl-item"><p class="b-title">2026.10.22 · 初版上线</p><p class="b-text">欢迎页、作品集、数字名片三大板块成型，作业素材入库。</p></div>' +
          '<div class="tl-item"><p class="b-title">2026.10.27 · 子页面扩充</p><p class="b-text">过程证据与迭代记录页上线，站点从单页扩展为多页面结构。</p></div>' +
          '<div class="tl-item"><p class="b-title">2026.11.03 · 动效与照片简介</p><p class="b-text">胶带任意角度旋转、Lenis 平滑滚动，简介加入照片与 p5.js 微尘光晕。</p></div>' +
          '<div class="tl-item"><p class="b-title">2026.11.04 · 个人介绍型定位</p><p class="b-text">加入 GPA 4.070、排名 10/72、钢琴特长，并补全项目成果与过程证据。</p></div>' +
-         '<div class="tl-item"><p class="b-title">2026.11.05 · 本轮改版</p><p class="b-text">迭代记录改为个人网站本身，按提交历史梳理为 7 个阶段。</p></div>' +
+         '<div class="tl-item"><p class="b-title">2026.11.05 · 迭代记录改版</p><p class="b-text">迭代记录改为个人网站本身，并完成胶带多圈旋转与留痕曲线的多轮打磨。</p></div>' +
+         '<div class="tl-item"><p class="b-title">2026.11.06 · 商城与动效</p><p class="b-text">商城项目加入胶带与项目成果/过程证据；首页换叶影背景与动态微尘；学习复盘改为卡片墙。</p></div>' +
+         '<div class="tl-item"><p class="b-title">2026.11.06 · 风与花（本次）</p><p class="b-text">首页枝叶随鼠标风动，个人简介融入夜百合照片，迭代记录页改用花园壁纸并重排为 9 个阶段。</p></div>' +
          '</div></div>' },
   review: { num:'06', name:'学习复盘', img:'d31aa0ed5bb7239c9398c0404c2a69bd.jpg',
     desc:'Vibe Coding 全课程学习复盘：七大模块、三大转变、未来行动计划。',
@@ -969,6 +1005,119 @@ function initHomeBg(){
   });
 }
 initHomeBg();
+
+/* 首页风动：把叶影背景按竖条重绘，鼠标掠过时枝叶像被风吹开
+   做法：按列切分背景图，逐列做很小的水平/垂直位移；位移由
+   缓慢的环境风 + 指针附近的阵风组成，越靠近叶框边缘越明显。 */
+var __wind = null;
+function initWindFx(){
+  if (__wind) return;
+  var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (reduce) return;
+  var canvas = document.getElementById('windFx');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  var W = 0, H = 0, dpr = 1, raf = null, last = 0, t0 = 0;
+  var px = 0.5, py = 0.5;        // 指针位置（0..1）
+  var sx = 0, sy = 0;            // 缓动后的指针偏移
+  var gust = 0;                  // 阵风强度，快速移动时升高后衰减
+  var lastX = 0, lastY = 0, lastT = 0, hasMove = false;
+  var N = 64;
+
+  function resize(){
+    W = window.innerWidth; H = window.innerHeight;
+    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    canvas.width = Math.max(1, Math.round(W * dpr));
+    canvas.height = Math.max(1, Math.round(H * dpr));
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    N = W < 760 ? 40 : 64;
+  }
+
+  function frame(t){
+    raf = requestAnimationFrame(frame);
+    if (t - last < 33) return;                 // 约 30fps，省电
+    last = t;
+    if (!imgReady) return;
+
+    var time = (t - t0) / 1000;
+    sx += (px - 0.5 - sx) * 0.055;
+    sy += (py - 0.5 - sy) * 0.055;
+    gust *= 0.945;
+
+    ctx.fillStyle = '#170a0e';
+    ctx.fillRect(0, 0, W, H);
+
+    /* 与 CSS Ken Burns 类似的缓慢推拉 */
+    var zoom = 1.065 + 0.012 * Math.sin(time * 0.12);
+    var scale = Math.max(W / im.naturalWidth, H / im.naturalHeight) * zoom;
+    var iw = im.naturalWidth * scale;
+    var ih = im.naturalHeight * scale;
+    var ox = (W - iw) / 2 + Math.sin(time * 0.07) * W * 0.006;
+    var oy = (H - ih) / 2 + Math.cos(time * 0.06) * H * 0.006;
+    var colW = iw / N;
+
+    for (var i = 0; i < N; i++){
+      var nx = (i + 0.5) / N;
+      var edge = 0.24 + 0.76 * Math.pow(Math.abs(nx - 0.5) * 2, 1.3);
+      var ambient = Math.sin(time * 0.8 + nx * 7.2) * 3.2 + Math.sin(time * 1.35 + nx * 13.7) * 1.1;
+      var dd = nx - px;
+      var infl = dd * Math.exp(-dd * dd * 20) * gust * 150;  // 平滑的阵风场，避免在指针处错开
+      var disp = ambient * edge + sx * 11 * edge + infl;
+      var vert = Math.sin(time * 0.9 + nx * 5.6) * 2.2 * edge + sy * 4 * edge;
+
+      var srcX = im.naturalWidth * i / N;
+      var srcW = Math.min(im.naturalWidth - srcX, im.naturalWidth / N + 2);
+      ctx.drawImage(im, srcX, 0, srcW, im.naturalHeight,
+        ox + i * colW + disp, oy + vert, colW + 2.5, ih);
+    }
+  }
+
+  var im = new Image();
+  var imgReady = false;
+  im.onload = function(){
+    if (!im.naturalWidth) return;
+    imgReady = true;
+    document.body.classList.add('wind-on');
+    resize();
+    t0 = performance.now();
+    last = 0;
+    raf = requestAnimationFrame(frame);
+    __wind = canvas;
+  };
+  im.src = 'assets/mint-silence-bg.webp';
+
+  window.addEventListener('pointermove', function(e){
+    if (!imgReady) return;
+    var now = performance.now();
+    var nx = e.clientX / Math.max(1, W);
+    var ny = e.clientY / Math.max(1, H);
+    if (hasMove){
+      var dt = Math.max(16, now - lastT);
+      var v = Math.hypot(e.clientX - lastX, e.clientY - lastY) / dt;  // px/ms
+      gust = Math.max(gust, Math.min(1, v / 2.4));
+    } else {
+      hasMove = true;
+    }
+    lastX = e.clientX; lastY = e.clientY; lastT = now;
+    px = nx; py = ny;
+  }, { passive: true });
+
+  window.addEventListener('resize', resize);
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden){
+      if (raf){ cancelAnimationFrame(raf); raf = null; }
+    } else if (!raf && imgReady){
+      last = 0;
+      raf = requestAnimationFrame(frame);
+    }
+  });
+}
+initWindFx();
+
 function initAboutFx(){
   var host = document.getElementById('aboutFx');
   if (!host){ __aboutFxTries = 0; removeAboutFx(); return; }   // 弹层已关闭

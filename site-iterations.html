@@ -4,15 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>个人网站 · 迭代记录 | 幻境回廊</title>
+<script>document.documentElement.classList.add('js');</script>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
 
   :root{
-    --bg:#1e241d;
-    --bg-soft:#262c24;
+    --bg:#12160f;
+    --bg-soft:#1c2219;
     --text:#e6e3d4;
-    --text-muted:#99a08c;
+    --text-muted:#a0a793;
     --vintage:#c9b98a;
+    --vintage-soft:rgba(201,185,138,.45);
     --ink:#3b382f;
     --ink-muted:#7c7666;
     --cream:#f4eee0;
@@ -23,6 +25,7 @@
     --green-deep:#57634a;
   }
 
+  html{scroll-behavior:smooth;}
   body{
     font-family:"Courier New","Songti SC","STSong","PingFang SC","Microsoft YaHei",monospace;
     background:var(--bg);
@@ -30,14 +33,33 @@
     line-height:1.8;
     letter-spacing:.4px;
     min-height:100vh;
-    padding-bottom:64px;
+    padding-bottom:72px;
     overflow-x:hidden;
     -webkit-font-smoothing:antialiased;
   }
 
+  /* —— 花园壁纸背景：Emberglow 254 —— */
+  .page-bg{
+    position:fixed; inset:0; z-index:-3; pointer-events:none;
+    background:#161a13 url("assets/emberglow-bg.webp") center center / cover no-repeat;
+    transform:scale(1.03);
+    animation:wallDrift 52s ease-in-out infinite alternate;
+    will-change:transform;
+  }
+  @keyframes wallDrift{
+    0%{transform:scale(1.03) translate3d(-.6%, .3%, 0);}
+    100%{transform:scale(1.075) translate3d(.7%, -.5%, 0);}
+  }
+  .page-veil{
+    position:fixed; inset:0; z-index:-2; pointer-events:none;
+    background:
+      linear-gradient(180deg, rgba(11,16,10,.68) 0%, rgba(11,16,10,.40) 42%, rgba(11,16,10,.72) 100%),
+      radial-gradient(ellipse at 50% 30%, transparent 20%, rgba(9,13,8,.42) 100%);
+  }
+
   /* 胶片颗粒 + 纸张暗角，与首页一致 */
   body::before{
-    content:"";position:fixed;inset:0;pointer-events:none;z-index:9;opacity:.07;mix-blend-mode:overlay;
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:9;opacity:.06;mix-blend-mode:overlay;
     background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
   body::after{
@@ -45,101 +67,182 @@
     background:radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.42) 100%);
   }
 
+  /* 顶部阅读进度 */
+  .progress{
+    position:fixed; top:0; left:0; right:0; height:2px; z-index:20;
+    background:linear-gradient(90deg, var(--vintage), #e7d6a5, var(--vintage));
+    transform:scaleX(0); transform-origin:left center;
+    transition:transform .12s linear;
+  }
+
   /* 顶部栏 */
   .topbar{
-    position:relative;z-index:2;max-width:1060px;margin:0 auto;
-    padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;
+    position:relative;z-index:2;max-width:1120px;margin:0 auto;
+    padding:24px 26px;display:flex;align-items:center;justify-content:space-between;gap:16px;
     font-size:11px;letter-spacing:3px;color:var(--text-muted);
   }
-  .back{color:var(--vintage);text-decoration:none;transition:opacity .3s;}
-  .back:hover{opacity:.72;}
+  .back{color:var(--vintage);text-decoration:none;transition:opacity .3s, transform .3s;
+    border-bottom:1px solid rgba(201,185,138,.28); padding-bottom:2px;}
+  .back:hover{opacity:.75;}
   .topbar-title span{color:var(--vintage);margin:0 6px;}
-  .topbar-meta{color:var(--vintage);}
+  .topbar-meta{color:var(--vintage);font-family:"Courier New",monospace;letter-spacing:2px;}
 
-  .wrap{position:relative;z-index:2;max-width:1060px;margin:0 auto;padding:8px 24px 0;}
+  .wrap{position:relative;z-index:2;max-width:1120px;margin:0 auto;padding:8px 26px 0;}
 
   /* 米白纸张 */
   .sheet{
-    position:relative;background:var(--cream);color:var(--ink);
-    border:1px solid var(--line);padding:clamp(28px,5vw,58px);
-    box-shadow:0 32px 72px rgba(0,0,0,.46);
+    position:relative;
+    background:linear-gradient(180deg, #fbf7ec 0%, var(--cream) 38%, #efe7d4 100%);
+    color:var(--ink);
+    border:1px solid var(--line);
+    padding:clamp(30px,5.5vw,64px);
+    box-shadow:0 40px 90px rgba(0,0,0,.55), 0 4px 18px rgba(0,0,0,.28);
   }
   .sheet::before{
     content:"";position:absolute;inset:10px;border:1px solid var(--line-soft);
     pointer-events:none;
   }
-  .corner{position:absolute;width:18px;height:18px;border:1px solid var(--vintage);opacity:.55;pointer-events:none;}
+  .corner{position:absolute;width:18px;height:18px;border:1px solid var(--vintage);opacity:.55;pointer-events:none;z-index:1;}
   .corner.tl{top:12px;left:12px;border-right:0;border-bottom:0;}
   .corner.tr{top:12px;right:12px;border-left:0;border-bottom:0;}
   .corner.bl{bottom:12px;left:12px;border-right:0;border-top:0;}
   .corner.br{bottom:12px;right:12px;border-left:0;border-top:0;}
   .tape{position:absolute;width:110px;height:28px;background:rgba(201,185,138,.6);
-    box-shadow:0 1px 3px rgba(0,0,0,.25);pointer-events:none;}
+    box-shadow:0 1px 3px rgba(0,0,0,.25);pointer-events:none;z-index:1;}
   .tape.t1{top:-14px;left:50%;transform:translateX(-50%) rotate(-3deg);}
   .tape.t2{bottom:-14px;left:50%;transform:translateX(-50%) rotate(2deg);}
 
+  /* 标题区 */
+  .hero{position:relative;}
+  .hero::after{
+    content:"✿"; position:absolute; right:2px; top:-8px;
+    font-family:"Songti SC","STSong",serif; font-size:58px; line-height:1;
+    color:rgba(201,185,138,.34); transform:rotate(12deg); pointer-events:none;
+  }
   .eyebrow{display:inline-flex;align-items:center;gap:12px;font-size:11px;letter-spacing:4px;
     color:var(--vintage);font-weight:700;text-transform:uppercase;}
   .stamp{display:inline-grid;place-items:center;width:40px;height:40px;border:2px solid var(--vintage);
     border-radius:50%;color:var(--vintage);font-size:12px;letter-spacing:0;transform:rotate(-6deg);
     box-shadow:inset 0 0 0 2px var(--cream),inset 0 0 0 3px var(--vintage);}
 
-  h1{font-size:clamp(30px,6vw,50px);font-weight:800;letter-spacing:8px;line-height:1.16;
+  h1{font-size:clamp(32px,6vw,54px);font-weight:800;letter-spacing:10px;line-height:1.16;
     color:var(--ink);margin-top:18px;}
-  .lede{max-width:760px;margin-top:14px;color:var(--ink-muted);font-size:13.5px;line-height:2;}
+  .lede{max-width:780px;margin-top:14px;color:var(--ink-muted);font-size:13.5px;line-height:2;}
   .lede b{color:var(--green-deep);}
+  .hero-note{margin-top:18px;display:flex;align-items:center;gap:12px;
+    font-size:9.5px;letter-spacing:2.4px;color:var(--vintage);text-transform:uppercase;}
+  .hero-note::before{content:"";width:34px;height:1px;background:var(--vintage);opacity:.6;}
 
-  .rule{height:1px;border:0;margin:26px 0;
+  .rule{height:1px;border:0;margin:28px 0;
     background:linear-gradient(90deg,transparent,var(--line) 15%,var(--line) 85%,transparent);}
 
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px;margin-bottom:32px;}
-  .stats div{border:1px solid var(--line-soft);background:var(--cream-2);padding:12px 14px;}
-  .stats b{display:block;font-size:20px;line-height:1.2;letter-spacing:1px;color:var(--green-deep);font-weight:800;}
+  /* 数据 */
+  .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:34px;}
+  .stats div{position:relative;border:1px solid var(--line-soft);background:rgba(255,255,255,.4);
+    padding:14px 16px 13px;transition:transform .3s, border-color .3s, box-shadow .3s;}
+  .stats div::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--vintage);opacity:.45;}
+  .stats div:hover{transform:translateY(-3px);border-color:var(--line);box-shadow:0 10px 20px rgba(59,56,47,.1);}
+  .stats b{display:block;font-size:22px;line-height:1.2;letter-spacing:1px;color:var(--green-deep);font-weight:800;
+    font-family:"Courier New",monospace;}
   .stats span{display:block;margin-top:3px;font-size:9.5px;letter-spacing:2px;color:var(--ink-muted);
     text-transform:uppercase;}
+  .stats .is-accent{background:linear-gradient(180deg,#fbf6e8,var(--cream-2));border-color:var(--line);}
+  .stats .is-accent b{color:var(--vintage);}
 
   /* 时间线 */
-  .timeline{position:relative;padding-left:28px;}
-  .timeline::before{content:"";position:absolute;left:7px;top:8px;bottom:8px;width:1px;background:var(--line);}
-  .it{position:relative;padding-bottom:30px;}
-  .it:last-child{padding-bottom:0;}
-  .it::before{content:"";position:absolute;left:-28px;top:10px;width:9px;height:9px;
-    background:var(--cream);border:1px solid var(--vintage);transform:rotate(45deg);}
+  .timeline{position:relative;padding-left:34px;}
+  .timeline::before{content:"";position:absolute;left:8px;top:10px;bottom:10px;width:1px;
+    background:linear-gradient(180deg,var(--line),rgba(217,207,169,.22));}
+  .it{
+    position:relative;margin-bottom:14px;padding:20px 22px 18px;
+    background:rgba(255,255,255,.34);border:1px solid var(--line-soft);
+    transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s, border-color .35s, background-color .35s;
+  }
+  .it::before{content:"";position:absolute;left:-30px;top:25px;width:9px;height:9px;
+    background:var(--cream);border:1px solid var(--vintage);transform:rotate(45deg);z-index:1;}
+  .it:hover{transform:translateY(-3px);border-color:var(--line);background:rgba(255,255,255,.5);
+    box-shadow:0 14px 28px rgba(59,56,47,.12);}
+  .it.is-now{background:linear-gradient(180deg,#fbf7ea 0%,#f0e8d4 100%);border-color:var(--vintage);
+    box-shadow:0 12px 26px rgba(59,56,47,.12);}
+  .it.is-now::after{content:"NOW";position:absolute;top:-10px;right:16px;
+    font-family:"Courier New",monospace;font-size:9px;letter-spacing:2px;color:var(--cream);
+    background:var(--vintage);padding:2px 8px;}
   .it-head{display:flex;align-items:flex-start;gap:14px;}
-  .it-num{flex:none;font-family:"Courier New",monospace;font-size:22px;line-height:1.1;
+  .it-num{flex:none;font-family:"Courier New",monospace;font-size:23px;line-height:1.12;
     font-weight:800;color:var(--vintage);letter-spacing:0;}
   .it-title h2{font-size:16px;font-weight:800;letter-spacing:2px;color:var(--ink);line-height:1.4;}
-  .it-title p{margin-top:2px;font-family:"Courier New",monospace;font-size:10px;letter-spacing:1.6px;
+  .it-title p{margin-top:3px;font-family:"Courier New",monospace;font-size:10px;letter-spacing:1.6px;
     color:var(--ink-muted);}
-  .it-desc{margin-top:8px;font-size:13.5px;line-height:1.95;color:var(--ink);}
-  .commits{margin-top:10px;padding-left:12px;border-left:1px solid var(--line-soft);display:grid;gap:4px;}
-  .commits div{display:flex;gap:10px;font-size:11.5px;line-height:1.7;color:var(--ink-muted);}
-  .commits code{flex:none;font-family:"Courier New",monospace;font-size:11px;color:var(--green-deep);
-    letter-spacing:.4px;}
+  .it-desc{margin-top:10px;font-size:13.5px;line-height:1.95;color:var(--ink);}
+  .commits{margin-top:12px;display:grid;gap:2px;}
+  .commits div{display:flex;align-items:flex-start;gap:10px;font-size:12px;line-height:1.7;
+    color:var(--ink-muted);padding:4px 0;border-bottom:1px dashed rgba(217,207,169,.42);}
+  .commits div:last-child{border-bottom:0;padding-bottom:0;}
+  .commits code{flex:none;font-family:"Courier New",monospace;font-size:10.5px;color:var(--green-deep);
+    letter-spacing:.4px;background:rgba(201,185,138,.15);border:1px solid rgba(217,207,169,.62);
+    padding:1px 6px;margin-top:1px;}
   .commits .now{color:var(--vintage);font-weight:700;}
 
-  .foot{margin-top:32px;padding-top:16px;border-top:1px solid var(--line-soft);
+  /* 滚动显现：仅在有 JS 时启用，避免无脚本时内容不可见 */
+  html.js .it{opacity:0;transform:translateY(16px);}
+  html.js .it.is-in{opacity:1;transform:none;
+    transition:opacity .62s ease, transform .62s cubic-bezier(.2,.8,.2,1),
+      box-shadow .35s, border-color .35s, background-color .35s;}
+  html.js .it.is-in:hover{transform:translateY(-3px);}
+
+  .foot{margin-top:34px;padding-top:16px;border-top:1px solid var(--line-soft);
+    display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
     font-size:10px;letter-spacing:1.6px;color:var(--ink-muted);text-transform:uppercase;}
+  .foot .mark{color:var(--vintage);font-family:"Courier New",monospace;letter-spacing:2px;}
+
+  /* 回到顶部 */
+  .to-top{
+    position:fixed;right:26px;bottom:26px;z-index:12;width:42px;height:42px;border-radius:50%;
+    border:1px solid rgba(201,185,138,.5);background:rgba(20,26,19,.72);color:var(--vintage);
+    font-size:17px;line-height:1;cursor:pointer;opacity:0;pointer-events:none;
+    transition:opacity .3s, transform .3s, background-color .3s;
+    backdrop-filter:blur(6px);
+  }
+  .to-top.show{opacity:1;pointer-events:auto;}
+  .to-top:hover{background:rgba(201,185,138,.18);transform:translateY(-3px);}
 
   @media (max-width:680px){
-    .topbar{padding:16px 16px;}
+    .topbar{padding:18px 16px;}
     .topbar-title{display:none;}
     .wrap{padding:6px 12px 0;}
-    .sheet{padding:26px 20px 30px;}
+    .sheet{padding:28px 20px 32px;}
+    .hero::after{font-size:40px;top:0;right:0;}
+    h1{letter-spacing:6px;}
     .stats{grid-template-columns:1fr 1fr;}
-    .timeline{padding-left:20px;}
-    .it::before{left:-20px;}
+    .timeline{padding-left:22px;}
+    .timeline::before{left:4px;}
+    .it{padding:16px 15px 15px;}
+    .it::before{left:-22px;top:21px;}
     .it-head{gap:10px;}
-    .commits div{flex-direction:column;gap:0;}
+    .it-num{font-size:19px;}
+    .commits div{flex-direction:column;gap:2px;}
+    .foot{flex-direction:column;}
+    .to-top{right:16px;bottom:16px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    .page-bg{animation:none;}
+    html.js .it{opacity:1;transform:none;}
+    .it, .stats div, .to-top{transition:none;}
   }
 </style>
 </head>
 <body>
 
+<div class="page-bg" aria-hidden="true"></div>
+<div class="page-veil" aria-hidden="true"></div>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
 <header class="topbar">
   <a class="back" href="welcome.html">← 返回幻境回廊</a>
   <div class="topbar-title">幻境回廊 <span>·</span> WELCOME PAGE</div>
-  <div class="topbar-meta">迭代记录</div>
+  <div class="topbar-meta">迭代记录 · 09</div>
 </header>
 
 <main class="wrap">
@@ -151,17 +254,20 @@
     <span class="tape t1" aria-hidden="true"></span>
     <span class="tape t2" aria-hidden="true"></span>
 
-    <p class="eyebrow"><span class="stamp">05</span> Course Module</p>
-    <h1>迭 代 记 录</h1>
-    <p class="lede">基于 GitHub 仓库 <b>12ti278/welcome-page</b> 的提交记录整理：从欢迎页初版，到 3D 胶带画廊、个人介绍型定位与项目成果扩充，个人网站一共走过 <b>7 个迭代阶段</b>、<b>32 次提交</b>。<br>下面按时间顺序记录每个阶段做了什么、为什么改。</p>
+    <div class="hero">
+      <p class="eyebrow"><span class="stamp">05</span> Course Module · Archive</p>
+      <h1>迭 代 记 录</h1>
+      <p class="lede">基于 GitHub 仓库 <b>12ti278/welcome-page</b> 的提交记录整理：从欢迎页初版，到 3D 胶带画廊、商城项目、动态首页与卡片式学习复盘，个人网站一共走过 <b>9 个迭代阶段</b>、<b>54 次提交</b>。<br>下面按时间顺序记录每个阶段做了什么、为什么改。</p>
+      <p class="hero-note">EMBERGLOW 254 · 每一次改动，都是墙上新开的一朵花</p>
+    </div>
 
     <hr class="rule">
 
     <div class="stats">
-      <div><b>7</b><span>迭代阶段</span></div>
-      <div><b>32</b><span>提交总数</span></div>
+      <div><b>9</b><span>迭代阶段</span></div>
+      <div><b>54</b><span>提交总数</span></div>
       <div><b>2026.10.22</b><span>首次提交</span></div>
-      <div><b>2026.11.05</b><span>本次更新</span></div>
+      <div class="is-accent"><b>2026.11.06</b><span>本次更新</span></div>
     </div>
 
     <div class="timeline">
@@ -286,21 +392,112 @@
         <div class="it-head">
           <span class="it-num">06</span>
           <div class="it-title">
-            <h2>迭代记录改版</h2>
-            <p>2026.11.05 · 本次提交</p>
+            <h2>迭代记录改版与胶带实验</h2>
+            <p>2026.11.04 – 11.05 · 10 次提交</p>
           </div>
         </div>
-        <p class="it-desc">迭代记录从塔罗项目切换为个人网站本身：依据 GitHub 的 31 次历史提交梳理出 7 个阶段，新增独立迭代记录页，并从首页「迭代记录」模块直达。</p>
+        <p class="it-desc">迭代记录从塔罗项目切换到个人网站本身：依据历史提交梳理出 7 个阶段，并上线独立迭代记录页。3D 胶带卷改为四层多圈、支持任意角度旋转；商城项目页面做了一轮实验后回退，胶带留痕改为可调角度的直线，为下一阶段的曲线铺贴做准备。</p>
         <div class="commits">
-          <div><code class="now">本次提交</code><span>个人网站迭代记录上线：7 个阶段 / 32 次提交</span></div>
+          <div><code>0f54c53</code><span>迭代记录改为个人网站迭代记录（基于 GitHub 提交历史）</span></div>
+          <div><code>a5e9f63</code><span>更新博客和问答社区真实截图，问答社区跳转公开线上地址</span></div>
+          <div><code>cc28d64</code><span>博客网站跳转地址更新为 jingsi-blog.netlify.app</span></div>
+          <div><code>3cf68e7</code><span>胶带卷改为 4 层多圈效果，更新博客和问答社区跳转地址</span></div>
+          <div><code>9a63c4d</code><span>尝试商城项目页面（vintage mercantile）</span></div>
+          <div><code>02b9291</code><span>回退到胶带 4 层多圈版本</span></div>
+          <div><code>3128adb</code><span>删除商城实验页面：mall-evidence</span></div>
+          <div><code>ddf6da0</code><span>删除商城实验页面：mall-homework</span></div>
+          <div><code>09fb056</code><span>删除商城实验页面：mall-project</span></div>
+          <div><code>5573b8b</code><span>阶段作业 3D 画廊对齐项目链接，胶带留痕改为可调角度的直线</span></div>
+        </div>
+      </section>
+
+      <!-- 07 -->
+      <section class="it">
+        <div class="it-head">
+          <span class="it-num">07</span>
+          <div class="it-title">
+            <h2>商城入廊 · 主视觉焕新</h2>
+            <p>2026.11.06 · 12 次提交</p>
+          </div>
+        </div>
+        <p class="it-desc">商城项目正式加入 3D 胶带与项目成果 / 过程证据；胶带留痕改为首尾相接的连续曲线，点击按 UV 命中对应作品。首页主视觉换成 Mint Silence 叶影背景，加入缓慢推拉与暖金微尘；个人简介补上悬停动效、数字滚动与纸屑粒子；学习复盘改为 16 张卡片 + p5 微尘。</p>
+        <div class="commits">
+          <div><code>c3875c0</code><span>index.html 恢复至 3cf68e7 版本，准备新一轮改版</span></div>
+          <div><code>4d9ab6c</code><span>胶带留痕改为完整贴纸首尾相接，点击按命中 UV 打开对应作品</span></div>
+          <div><code>720dcd2</code><span>胶带留痕改为沿拖拽轨迹连续铺贴的曲线</span></div>
+          <div><code>a68ac23</code><span>商城项目加入作品集</span></div>
+          <div><code>8def26c</code><span>弯曲处贴纸随切线转开，外弯轮廓按曲率放大</span></div>
+          <div><code>d1a1f2d</code><span>简介「能力与爱好」悬停动效，标签弹起并展示照片</span></div>
+          <div><code>1258fd9</code><span>简介「关于我」放大 + GPA / 排名滚动 + p5 纸屑粒子</span></div>
+          <div><code>f8947a8</code><span>商城作品上胶带 + 手绘胶带边缘平滑 + 主视觉背景焕新</span></div>
+          <div><code>08061bc</code><span>新背景下提升首页文字可读性</span></div>
+          <div><code>09c4563</code><span>商城项目补全 + 首页动态背景</span></div>
+          <div><code>20c35d7</code><span>首页文字可读性微调</span></div>
+          <div><code>ffbc503</code><span>学习复盘改为卡片墙 + p5.js 微尘动效</span></div>
+        </div>
+      </section>
+
+      <!-- 08 -->
+      <section class="it is-now">
+        <div class="it-head">
+          <span class="it-num">08</span>
+          <div class="it-title">
+            <h2>风与花 · 页面优化</h2>
+            <p>2026.11.06 · 1 次提交</p>
+          </div>
+        </div>
+        <p class="it-desc">首页叶影背景加入鼠标风动：背景按竖列重绘，指针掠过时枝叶像被风吹开，边缘的叶片摆动更明显。个人简介融入夜百合照片，补一段安静的画面。迭代记录页换用 Emberglow 花园壁纸，重新排版为 9 个阶段，并加入滚动显现与阅读进度。</p>
+        <div class="commits">
+          <div><code class="now">本次提交</code><span>首页风动 + 简介夜百合 + 迭代记录页改版</span></div>
         </div>
       </section>
 
     </div>
 
-    <p class="foot">数据来源：GitHub · 12ti278/welcome-page　|　统计截至 2026-11-05</p>
+    <p class="foot">
+      <span>数据来源：GitHub · 12ti278/welcome-page　|　统计截至 2026-11-06</span>
+      <span class="mark">EMBERGLOW 254 · ARCHIVE</span>
+    </p>
   </article>
 </main>
+
+<button class="to-top" id="toTop" type="button" aria-label="回到顶部">↑</button>
+
+<script>
+(function(){
+  var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var items = Array.prototype.slice.call(document.querySelectorAll('.it'));
+
+  if (!reduce && 'IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting){
+          en.target.classList.add('is-in');
+          io.unobserve(en.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    items.forEach(function(el){ io.observe(el); });
+  } else {
+    items.forEach(function(el){ el.classList.add('is-in'); });
+  }
+
+  var bar = document.getElementById('progress');
+  var top = document.getElementById('toTop');
+  function onScroll(){
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    var p = max > 0 ? window.scrollY / max : 0;
+    bar.style.transform = 'scaleX(' + Math.max(0, Math.min(1, p)).toFixed(4) + ')';
+    top.classList.toggle('show', window.scrollY > 420);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  top.addEventListener('click', function(){
+    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+  });
+})();
+</script>
 
 </body>
 </html>
