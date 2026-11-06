@@ -558,7 +558,7 @@
   </div>
   <div class="works-tape-hint">
     <span class="hud-chip" id="hudLoad">截图 <b>–</b>/3</span>
-    <span class="hud-chip">拖拽胶带 · 曲线留痕</span>
+    <span class="hud-chip">点击贴纸打开 · 拖拽留痕</span>
     <span class="hud-chip" id="hudOrbit">Orbit <b>Off</b> [Tab]</span>
     <span class="hud-chip">Rewind [Space]</span>
     <span class="hud-chip">FPS <b id="hudFps">0</b></span>
@@ -1479,8 +1479,8 @@ function initWorks3D(){
       drawTrailCard(g, c.part, at.x, at.y, at.ang, scale);
       hits.push({ x: at.x, y: at.y, ang: at.ang, w: c.w, h: cardH, pi: c.pi });
     }
-    // 只记录已落笔的主画布，实时预览层不覆盖
-    if (g === trailCtx) trailCardHits = hits;
+    // 只记录已落笔的主画布；多笔留痕的贴纸都要能点，追加而不是覆盖
+    if (g === trailCtx) trailCardHits = trailCardHits.concat(hits);
   }
 
   // 屏幕坐标命中已落笔胶带上的截图，返回对应的作品序号
@@ -1505,10 +1505,19 @@ function initWorks3D(){
     return -1;
   }
 
+  // 新标签打开作品；若被弹窗拦截（部分内置浏览器），退回当前页跳转，保证一定有线可走
+  function openWorkUrl(url){
+    if (!url) return;
+    let win = null;
+    try { win = window.open(url, '_blank'); } catch(_){ win = null; }
+    if (win) { try { win.opener = null; } catch(_){} }
+    else location.href = url;
+  }
+
   function openTrailCardAt(clientX, clientY){
     const idx = trailCardAt(clientX, clientY);
     if (idx >= 0 && WORKS[idx]){
-      window.open(WORKS[idx].url, '_blank');
+      openWorkUrl(WORKS[idx].url);
       return true;
     }
     return false;
@@ -1680,8 +1689,10 @@ function initWorks3D(){
   }
 
   const raycaster = new THREE.Raycaster();
-  let dragging = false, downX = 0, downY = 0, startX = 0, startY = 0;
+  let dragging = false, dragActive = false, downX = 0, downY = 0, startX = 0, startY = 0;
   let rotatingRoll = false;
+  // 点击与拖拽的分界：手指/鼠标按下到抬起常有几像素抖动，阈值太小会把点击误判成拖拽
+  const CLICK_SLOP_MOUSE = 10, CLICK_SLOP_TOUCH = 16;
 
   stage.addEventListener('pointermove', function(e){
     const r = canvas.getBoundingClientRect();
@@ -1689,6 +1700,12 @@ function initWorks3D(){
     ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
     ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
     if (dragging){
+      // 按下后先等指针走出点击阈值再开始拖，避免一次点按的轻微抖动把胶带挪走
+      if (!dragActive){
+        const slop = e.pointerType === 'touch' ? CLICK_SLOP_TOUCH : CLICK_SLOP_MOUSE;
+        if (!rotatingRoll && Math.hypot(e.clientX - startX, e.clientY - startY) < slop) return;
+        dragActive = true;
+      }
       const dx = e.clientX - downX, dy = e.clientY - downY;
       downX = e.clientX; downY = e.clientY;
       if (orbitMode){
@@ -1703,12 +1720,18 @@ function initWorks3D(){
         if (raycaster.ray.intersectPlane(rollPlane, _rollHit)) rollTarget.copy(_rollHit);
       }
     } else {
-      // 悬停在胶带截图上时给出可点击提示
-      canvas.style.cursor = trailCardAt(e.clientX, e.clientY) >= 0 ? 'pointer' : '';
+      // 悬停在胶带截图上时给出可点击提示（卷筒侧面的贴纸 + 已落笔胶带上的贴纸）
+      let overWork = trailCardAt(e.clientX, e.clientY) >= 0;
+      if (!overWork){
+        raycaster.setFromCamera(ndc, camera);
+        const hover = raycaster.intersectObject(roll, false);
+        overWork = hover.length > 0 && (!hover[0].face || hover[0].face.materialIndex === 0);
+      }
+      canvas.style.cursor = overWork ? 'pointer' : '';
     }
   });
   stage.addEventListener('pointerdown', function(e){
-    dragging = true; startX = downX = e.clientX; startY = downY = e.clientY;
+    dragging = true; dragActive = false; startX = downX = e.clientX; startY = downY = e.clientY;
     // 默认拖拽 = 移动胶带 + 留痕；按住 Shift 拖拽 = 旋转卷筒（用滚轮也能转）
     rotatingRoll = !orbitMode && e.shiftKey;
     if (!orbitMode && !rotatingRoll) beginTrailDrag(rollGroup.position.x, rollGroup.position.y);
@@ -1740,7 +1763,7 @@ function initWorks3D(){
     for (let i = 0; i < WORKS.length; i++){
       if (workImages[i]){ if (seen === idx){ realIdx = i; break; } seen++; }
     }
-    if (WORKS[realIdx]) window.open(WORKS[realIdx].url, '_blank');
+    if (WORKS[realIdx]) openWorkUrl(WORKS[realIdx].url);
   }
 
   function endDrag(e){
@@ -1750,16 +1773,18 @@ function initWorks3D(){
     canvas.classList.remove('grabbing');
     try{ if (e && e.pointerId != null) stage.releasePointerCapture(e.pointerId); }catch(_){}
     const moved = Math.hypot(e.clientX - startX, e.clientY - startY);
+    const slop = (e && e.pointerType === 'touch') ? CLICK_SLOP_TOUCH : CLICK_SLOP_MOUSE;
+    const isClick = moved < slop;
     if (!wasRotate){
-      if (moved >= 4){
+      if (isClick){
+        cancelTrailDrag();
+      } else {
         updateTrailDrag(rollGroup.position.x, rollGroup.position.y);
         commitTrailDrag();
-      } else {
-        cancelTrailDrag();
       }
     }
     if (wasRotate) return;
-    if (moved >= 4) return;
+    if (!isClick) return;
     const r = canvas.getBoundingClientRect();
     ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
     ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
@@ -1824,7 +1849,7 @@ function initWorks3D(){
     camera.position.copy(camPos);
     camera.lookAt(camLook);
 
-    if (dragging && !orbitMode && !rotatingRoll){
+    if (dragging && dragActive && !orbitMode && !rotatingRoll){
       updateTrailDrag(rollGroup.position.x, rollGroup.position.y);
     }
 
