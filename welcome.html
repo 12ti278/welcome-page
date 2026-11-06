@@ -67,6 +67,12 @@
     background:radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.42) 100%);
   }
 
+  /* 主视觉背景：墨绿叶框（已去掉画面中央文字） */
+  .bg-art{
+    position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:#170a0e url("assets/mint-silence-bg.webp") center center / cover no-repeat;
+  }
+
   /* 慢呼吸的光晕背景 */
   .glow{
     position:fixed; inset:0; z-index:0; pointer-events:none;
@@ -101,7 +107,7 @@
 
   .title{
     font-family:"Courier New",monospace;
-    font-size:clamp(42px, 9vw, 96px);
+    font-size:clamp(50px, 12vw, 132px);
     font-weight:800; letter-spacing:5px; line-height:1.02;
     color:var(--text);
     animation:rise 1s .15s ease both;
@@ -550,6 +556,7 @@
 </head>
 <body>
 
+<div class="bg-art" aria-hidden="true"></div>
 <div class="glow" aria-hidden="true"></div>
 
 <main class="stage">
@@ -665,7 +672,7 @@ var MODS = {
     action:'<a class="sheet-btn" href="https://12ti278.github.io/digital-card/" target="_blank" rel="noopener">查看数字名片 <span class="arr">→</span></a>' },
   homework: { num:'02', name:'阶段作业', img:'3e0555ad74af257cc2fdb44bc26ba4a2.jpg',
     desc:'进入胶带画廊查看全部作业作品。',
-    html:'<div class="block"><p class="b-title">作品画廊</p><p class="b-text">共 5 件作业作品，以 3D 胶带卷形式陈列，可拖拽胶带留痕、切换视角、截图存档。</p></div>',
+    html:'<div class="block"><p class="b-title">作品画廊</p><p class="b-text">共 7 件作业作品，以 3D 胶带卷形式陈列，可拖拽胶带留痕、切换视角、截图存档。</p></div>',
     action:'<a class="sheet-btn" href="总作业1.html#works">打开 3D 胶带画廊 <span class="arr">→</span></a>' },
   projects: { num:'03', name:'项目成果', img:'monet_garden.jpg',
     desc:'放置课程相关项目，含功能说明、技术与项目入口。',

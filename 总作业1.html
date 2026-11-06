@@ -607,11 +607,14 @@ const WORKS = [
 
   { title: "全栈问答社区", url: "https://tourmaline-seahorse-ed5cef.netlify.app", thumb: "assets/qa-preview.jpg", evidence: "qa-community-evidence.html", project: "qa-community-project.html" },
   { title: "幻境回廊 · 个人博客", url: "https://jingsi-blog.netlify.app", thumb: "assets/blog-preview.jpg", evidence: "blog-evidence.html", project: "blog-project.html" },
+  { title: "时光商社 · 中古商城", url: "https://share.traecontent.cn/artifact/A2MECA.VHO0RIZ", thumb: "assets/mall-preview.jpg" },
 ];
 
 const worksOverlay = document.getElementById('worksOverlay');
 const worksCountHome = document.getElementById('worksCountHome');
 if (worksCountHome) worksCountHome.textContent = WORKS.length;
+const hudLoadInit = document.getElementById('hudLoad');
+if (hudLoadInit) hudLoadInit.innerHTML = '截图 <b>–</b>/' + WORKS.length;
 
 /* ---------- 入口卡片扇形缩略图 ---------- */
 (function renderEntryPreview(){
@@ -678,7 +681,7 @@ document.addEventListener('keydown', function(e){
 })();
 
 /* ============================================================
-   预加载三张网页截图
+   预加载全部作品截图
    ============================================================ */
 const workImages = [];
 
@@ -757,7 +760,7 @@ function initWorks3D(){
   const R = 1.2, W = 1.5;           // 胶带更细长：带面收窄、卷体略小
   const CORE_R = R * 0.58;          // 镂空纸芯半径（孔更大）
 
-  /* ---------- 拼接三张截图（小贴纸：缩到胶带中间，四周露出牛皮纸底色） ---------- */
+  /* ---------- 拼接全部截图（小贴纸：缩到胶带中间，四周露出牛皮纸底色） ---------- */
   const STRIP_H = 720;
   const PAD = 46;                 // 贴纸内边距（奶油纸框）
   const GAP = 110;                // 贴纸之间露出的牛皮纸胶带
@@ -850,21 +853,27 @@ function initWorks3D(){
       ox += p.cellW + GAP;
     });
 
-    // 参差不齐的撕边：上下边缘随机撕裂（真实胶带感）
+    // 撕边：低频起伏 + 极轻的毛边，边缘整体顺直，不做锯齿状随机游走
     ctx.globalCompositeOperation = 'destination-out';
     ctx.fillStyle = 'rgba(0,0,0,1)';
     const RAG = 18, RSTEP = 5;
-    let ty = RAG * (0.3 + Math.random() * 0.7);
+    const phA = Math.random() * Math.PI * 2, phB = Math.random() * Math.PI * 2;
+    let ty = RAG * 0.55;
     ctx.beginPath(); ctx.moveTo(0, 0);
     for (let sx = 0; sx <= totalW; sx += RSTEP){
-      ty += (Math.random() - 0.5) * 6; ty = Math.max(1, Math.min(RAG, ty));
+      ty = RAG * 0.55
+         + Math.sin(sx * 0.013 + phA) * 2.2
+         + Math.sin(sx * 0.031 + phA * 1.7) * 0.9
+         + (Math.random() - 0.5) * 0.5;
       ctx.lineTo(sx, ty);
     }
     ctx.lineTo(totalW, 0); ctx.closePath(); ctx.fill();
-    ty = RAG * (0.3 + Math.random() * 0.7);
     ctx.beginPath(); ctx.moveTo(0, STRIP_H);
     for (let sx = 0; sx <= totalW; sx += RSTEP){
-      ty += (Math.random() - 0.5) * 6; ty = Math.max(1, Math.min(RAG, ty));
+      ty = RAG * 0.55
+         + Math.sin(sx * 0.012 + phB) * 2.2
+         + Math.sin(sx * 0.029 + phB * 1.7) * 0.9
+         + (Math.random() - 0.5) * 0.5;
       ctx.lineTo(sx, STRIP_H - ty);
     }
     ctx.lineTo(totalW, STRIP_H); ctx.closePath(); ctx.fill();
@@ -1125,6 +1134,7 @@ function initWorks3D(){
   let trailU = 0;                 // 累计纹理 u（跨拖拽连续，贴纸不会被切断）
   let trailEnd = null;            // 上一笔留痕的终点（保证两笔首尾相接）
   let trailDrag = null;           // 本次拖拽：{ last, startU, segments }
+  let trailCardHits = [];         // 已落笔胶带上贴纸的屏幕位置（点击跳转用）
   const _projV = new THREE.Vector3();
 
   function resizeTrailCanvas(){
@@ -1248,30 +1258,50 @@ function initWorks3D(){
     }
     const cardHalfLen = avgCell * cardScale / 2;
 
+    // 曲率 → 外弯侧额外宽度：先逐点算，再用长窗口高斯平滑，
+    // 弯道处的加宽缓慢鼓起，不会在拐点堆出一个鼓包。
+    const curv = new Float32Array(n);
+    const extra = new Float32Array(n);
     for (let i = 0; i < n; i++){
-      const p = geo[i];
       const i0 = Math.max(0, i - 1), i1 = Math.min(n - 1, i + 1);
       let da = Math.atan2(geo[i1].ty, geo[i1].tx) - Math.atan2(geo[i0].ty, geo[i0].tx);
       while (da > Math.PI) da -= Math.PI * 2;
       while (da < -Math.PI) da += Math.PI * 2;
       const ds = Math.max(2, geo[i1].cum - geo[i0].cum);
-      const k = da / ds;
-      // 外弯侧的额外宽度：贴着卡片外角走，弯越紧，轮廓放得越宽
-      const extra = Math.min(15, cardHalfLen * cardHalfLen * Math.abs(k) * 0.6);
-      const wob = trailWave(i * 0.42, seed);
-      const base = trailHalfWpx * (1 + 0.02 * wob + 0.012 * Math.sin(i * 2.9 + seed));
-      // k > 0：圆心在 +n（右）侧，外弯在左侧；k < 0 反之
-      p.hwR = base + (k < 0 ? extra : 0);
-      p.hwL = base + (k > 0 ? extra : 0);
-      // 撕边：只留很浅的咬口，避免边缘出现规律的锯齿
-      p.tearR = 0.2 + 1.1 * Math.pow(trailRand(i * 1.73 + 3.1 + seed), 1.8)
-              + 0.8 * Math.max(0, trailWave(i * 0.63 + 2.2, seed * 1.3));
-      p.tearL = 0.2 + 1.1 * Math.pow(trailRand(i * 2.31 + 7.9 + seed), 1.8)
-              + 0.8 * Math.max(0, trailWave(i * 0.71 + 5.6, seed * 1.7));
+      curv[i] = da / ds;
+      extra[i] = Math.min(9, cardHalfLen * cardHalfLen * Math.abs(curv[i]) * 0.36);
+    }
+    // 更宽的高斯窗口：弯道加宽被摊平，两侧轮廓只留一条缓坡
+    const KERNEL = [1, 2, 3, 4, 5, 6, 5, 4, 3, 2, 1];
+    const extraSm = new Float32Array(n);
+    for (let i = 0; i < n; i++){
+      let sum = 0, wsum = 0;
+      for (let d = -5; d <= 5; d++){
+        const j = i + d;
+        if (j < 0 || j >= n) continue;
+        sum += extra[j] * KERNEL[d + 5];
+        wsum += KERNEL[d + 5];
+      }
+      extraSm[i] = sum / wsum;
     }
 
-    // 宽度与撕口沿路径做邻域平滑：弯外侧的加宽自然过渡，不出现鼓包台阶
-    for (let pass = 0; pass < 2; pass++){
+    for (let i = 0; i < n; i++){
+      const p = geo[i];
+      const k = curv[i];
+      // 宽度几乎恒定，只留极缓的长波，整体是一条顺直的胶带
+      const base = trailHalfWpx * (1 + 0.004 * trailWave(i * 0.16, seed));
+      // k > 0：圆心在 +n（右）侧，外弯在左侧；k < 0 反之
+      p.hwR = base + (k < 0 ? extraSm[i] : 0);
+      p.hwL = base + (k > 0 ? extraSm[i] : 0);
+      // 撕边：极浅的低频咬口，几乎看不出锯齿
+      p.tearR = 0.12 + 0.4 * Math.pow(trailRand(Math.floor(i / 8) * 1.73 + 3.1 + seed), 2)
+              + 0.18 * Math.max(0, trailWave(i * 0.14 + 2.2, seed * 1.3));
+      p.tearL = 0.12 + 0.4 * Math.pow(trailRand(Math.floor(i / 8) * 2.31 + 7.9 + seed), 2)
+              + 0.18 * Math.max(0, trailWave(i * 0.15 + 5.6, seed * 1.7));
+    }
+
+    // 沿路径多平滑几遍，两侧轮廓连成顺滑的长线
+    for (let pass = 0; pass < 3; pass++){
       for (let i = 1; i < n - 1; i++){
         const pa = geo[i - 1], pb = geo[i], pc = geo[i + 1];
         pb.hwR = pa.hwR * 0.25 + pb.hwR * 0.5 + pc.hwR * 0.25;
@@ -1436,17 +1466,52 @@ function initWorks3D(){
       const m0 = Math.floor((-cw - s0) / period) + 1;
       for (let s = s0 + m0 * period; s - cw / 2 <= L; s += period){
         if (s + cw / 2 < 0) continue;
-        list.push({ part: p, s: s, w: cw });
+        list.push({ part: p, pi: i, s: s, w: cw });
       }
     }
     list.sort(function(a, b){ return a.s - b.s; });
+    const hits = [];
     for (let k = 0; k < list.length; k++){
       const c = list[k];
       // 与轨迹有交集的卡片都画，端头由胶带撕口自然裁掉
       if (c.s + c.w / 2 < 0 || c.s - c.w / 2 > L) continue;
       const at = trailAt(geo, c.s);
       drawTrailCard(g, c.part, at.x, at.y, at.ang, scale);
+      hits.push({ x: at.x, y: at.y, ang: at.ang, w: c.w, h: cardH, pi: c.pi });
     }
+    // 只记录已落笔的主画布，实时预览层不覆盖
+    if (g === trailCtx) trailCardHits = hits;
+  }
+
+  // 屏幕坐标命中已落笔胶带上的截图，返回对应的作品序号
+  function trailCardAt(clientX, clientY){
+    if (!trailCanvas || !trailCardHits.length) return -1;
+    const r = trailCanvas.getBoundingClientRect();
+    if (!r.width || !r.height) return -1;
+    const px = clientX - r.left, py = clientY - r.top;
+    for (let k = trailCardHits.length - 1; k >= 0; k--){
+      const h = trailCardHits[k];
+      const dx = px - h.x, dy = py - h.y;
+      const ca = Math.cos(-h.ang), sa = Math.sin(-h.ang);
+      const lx = dx * ca - dy * sa;
+      const ly = dx * sa + dy * ca;
+      if (Math.abs(lx) > h.w / 2 || Math.abs(ly) > h.h / 2) continue;
+      let seen = 0;
+      for (let i = 0; i < WORKS.length; i++){
+        if (workImages[i]){ if (seen === h.pi) return i; seen++; }
+      }
+      return -1;
+    }
+    return -1;
+  }
+
+  function openTrailCardAt(clientX, clientY){
+    const idx = trailCardAt(clientX, clientY);
+    if (idx >= 0 && WORKS[idx]){
+      window.open(WORKS[idx].url, '_blank');
+      return true;
+    }
+    return false;
   }
 
   /* 画一整笔留痕：投影 → 银灰胶带底 → 裁剪 → 逐张卡片 → 柔光 → 内缘暗部 */
@@ -1571,6 +1636,7 @@ function initWorks3D(){
     trailDrag = null;
     trailEnd = null;
     trailU = 0;
+    trailCardHits = [];
     const w = stage.clientWidth, h = stage.clientHeight;
     if (trailCtx) trailCtx.clearRect(0, 0, w, h);
     if (trailLiveCtx) trailLiveCtx.clearRect(0, 0, w, h);
@@ -1636,6 +1702,9 @@ function initWorks3D(){
         raycaster.setFromCamera(ndc, camera);
         if (raycaster.ray.intersectPlane(rollPlane, _rollHit)) rollTarget.copy(_rollHit);
       }
+    } else {
+      // 悬停在胶带截图上时给出可点击提示
+      canvas.style.cursor = trailCardAt(e.clientX, e.clientY) >= 0 ? 'pointer' : '';
     }
   });
   stage.addEventListener('pointerdown', function(e){
@@ -1696,7 +1765,9 @@ function initWorks3D(){
     ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
     raycaster.setFromCamera(ndc, camera);
     const hits = raycaster.intersectObject(roll, false);
-    if (hits.length){ openByHit(hits[0]); }
+    if (hits.length){ openByHit(hits[0]); return; }
+    // 没点到卷筒时，命中已落笔胶带上的截图也能打开对应作品
+    openTrailCardAt(e.clientX, e.clientY);
   }
   stage.addEventListener('pointerup', endDrag);
   stage.addEventListener('pointercancel', endDrag);
