@@ -407,6 +407,65 @@
   .tags span{font-size:12px; letter-spacing:1px; color:var(--green-deep);
     border:1px solid var(--line); padding:3px 12px; background:var(--cream);}
 
+  /* —— 学习复盘：纸质卡片墙 + p5 微尘/纸屑 —— */
+  .modal-sheet.review-sheet{width:min(980px, 94vw);}
+  .review-wrap{position:relative;}
+  .review-fx{position:absolute; inset:0; z-index:2; pointer-events:none;}
+  .review-fx canvas{display:block; pointer-events:none;}
+  .review-flow{position:relative; z-index:1; display:flex; flex-direction:column; gap:14px;}
+  .review-grid{display:grid; gap:14px;}
+  .review-grid-2{grid-template-columns:repeat(2, minmax(0, 1fr));}
+  .review-grid-3{grid-template-columns:repeat(3, minmax(0, 1fr)); gap:12px;}
+
+  .review-card{
+    position:relative; overflow:hidden;
+    padding:18px 18px 20px;
+    background:linear-gradient(180deg, #fbf8ef 0%, #f2ecdc 100%);
+    border:1px solid var(--line);
+    box-shadow:0 6px 18px rgba(59,56,47,.07), inset 0 0 0 4px rgba(255,255,255,.32);
+    transition:transform .35s cubic-bezier(.2,.9,.3,1.25), box-shadow .35s, border-color .35s;
+  }
+  .review-card::after{
+    content:""; position:absolute; right:0; bottom:0; width:26px; height:26px;
+    background:linear-gradient(135deg, transparent 49%, rgba(201,185,138,.32) 50%);
+    pointer-events:none;
+  }
+  .review-card:hover{
+    transform:translateY(-5px) rotate(-.35deg);
+    border-color:var(--vintage);
+    box-shadow:0 16px 34px rgba(59,56,47,.16), inset 0 0 0 4px rgba(255,255,255,.32);
+  }
+  .rc-overview{background:linear-gradient(135deg, #fbf8ef 0%, #efe6d2 62%, #e8dec6 100%);}
+  .rc-head{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px;}
+  .rc-num{display:inline-grid; place-items:center; width:30px; height:30px; flex:0 0 auto;
+    border:1px solid var(--vintage); border-radius:50%; color:var(--green-deep);
+    font-size:11px; letter-spacing:0;
+    box-shadow:inset 0 0 0 2px #f7f2e4, inset 0 0 0 3px var(--line);}
+  .rc-kicker{font-size:9.5px; letter-spacing:3px; color:var(--vintage); text-transform:uppercase;}
+  .rc-title{font-size:16px; letter-spacing:1.5px; line-height:1.45; color:var(--green-deep); font-weight:800;}
+  .rc-text{margin-top:8px; font-size:13px; line-height:1.9; color:var(--ink);}
+  .rc-text b{color:var(--green-deep);}
+  .rc-tags{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;}
+  .rc-tags span{font-size:11px; letter-spacing:.5px; color:var(--green-deep);
+    border:1px solid var(--line); padding:2px 9px; background:rgba(255,255,255,.45);}
+  .rc-stats{display:flex; gap:28px; margin-top:14px;}
+  .rc-stats span{display:flex; flex-direction:column; gap:2px;}
+  .rc-stats b{font-family:"Courier New", monospace; font-size:30px; line-height:1; color:var(--green-deep);
+    font-weight:700; letter-spacing:1px;}
+  .rc-stats i{font-style:normal; font-size:11px; letter-spacing:2px; color:var(--ink-muted);}
+
+  .review-label{margin:12px 2px 0; font-size:11px; letter-spacing:3px; font-weight:700; color:var(--green-deep);}
+  .rc-mini{padding:14px 15px 16px;}
+  .rc-mini .rc-dot{font-family:"Courier New", monospace; font-size:10px; letter-spacing:2px; color:var(--vintage);}
+  .rc-mini-title{margin-top:4px; font-size:14px; letter-spacing:1px; color:var(--green-deep); font-weight:700;}
+  .rc-mini-text{margin-top:6px; font-size:12.5px; line-height:1.85; color:var(--ink);}
+  .rc-wide{grid-column:1 / -1;}
+
+  @media (max-width: 640px){
+    .review-grid-2, .review-grid-3{grid-template-columns:1fr;}
+    .rc-stats{gap:20px;}
+  }
+
   /* —— 能力与爱好：悬停/轻触标签 → 弹起并弹出纸质照片 —— */
   .b-hint{font-size:10px; letter-spacing:1px; color:var(--vintage); font-weight:400; margin-left:8px;}
   .tags .hobby-chip{
@@ -716,25 +775,33 @@ var MODS = {
          '</div></div>' },
   review: { num:'06', name:'学习复盘', img:'d31aa0ed5bb7239c9398c0404c2a69bd.jpg',
     desc:'Vibe Coding 全课程学习复盘：七大模块、三大转变、未来行动计划。',
-    html:'<div class="block"><p class="b-title">📊 学习概览</p><p class="b-text">从 AI 基础认知到 Vibe Coding 实战落地，共完成 <b>7 大核心模块</b>、<b>1 个实战项目</b>，形成了从基础 → 工具 → 技术 → 产品 → 工程 → 实战的完整学习闭环。</p><div class="tags"><span>7 大模块</span><span>1 个实战</span><span>3 大转变</span></div></div>' +
-         '<div class="block"><p class="b-title">01 · 课程导入与 AI 基础</p><p class="b-text">建立了对 AI 编程的正确认知：AI 不是替代程序员，而是提升开发效率的放大器。理解了 LLM 的 Token、上下文窗口、生成机制等基本原理，认识到 Prompt 工程是 AI 时代程序员的核心竞争力。</p></div>' +
-         '<div class="block"><p class="b-title">02 · Vibe Coding 学习路线、工具、提示词</p><p class="b-text">掌握了 Cursor、Trae、Copilot、Claude Code 等主流工具的特点与适用场景。理解了提示词设计的核心原则：清晰性、具体性、上下文完整性。核心感悟：好的提示词不是"命令"，而是"协作沟通"。</p><div class="tags"><span>角色设定</span><span>任务分解</span><span>示例引导</span><span>迭代优化</span></div></div>' +
-         '<div class="block"><p class="b-title">03 · 提示词 & 上下文 & 项目流程</p><p class="b-text">深入学习了结构化提示词、思维链（CoT）、少样本学习（Few-shot）等进阶技巧。最大收获是建立了"上下文工程"意识——上下文是 AI 编程的"燃料"，很多时候输出不理想不是模型能力不够，而是提供的上下文不足或不精准。</p></div>' +
-         '<div class="block"><p class="b-title">04 · 软件工程 & 前端和后端设计</p><p class="b-text">夯实了模块化分层架构、代码质量保障、版本控制协作等软件工程基本功。前端掌握了组件化思维、状态管理、响应式设计；后端掌握了 API 设计、数据库设计、安全性考虑。深刻体会：AI 能生成代码，但不能代替"设计思考"。</p></div>' +
-         '<div class="block"><p class="b-title">05 · 如何做出有用的产品</p><p class="b-text">建立了用户中心的产品思维，学习了从需求洞察、MVP 验证、功能优先级到数据驱动的完整产品流程。理解了 AI Native 产品的核心：从底层用 AI 重构体验，而非简单叠加。技术决定"能不能做出来"，产品思维决定"做出来有没有用"。</p></div>' +
-         '<div class="block"><p class="b-title">06 · 开发和部署</p><p class="b-text">掌握了从开发环境搭建、代码规范、构建优化到 CI/CD 部署上线的完整工程化流程。学会了性能监控、服务可用性告警、灰度发布等运维知识。完整的开发能力不仅是"写出来"，更是"跑起来、跑得稳、跑得好"。</p></div>' +
-         '<div class="block"><p class="b-title">07 · 个人数字名片开发实战</p><p class="b-text">通过完整项目实战，将前 6 个模块的知识融会贯通。从需求梳理 → 设计方案 → 代码生成 → 迭代优化 → 部署上线，完整走通了 Vibe Coding 的全流程。人的角色从"执行者"转向了"导演 + 审核者"。</p></div>' +
-         '<div class="block"><p class="b-title">💡 三大思维转变</p><div class="tl">' +
-         '<div class="tl-item"><p class="b-title">思维转变</p><p class="b-text">从"我来写代码"到"我来描述需求、AI 来实现"的协作思维</p></div>' +
-         '<div class="tl-item"><p class="b-title">能力升级</p><p class="b-text">掌握提示词工程、上下文管理、AI 项目流程等核心技能</p></div>' +
-         '<div class="tl-item"><p class="b-title">效率提升</p><p class="b-text">Vibe Coding 显著缩短了从想法到产品的开发周期</p></div>' +
-         '</div></div>' +
-         '<div class="block"><p class="b-title">📌 下一步行动计划</p><div class="tl">' +
-         '<div class="tl-item"><p class="b-title">持续练习</p><p class="b-text">每周用 Vibe Coding 完成一个小项目，保持手感和熟练度</p></div>' +
-         '<div class="tl-item"><p class="b-title">建立提示词库</p><p class="b-text">整理和沉淀常用的提示词模板，形成个人知识库</p></div>' +
-         '<div class="tl-item"><p class="b-title">深化产品思维</p><p class="b-text">多观察好产品、多思考用户需求，技术服务于价值</p></div>' +
-         '<div class="tl-item"><p class="b-title">探索更复杂项目</p><p class="b-text">逐步尝试全栈应用、多用户系统、AI 原生产品等</p></div>' +
-         '<div class="tl-item"><p class="b-title">社区交流</p><p class="b-text">关注 AI 编程领域的最新动态，保持技术敏感度</p></div>' +
+    html:'<div class="review-wrap"><div class="review-fx" id="reviewFx" aria-hidden="true"></div><div class="review-flow" id="reviewFlow">' +
+         '<article class="review-card rc-overview"><div class="rc-head"><span class="rc-num">✦</span><span class="rc-kicker">Learning Review</span></div>' +
+         '<h3 class="rc-title">学习概览</h3><p class="rc-text">从 AI 基础认知到 Vibe Coding 实战落地，共完成 <b>7 大核心模块</b>、<b>1 个实战项目</b>，形成了从基础 → 工具 → 技术 → 产品 → 工程 → 实战的完整学习闭环。</p>' +
+         '<div class="rc-stats"><span><b>7</b><i>大模块</i></span><span><b>1</b><i>实战项目</i></span><span><b>3</b><i>大转变</i></span></div></article>' +
+         '<div class="review-grid review-grid-2">' +
+         '<article class="review-card"><div class="rc-head"><span class="rc-num">01</span><span class="rc-kicker">Module</span></div><h3 class="rc-title">课程导入与 AI 基础</h3><p class="rc-text">建立了对 AI 编程的正确认知：AI 不是替代程序员，而是提升开发效率的放大器。理解了 LLM 的 Token、上下文窗口、生成机制等基本原理，认识到 Prompt 工程是 AI 时代程序员的核心竞争力。</p></article>' +
+         '<article class="review-card"><div class="rc-head"><span class="rc-num">02</span><span class="rc-kicker">Module</span></div><h3 class="rc-title">Vibe Coding 学习路线、工具、提示词</h3><p class="rc-text">掌握了 Cursor、Trae、Copilot、Claude Code 等主流工具的特点与适用场景。理解了提示词设计的核心原则：清晰性、具体性、上下文完整性。核心感悟：好的提示词不是“命令”，而是“协作沟通”。</p><div class="rc-tags"><span>角色设定</span><span>任务分解</span><span>示例引导</span><span>迭代优化</span></div></article>' +
+         '<article class="review-card"><div class="rc-head"><span class="rc-num">03</span><span class="rc-kicker">Module</span></div><h3 class="rc-title">提示词 &amp; 上下文 &amp; 项目流程</h3><p class="rc-text">深入学习了结构化提示词、思维链（CoT）、少样本学习（Few-shot）等进阶技巧。最大收获是建立了“上下文工程”意识——上下文是 AI 编程的“燃料”，很多时候输出不理想不是模型能力不够，而是提供的上下文不足或不精准。</p></article>' +
+         '<article class="review-card"><div class="rc-head"><span class="rc-num">04</span><span class="rc-kicker">Module</span></div><h3 class="rc-title">软件工程 &amp; 前端和后端设计</h3><p class="rc-text">夯实了模块化分层架构、代码质量保障、版本控制协作等软件工程基本功。前端掌握了组件化思维、状态管理、响应式设计；后端掌握了 API 设计、数据库设计、安全性考虑。深刻体会：AI 能生成代码，但不能代替“设计思考”。</p></article>' +
+         '<article class="review-card"><div class="rc-head"><span class="rc-num">05</span><span class="rc-kicker">Module</span></div><h3 class="rc-title">如何做出有用的产品</h3><p class="rc-text">建立了用户中心的产品思维，学习了从需求洞察、MVP 验证、功能优先级到数据驱动的完整产品流程。理解了 AI Native 产品的核心：从底层用 AI 重构体验，而非简单叠加。技术决定“能不能做出来”，产品思维决定“做出来有没有用”。</p></article>' +
+         '<article class="review-card"><div class="rc-head"><span class="rc-num">06</span><span class="rc-kicker">Module</span></div><h3 class="rc-title">开发和部署</h3><p class="rc-text">掌握了从开发环境搭建、代码规范、构建优化到 CI/CD 部署上线的完整工程化流程。学会了性能监控、服务可用性告警、灰度发布等运维知识。完整的开发能力不仅是“写出来”，更是“跑起来、跑得稳、跑得好”。</p></article>' +
+         '<article class="review-card rc-wide"><div class="rc-head"><span class="rc-num">07</span><span class="rc-kicker">Module</span></div><h3 class="rc-title">个人数字名片开发实战</h3><p class="rc-text">通过完整项目实战，将前 6 个模块的知识融会贯通。从需求梳理 → 设计方案 → 代码生成 → 迭代优化 → 部署上线，完整走通了 Vibe Coding 的全流程。人的角色从“执行者”转向了“导演 + 审核者”。</p></article>' +
+         '</div>' +
+         '<p class="review-label">💡 三大思维转变</p>' +
+         '<div class="review-grid review-grid-3">' +
+         '<article class="review-card rc-mini"><span class="rc-dot">01</span><h4 class="rc-mini-title">思维转变</h4><p class="rc-mini-text">从“我来写代码”到“我来描述需求、AI 来实现”的协作思维。</p></article>' +
+         '<article class="review-card rc-mini"><span class="rc-dot">02</span><h4 class="rc-mini-title">能力升级</h4><p class="rc-mini-text">掌握提示词工程、上下文管理、AI 项目流程等核心技能。</p></article>' +
+         '<article class="review-card rc-mini"><span class="rc-dot">03</span><h4 class="rc-mini-title">效率提升</h4><p class="rc-mini-text">Vibe Coding 显著缩短了从想法到产品的开发周期。</p></article>' +
+         '</div>' +
+         '<p class="review-label">📌 下一步行动计划</p>' +
+         '<div class="review-grid review-grid-2">' +
+         '<article class="review-card rc-mini"><span class="rc-dot">01</span><h4 class="rc-mini-title">持续练习</h4><p class="rc-mini-text">每周用 Vibe Coding 完成一个小项目，保持手感和熟练度。</p></article>' +
+         '<article class="review-card rc-mini"><span class="rc-dot">02</span><h4 class="rc-mini-title">建立提示词库</h4><p class="rc-mini-text">整理和沉淀常用的提示词模板，形成个人知识库。</p></article>' +
+         '<article class="review-card rc-mini"><span class="rc-dot">03</span><h4 class="rc-mini-title">深化产品思维</h4><p class="rc-mini-text">多观察好产品、多思考用户需求，技术服务于价值。</p></article>' +
+         '<article class="review-card rc-mini"><span class="rc-dot">04</span><h4 class="rc-mini-title">探索更复杂项目</h4><p class="rc-mini-text">逐步尝试全栈应用、多用户系统、AI 原生产品等。</p></article>' +
+         '<article class="review-card rc-mini rc-wide"><span class="rc-dot">05</span><h4 class="rc-mini-title">社区交流</h4><p class="rc-mini-text">关注 AI 编程领域的最新动态，保持技术敏感度。</p></article>' +
+         '</div>' +
          '</div></div>',
     action:'<a class="sheet-btn" href="https://12ti278.github.io/learning-review/" target="_blank" rel="noopener">查看完整复盘站 <span class="arr">→</span></a>' }
 };
@@ -1273,6 +1340,177 @@ function initAboutSpark(){
   };
 }
 
+/* ============================================================
+   学习复盘：p5.js 纸面微尘 + 卡片悬停纸屑
+   卡片墙本身用 CSS 排布；p5 画布铺在卡片后方，
+   细尘缓慢上浮，鼠标掠过卡片时在落点迸出少量纸屑。
+   ============================================================ */
+var __reviewFx = null, __reviewFxRO = null, __reviewFxDetach = null, __reviewFxWait = null, __reviewFxTries = 0;
+function removeReviewFx(){
+  clearTimeout(__reviewFxWait); __reviewFxWait = null;
+  if (__reviewFxDetach){ try{ __reviewFxDetach(); }catch(e){} __reviewFxDetach = null; }
+  if (__reviewFxRO){ try{ __reviewFxRO.disconnect(); }catch(e){} __reviewFxRO = null; }
+  if (__reviewFx){ try{ __reviewFx.remove(); }catch(e){} __reviewFx = null; }
+}
+function initReviewFx(){
+  var host = document.getElementById('reviewFx');
+  if (!host){ __reviewFxTries = 0; removeReviewFx(); return; }
+  var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (reduce){ removeReviewFx(); return; }
+  if (!window.p5){                                  // CDN 可能晚于弹窗动画到达
+    if (__reviewFxTries++ > 300){ __reviewFxTries = 0; return; }
+    clearTimeout(__reviewFxWait);
+    __reviewFxWait = setTimeout(initReviewFx, 120);
+    return;
+  }
+  __reviewFxTries = 0;
+  removeReviewFx();
+
+  var PALETTE = [[201,185,138], [111,125,94], [59,56,47], [214,201,166]];
+  __reviewFx = new p5(function(p){
+    var W = 0, H = 0, motes = [], sparks = [], t = 0;
+    var flow = document.getElementById('reviewFlow');
+
+    function measure(){
+      W = Math.max(240, host.clientWidth || 0);
+      H = Math.max(240, host.clientHeight || 0);
+    }
+    function seed(){
+      motes = [];
+      var n = Math.min(72, Math.max(26, Math.round(W * H / 16000)));
+      for (var i = 0; i < n; i++){
+        motes.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: 0.5 + Math.random() * 1.5,
+          sp: 0.10 + Math.random() * 0.26,
+          a: 0.10 + Math.random() * 0.22,
+          c: PALETTE[(Math.random() * PALETTE.length) | 0],
+          s: Math.random() * 1000
+        });
+      }
+    }
+    function burst(x, y, n, power){
+      for (var i = 0; i < n; i++){
+        var c = PALETTE[(Math.random() * PALETTE.length) | 0];
+        var ang = Math.random() * Math.PI * 2;
+        var sp = (0.35 + Math.random() * 1.5) * power;
+        var life = 22 + Math.random() * 26;
+        sparks.push({
+          x: x, y: y,
+          vx: Math.cos(ang) * sp,
+          vy: Math.sin(ang) * sp - 0.35,
+          life: life, max: life,
+          size: 0.8 + Math.random() * 1.9,
+          c: c,
+          sway: Math.random() * 1000
+        });
+      }
+      if (sparks.length > 220) sparks.splice(0, sparks.length - 220);
+    }
+
+    p.setup = function(){
+      measure();
+      p.pixelDensity(1);
+      var c = p.createCanvas(W, H);
+      c.parent(host);
+      c.style('position', 'absolute');
+      c.style('left', '0');
+      c.style('top', '0');
+      p.frameRate(30);
+      p.noStroke();
+      seed();
+
+      /* 卡片悬停 / 划过 → 纸屑迸出 */
+      if (flow){
+        var lastMove = 0;
+        function cardFrom(el){
+          return el && el.closest ? el.closest('.review-card') : null;
+        }
+        function localPoint(e){
+          var b = host.getBoundingClientRect();
+          return { x: e.clientX - b.left, y: e.clientY - b.top };
+        }
+        function onOver(e){
+          if (e.pointerType === 'touch') return;
+          if (!cardFrom(e.target)) return;
+          var q = localPoint(e);
+          burst(q.x, q.y, 10, 1);
+        }
+        function onMove(e){
+          if (e.pointerType === 'touch') return;
+          if (!cardFrom(e.target)) return;
+          var now = Date.now();
+          if (now - lastMove < 70) return;
+          lastMove = now;
+          if (Math.random() < 0.55){
+            var q = localPoint(e);
+            burst(q.x, q.y, 1, 0.5);
+          }
+        }
+        function onDown(e){
+          if (!cardFrom(e.target)) return;
+          var q = localPoint(e);
+          burst(q.x, q.y, 16, 1.15);
+        }
+        flow.addEventListener('pointerover', onOver);
+        flow.addEventListener('pointermove', onMove);
+        flow.addEventListener('pointerdown', onDown);
+        __reviewFxDetach = function(){
+          flow.removeEventListener('pointerover', onOver);
+          flow.removeEventListener('pointermove', onMove);
+          flow.removeEventListener('pointerdown', onDown);
+        };
+      }
+
+      if (window.ResizeObserver){
+        __reviewFxRO = new ResizeObserver(function(){
+          var nw = Math.max(240, host.clientWidth || 0);
+          var nh = Math.max(240, host.clientHeight || 0);
+          if (Math.abs(nw - W) > 2 || Math.abs(nh - H) > 2){
+            W = nw; H = nh;
+            p.resizeCanvas(W, H);
+            seed();
+          }
+        });
+        __reviewFxRO.observe(host);
+      }
+    };
+
+    p.draw = function(){
+      if (!document.getElementById('reviewFx')){ p.clear(); return; }
+      p.clear();
+      t += 1 / 30;
+
+      /* 纸面微尘：缓慢上浮，轻微左右游移 */
+      for (var i = 0; i < motes.length; i++){
+        var m = motes[i];
+        m.y -= m.sp * (0.6 + p.noise(m.s, t * 0.22) * 0.9);
+        m.x += (p.noise(m.s + 37, t * 0.18) - 0.5) * 0.7;
+        if (m.y < -10){ m.y = H + 10; m.x = Math.random() * W; }
+        if (m.x < -10) m.x = W + 10; else if (m.x > W + 10) m.x = -10;
+        var tw = 0.7 + 0.3 * Math.sin(t * 1.2 + m.s);
+        p.fill(m.c[0], m.c[1], m.c[2], m.a * tw * 255);
+        p.circle(m.x, m.y, m.r * 2);
+      }
+
+      /* 纸屑：轻、有阻力，渐渐淡出 */
+      for (var j = sparks.length - 1; j >= 0; j--){
+        var q = sparks[j];
+        q.life -= 1;
+        if (q.life <= 0){ sparks.splice(j, 1); continue; }
+        q.vx *= 0.955;
+        q.vy = q.vy * 0.955 - 0.008;
+        q.x += q.vx + Math.sin(t * 1.6 + q.sway) * 0.12;
+        q.y += q.vy;
+        var a = Math.min(1, q.life / q.max * 1.7) * 190;
+        p.fill(q.c[0], q.c[1], q.c[2], a);
+        p.circle(q.x, q.y, q.size * 2);
+      }
+    };
+  });
+}
+
 function openModal(key){
   var m = MODS[key];
   if (!m) return;
@@ -1282,6 +1520,8 @@ function openModal(key){
   document.getElementById('modTitle').textContent = m.name;
   document.getElementById('modDesc').textContent = m.desc;
   document.getElementById('modContent').innerHTML = m.html;
+  var sheet = document.querySelector('#modal .modal-sheet');
+  if (sheet) sheet.classList.toggle('review-sheet', key === 'review');
   if (key === 'about'){
     setTimeout(initAboutIntro, 60);
     setTimeout(initAboutFx, 120);
@@ -1289,6 +1529,11 @@ function openModal(key){
   } else {
     removeAboutFx();
     removeAboutSpark();
+  }
+  if (key === 'review'){
+    setTimeout(initReviewFx, 160);
+  } else {
+    removeReviewFx();
   }
 
   var acts = document.getElementById('modActions');
@@ -1310,6 +1555,9 @@ function closeModal(){
   if (window.lenis) window.lenis.start();
   removeAboutFx();
   removeAboutSpark();
+  removeReviewFx();
+  var sheet = document.querySelector('#modal .modal-sheet');
+  if (sheet) sheet.classList.remove('review-sheet');
   history.replaceState(null, '', location.pathname);
 }
 
