@@ -81,11 +81,12 @@
     50%{transform:scale(1.075) translate3d(.8%, -.6%, 0);}
     100%{transform:scale(1.04) translate3d(-.5%, -1%, 0);}
   }
-  /* 首页叶影风动：canvas 按竖条重绘背景，鼠标带动局部风场 */
+  /* 首页叶影风动：p5 按 列×行 重绘背景，鼠标带动局部风场 */
   .wind-fx{
     position:fixed; inset:0; z-index:-1;
-    width:100%; height:100%; pointer-events:none; display:block;
+    width:100%; height:100%; pointer-events:none; overflow:hidden;
   }
+  .wind-fx canvas{display:block !important; width:100% !important; height:100% !important; pointer-events:none;}
   .wind-on .bg-art{animation:none;}
   /* 首页 p5 微尘层：固定在背景之上、内容之下 */
   .home-fx{
@@ -415,8 +416,22 @@
   .tags span{font-size:12px; letter-spacing:1px; color:var(--green-deep);
     border:1px solid var(--line); padding:3px 12px; background:var(--cream);}
 
-  /* —— 学习复盘：纸质卡片墙 + p5 微尘/纸屑 —— */
-  .modal-sheet.review-sheet{width:min(980px, 94vw);}
+  /* —— 学习复盘：Emberglow 花园壁纸 + 纸质卡片墙 + p5 微尘/纸屑 —— */
+  .modal-sheet.review-sheet{
+    width:min(980px, 94vw);
+    background-color:#f1ebd9;
+    background-image:
+      linear-gradient(180deg, rgba(251,248,239,.87) 0%, rgba(250,246,235,.85) 44%, rgba(246,240,226,.91) 100%),
+      url("assets/review-garden.webp");
+    background-size:cover, cover;
+    background-position:center top, center top;
+    background-repeat:no-repeat, no-repeat;
+  }
+  /* 壁纸在页眉处多露出一点，卡片区再由米色压住 */
+  .modal-sheet.review-sheet .sheet-eyebrow,
+  .modal-sheet.review-sheet .sheet-title,
+  .modal-sheet.review-sheet .sheet-desc,
+  .modal-sheet.review-sheet .sheet-rule{position:relative; z-index:1;}
   .review-wrap{position:relative;}
   .review-fx{position:absolute; inset:0; z-index:2; pointer-events:none;}
   .review-fx canvas{display:block; pointer-events:none;}
@@ -539,11 +554,27 @@
     .about-stat{transition-duration:.01s;}
     .about-stat:hover{transform:none;}
   }
-  .entry{display:block; font-size:12.5px; letter-spacing:1px; color:var(--vintage); margin-top:10px;}
+  .entry{display:block; font-size:12.5px; letter-spacing:1px; font-weight:600; color:#8a7442; margin-top:10px;
+    transition:color .25s;}
+  .entry:hover{color:var(--green-deep); text-decoration:underline; text-underline-offset:3px;}
   .tl{position:relative; padding-left:16px; border-left:1px solid var(--line);}
   .tl-item{position:relative; padding-bottom:14px;}
   .tl-item:last-child{padding-bottom:0;}
   .tl-item::before{content:"◆"; position:absolute; left:-22px; top:2px; font-size:9px; color:var(--vintage);}
+
+  /* 过程证据：山路照片带 */
+  .ev-band{position:relative; margin:0 0 16px; overflow:hidden; border:1px solid var(--line);
+    background:#0f140e;}
+  .ev-band img{display:block; width:100%; height:176px; object-fit:cover; object-position:center 42%;
+    filter:saturate(.92) contrast(1.03); transition:transform 1.2s cubic-bezier(.2,.8,.2,1);}
+  .ev-band:hover img{transform:scale(1.035);}
+  .ev-band::after{content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(180deg, rgba(9,13,8,0) 34%, rgba(9,13,8,.82) 100%);}
+  .ev-band figcaption{position:absolute; left:16px; right:16px; bottom:12px; z-index:1;
+    display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; color:var(--cream);}
+  .ev-band figcaption b{font-size:13px; letter-spacing:3px;}
+  .ev-band figcaption span{font-size:11px; letter-spacing:1px; color:rgba(230,227,212,.75);}
+  @media (max-width:560px){ .ev-band img{height:140px;} }
 
   /* —— 个人简介：照片 + 纸感排版 + p5 微尘 —— */
   .about-hero{position:relative; display:grid; grid-template-columns:210px 1fr; gap:26px; align-items:center; margin-bottom:16px;}
@@ -588,6 +619,47 @@
   @media (max-width:560px){
     .about-lily img{height:160px;}
     .about-lily figcaption{left:14px; right:14px; bottom:11px;}
+  }
+
+  /* 个人简介：植物手记三联画 */
+  .about-gallery{display:grid; grid-template-columns:1.04fr .96fr; grid-template-rows:118px 118px;
+    gap:10px; margin:0 0 16px;}
+  .about-gallery .ag-tall{grid-row:span 2;}
+  .about-gallery figure{position:relative; margin:0; overflow:hidden; border:1px solid var(--line);
+    background:#10150e;}
+  .about-gallery img{display:block; width:100%; height:100%; object-fit:cover;
+    filter:saturate(.94) contrast(1.02); transition:transform 1.2s cubic-bezier(.2,.8,.2,1);}
+  .about-gallery .ag-tall img{object-position:center 46%;}
+  .about-gallery figure:nth-child(2) img{object-position:center 56%;}
+  .about-gallery figure:nth-child(3) img{object-position:center 46%;}
+  .about-gallery figure:hover img{transform:scale(1.05);}
+  .about-gallery figure::after{content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(180deg, transparent 42%, rgba(9,13,8,.78) 100%);}
+  .about-gallery figcaption{position:absolute; left:12px; right:12px; bottom:9px; z-index:1;
+    display:flex; align-items:baseline; justify-content:space-between; gap:8px; color:#f2ecdc;}
+  .about-gallery figcaption b{font-size:12px; letter-spacing:2px; font-weight:700;}
+  .about-gallery figcaption span{font-family:"Courier New",monospace; font-size:8.5px;
+    letter-spacing:2px; color:rgba(230,227,212,.72);}
+
+  /* 个人简介：诗句印刷卡 */
+  .about-quote{display:grid; grid-template-columns:minmax(0,1fr) 218px; gap:20px; align-items:center;
+    margin:0 0 18px; padding:18px 20px; border:1px solid var(--line);
+    background:linear-gradient(135deg, #eef1e3 0%, #e2e9d5 64%, #dbe3cc 100%);}
+  .about-quote .aq-text{font-size:12.5px; line-height:2.05; letter-spacing:.5px; color:var(--green-deep);}
+  .about-quote .aq-text b{display:block; margin-bottom:8px; font-size:10px; letter-spacing:3px;
+    color:var(--vintage); font-family:"Courier New",monospace;}
+  .about-quote .aq-text em{display:block; margin-top:8px; font-style:normal; font-size:11px;
+    letter-spacing:1px; color:var(--ink-muted);}
+  .about-quote figure{margin:0;}
+  .about-quote img{display:block; width:100%; height:auto; border:6px solid #faf7ec;
+    box-shadow:0 12px 26px rgba(30,36,29,.2); transform:rotate(1.4deg);
+    transition:transform .5s cubic-bezier(.2,.8,.2,1);}
+  .about-quote:hover img{transform:rotate(0deg) scale(1.02);}
+  @media (max-width:560px){
+    .about-gallery{grid-template-rows:96px 96px;}
+    .about-gallery figcaption span{display:none;}
+    .about-quote{grid-template-columns:1fr; gap:14px; padding:16px;}
+    .about-quote img{width:min(220px, 72%); margin:0 auto;}
   }
 
   /* 关于我：放大成主标题，下划线从左往右画出来 */
@@ -662,7 +734,7 @@
 <body>
 
 <div class="bg-art" aria-hidden="true"></div>
-<canvas class="wind-fx" id="windFx" aria-hidden="true"></canvas>
+<div class="wind-fx" id="windFx" aria-hidden="true"></div>
 <div class="glow" aria-hidden="true"></div>
 
 <main class="stage">
@@ -772,6 +844,15 @@ var MODS = {
            '<span class="lily-tag" aria-hidden="true">LILIES · No.02</span>' +
            '<figcaption><b>夜百合</b><span>在暗处，也能安静地开花。</span></figcaption>' +
          '</figure>' +
+         '<div class="about-gallery">' +
+           '<figure class="ag-tall"><img src="assets/lily-books.webp" alt="百合花与旧书拼贴" loading="lazy"><figcaption><b>书页间的百合</b><span>PLATES &amp; PAGES</span></figcaption></figure>' +
+           '<figure><img src="assets/still-lilies.webp" alt="水盆中的白百合与青果" loading="lazy"><figcaption><b>青果与百合</b><span>STILL LIFE</span></figcaption></figure>' +
+           '<figure><img src="assets/mist-forest.webp" alt="雾中的绿色树林" loading="lazy"><figcaption><b>雾林</b><span>MIST</span></figcaption></figure>' +
+         '</div>' +
+         '<div class="about-quote">' +
+           '<div class="aq-text"><b>EXCERPT · 向内看</b>这一生不是去寻找自己，而是把自己一层层剥开——你一直在里面。<em>关于自我、信念，以及想去的方向。</em></div>' +
+           '<figure><img src="assets/inward-poem.webp" alt="深绿色背景上的英文诗句" loading="lazy"></figure>' +
+         '</div>' +
          '<div class="block"><p class="b-title">学习经历</p><p class="b-text">武汉理工大学 · 数字经济专业（本科在读）</p></div>' +
          '<div class="block"><p class="b-title">能力与爱好<span class="b-hint">悬停 / 轻触标签看照片</span></p><div class="tags tags-hobby">' +
            '<span class="hobby-chip" style="--i:0">钢琴</span><span class="hobby-chip" style="--i:1">数字经济</span><span class="hobby-chip" style="--i:2">手工</span><span class="hobby-chip" style="--i:3">音乐</span>' +
@@ -787,13 +868,14 @@ var MODS = {
     action:'<a class="sheet-btn" href="总作业1.html#works">打开 3D 胶带画廊 <span class="arr">→</span></a>' },
   projects: { num:'03', name:'项目成果', img:'monet_garden.jpg',
     desc:'放置课程相关项目，含功能说明、技术与项目入口。',
-    html:'<div class="block"><p class="b-title">🔮 塔罗秘仪 · Tarot Arcana</p><p class="b-text">纯离线、单文件的塔罗占卜 Web 应用。整合抽牌占卜、78 张牌义词典、每日一抽、历史记录，用 p5.js 视觉与程序化音乐营造沉浸氛围。</p><div class="tags"><span>p5.js</span><span>Web Audio</span><span>localStorage</span><span>单文件</span></div><a class="entry" href="tarot-evidence.html">查看过程证据 →</a></div>' +
-         '<div class="block"><p class="b-title">💬 全栈问答社区</p><p class="b-text">完整的技术问答社区项目，前端 React+TS+Vite+Tailwind，后端 Express+MySQL，JWT 鉴权、点赞事务、积分体系、通知系统。</p><div class="tags"><span>React</span><span>Express</span><span>MySQL</span><span>JWT</span><span>全栈</span></div><a class="entry" href="qa-community-project.html">查看项目成果 →</a>　<a class="entry" href="qa-community-evidence.html">查看过程证据 →</a></div>' +
-         '<div class="block"><p class="b-title">🌐 幻境回廊 · 个人博客</p><p class="b-text">复古核莫兰迪绿风格的个人作品集网站，p5.js 3D 胶带画廊、胶片颗粒质感、六大内容板块。</p><div class="tags"><span>HTML/CSS</span><span>p5.js</span><span>复古核</span><span>GitHub Pages</span></div><a class="entry" href="blog-project.html">查看项目成果 →</a>　<a class="entry" href="blog-evidence.html">查看过程证据 →</a></div>' +
-         '<div class="block"><p class="b-title">🕰️ 时光商社 · 中古商城</p><p class="b-text">复古中古电商网站，包含商品分类、商品搜索、优惠券、购物车与登录入口，暖木色与烫金质感还原旧货商行的氛围。</p><div class="tags"><span>电商</span><span>商品分类</span><span>购物车</span><span>复古视觉</span></div><a class="entry" href="https://share.traecontent.cn/artifact/A2MECA.VHO0RIZ" target="_blank" rel="noopener">查看项目成果 →</a>　<a class="entry" href="https://share.traecontent.cn/artifact/ZRF1QSCK57TEC8" target="_blank" rel="noopener">查看过程证据 →</a></div>' },
+    html:'<div class="block"><p class="b-title">🔮 塔罗秘仪 · Tarot Arcana</p><p class="b-text">纯离线、单文件的塔罗占卜 Web 应用。整合抽牌占卜、78 张牌义词典、每日一抽、历史记录，用 p5.js 视觉与程序化音乐营造沉浸氛围。</p><div class="tags"><span>p5.js</span><span>Web Audio</span><span>localStorage</span><span>单文件</span></div><a class="entry" href="https://11125.mindock.ai/B06rBK" target="_blank" rel="noopener">查看项目成果 →</a></div>' +
+         '<div class="block"><p class="b-title">💬 全栈问答社区</p><p class="b-text">完整的技术问答社区项目，前端 React+TS+Vite+Tailwind，后端 Express+MySQL，JWT 鉴权、点赞事务、积分体系、通知系统。</p><div class="tags"><span>React</span><span>Express</span><span>MySQL</span><span>JWT</span><span>全栈</span></div><a class="entry" href="qa-community-project.html">查看项目成果 →</a></div>' +
+         '<div class="block"><p class="b-title">🌐 幻境回廊 · 个人博客</p><p class="b-text">复古核莫兰迪绿风格的个人作品集网站，p5.js 3D 胶带画廊、胶片颗粒质感、六大内容板块。</p><div class="tags"><span>HTML/CSS</span><span>p5.js</span><span>复古核</span><span>GitHub Pages</span></div><a class="entry" href="blog-project.html">查看项目成果 →</a></div>' +
+         '<div class="block"><p class="b-title">🕰️ 时光商社 · 中古商城</p><p class="b-text">复古中古电商网站，包含商品分类、商品搜索、优惠券、购物车与登录入口，暖木色与烫金质感还原旧货商行的氛围。</p><div class="tags"><span>电商</span><span>商品分类</span><span>购物车</span><span>复古视觉</span></div><a class="entry" href="https://share.traecontent.cn/artifact/A2MECA.VHO0RIZ" target="_blank" rel="noopener">查看项目成果 →</a></div>' },
   evidence: { num:'04', name:'过程证据', img:'5e1338cb48c7a7a75e04f9943fbd9220.jpg',
     desc:'放置需求、原型与问题解决记录等过程性材料。',
-    html:'<div class="block"><p class="b-title">🔮 塔罗秘仪 · 过程证据</p><p class="b-text">从需求研究、产品需求、技术设计到问题解决，完整记录塔罗项目从 0 到 1 的全过程。</p><div class="tags"><span>需求研究</span><span>PRD</span><span>技术设计</span><span>问题解决</span></div><a class="entry" href="tarot-evidence.html">查看完整过程证据 →</a></div>' +
+    html:'<figure class="ev-band"><img src="assets/mountain-meadow.webp" alt="高山草甸与针叶林" loading="lazy"><figcaption><b>山脊与草甸</b><span>成果看得见，路径藏在山背后。</span></figcaption></figure>' +
+         '<div class="block"><p class="b-title">🔮 塔罗秘仪 · 过程证据</p><p class="b-text">从需求研究、产品需求、技术设计到问题解决，完整记录塔罗项目从 0 到 1 的全过程。</p><div class="tags"><span>需求研究</span><span>PRD</span><span>技术设计</span><span>问题解决</span></div><a class="entry" href="tarot-evidence.html">查看完整过程证据 →</a></div>' +
          '<div class="block"><p class="b-title">💬 全栈问答社区 · 过程证据</p><p class="b-text">全栈问答社区开发全过程记录：需求研究、产品需求、技术设计、问题解决记录、UI 风格迭代。</p><div class="tags"><span>全栈</span><span>MySQL事务</span><span>JWT鉴权</span><span>UI迭代</span></div><a class="entry" href="qa-community-evidence.html">查看完整过程证据 →</a></div>' +
          '<div class="block"><p class="b-title">🌐 幻境回廊 · 过程证据</p><p class="b-text">博客网站从 0 到 1 的完整记录：需求研究、产品设计、视觉设计、技术实现、项目成果。</p><div class="tags"><span>复古核</span><span>视觉设计</span><span>p5.js</span><span>静态站</span></div><a class="entry" href="blog-evidence.html">查看完整过程证据 →</a></div>' +
          '<div class="block"><p class="b-title">🕰️ 时光商社 · 过程证据</p><p class="b-text">中古商城项目从需求梳理、信息架构、视觉风格到页面落地与问题解决的完整过程记录。</p><div class="tags"><span>需求研究</span><span>视觉设计</span><span>页面实现</span><span>问题解决</span></div><a class="entry" href="https://share.traecontent.cn/artifact/ZRF1QSCK57TEC8" target="_blank" rel="noopener">查看完整过程证据 →</a></div>' },
@@ -1006,115 +1088,186 @@ function initHomeBg(){
 }
 initHomeBg();
 
-/* 首页风动：把叶影背景按竖条重绘，鼠标掠过时枝叶像被风吹开
-   做法：按列切分背景图，逐列做很小的水平/垂直位移；位移由
-   缓慢的环境风 + 指针附近的阵风组成，越靠近叶框边缘越明显。 */
-var __wind = null;
+/* 首页风动（p5.js）：把叶影背景切成 列 × 行 的小块重绘
+   - 环境风：两层 Perlin 噪声，缓慢推着叶框呼吸
+   - 指针阵风：指针附近的高斯风场，移动越快风越大
+   - 触叶波纹：指针掠过四周叶片时，荡开一圈圈涟漪
+   - 叶面微光：指针落在叶片区域时，叶面泛起一层暖光 */
+var __windP5 = null, __wind = null, __windTries = 0;
+
 function initWindFx(){
-  if (__wind) return;
+  if (__windP5) return;
   var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   if (reduce) return;
-  var canvas = document.getElementById('windFx');
-  if (!canvas) return;
-  var ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  var W = 0, H = 0, dpr = 1, raf = null, last = 0, t0 = 0;
-  var px = 0.5, py = 0.5;        // 指针位置（0..1）
-  var sx = 0, sy = 0;            // 缓动后的指针偏移
-  var gust = 0;                  // 阵风强度，快速移动时升高后衰减
-  var lastX = 0, lastY = 0, lastT = 0, hasMove = false;
-  var N = 64;
-
-  function resize(){
-    W = window.innerWidth; H = window.innerHeight;
-    dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-    canvas.width = Math.max(1, Math.round(W * dpr));
-    canvas.height = Math.max(1, Math.round(H * dpr));
-    canvas.style.width = W + 'px';
-    canvas.style.height = H + 'px';
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    N = W < 760 ? 40 : 64;
+  if (!window.p5){                                  // CDN 晚到：稍后重试
+    if (__windTries++ < 80) setTimeout(initWindFx, 250);
+    return;
   }
+  var host = document.getElementById('windFx');
+  if (!host || host.querySelector('canvas')) return;
 
-  function frame(t){
-    raf = requestAnimationFrame(frame);
-    if (t - last < 33) return;                 // 约 30fps，省电
-    last = t;
-    if (!imgReady) return;
+  __windP5 = new p5(function(p){
+    var img = null, ready = false;
+    var W = 0, H = 0, COLS = 56, ROWS = 3;
+    var px = .5, py = .5, fx = .5, fy = .5;
+    var gust = 0, lastX = 0, lastY = 0, lastT = 0, moved = false;
+    var ripples = [], lastRipple = 0;
 
-    var time = (t - t0) / 1000;
-    sx += (px - 0.5 - sx) * 0.055;
-    sy += (py - 0.5 - sy) * 0.055;
-    gust *= 0.945;
-
-    ctx.fillStyle = '#170a0e';
-    ctx.fillRect(0, 0, W, H);
-
-    /* 与 CSS Ken Burns 类似的缓慢推拉 */
-    var zoom = 1.065 + 0.012 * Math.sin(time * 0.12);
-    var scale = Math.max(W / im.naturalWidth, H / im.naturalHeight) * zoom;
-    var iw = im.naturalWidth * scale;
-    var ih = im.naturalHeight * scale;
-    var ox = (W - iw) / 2 + Math.sin(time * 0.07) * W * 0.006;
-    var oy = (H - ih) / 2 + Math.cos(time * 0.06) * H * 0.006;
-    var colW = iw / N;
-
-    for (var i = 0; i < N; i++){
-      var nx = (i + 0.5) / N;
-      var edge = 0.24 + 0.76 * Math.pow(Math.abs(nx - 0.5) * 2, 1.3);
-      var ambient = Math.sin(time * 0.8 + nx * 7.2) * 3.2 + Math.sin(time * 1.35 + nx * 13.7) * 1.1;
-      var dd = nx - px;
-      var infl = dd * Math.exp(-dd * dd * 20) * gust * 150;  // 平滑的阵风场，避免在指针处错开
-      var disp = ambient * edge + sx * 11 * edge + infl;
-      var vert = Math.sin(time * 0.9 + nx * 5.6) * 2.2 * edge + sy * 4 * edge;
-
-      var srcX = im.naturalWidth * i / N;
-      var srcW = Math.min(im.naturalWidth - srcX, im.naturalWidth / N + 2);
-      ctx.drawImage(im, srcX, 0, srcW, im.naturalHeight,
-        ox + i * colW + disp, oy + vert, colW + 2.5, ih);
+    function layout(){
+      W = window.innerWidth; H = window.innerHeight;
+      if (p.width !== W || p.height !== H) p.resizeCanvas(W, H);
+      COLS = W < 760 ? 34 : 56;
+      ROWS = H < 620 ? 2 : 3;
     }
-  }
 
-  var im = new Image();
-  var imgReady = false;
-  im.onload = function(){
-    if (!im.naturalWidth) return;
-    imgReady = true;
-    document.body.classList.add('wind-on');
-    resize();
-    t0 = performance.now();
-    last = 0;
-    raf = requestAnimationFrame(frame);
-    __wind = canvas;
-  };
-  im.src = 'assets/mint-silence-bg.webp';
+    p.setup = function(){
+      var c = p.createCanvas(window.innerWidth, window.innerHeight);
+      c.parent(host);
+      p.pixelDensity(1);
+      p.frameRate(30);
+      p.noStroke();
+      layout();
+      p.loadImage('assets/mint-silence-bg.webp', function(im){
+        if (!im || !im.width) return;
+        img = im;
+        ready = true;
+        document.body.classList.add('wind-on');
+        __wind = host;
+      });
+    };
 
-  window.addEventListener('pointermove', function(e){
-    if (!imgReady) return;
-    var now = performance.now();
-    var nx = e.clientX / Math.max(1, W);
-    var ny = e.clientY / Math.max(1, H);
-    if (hasMove){
-      var dt = Math.max(16, now - lastT);
-      var v = Math.hypot(e.clientX - lastX, e.clientY - lastY) / dt;  // px/ms
-      gust = Math.max(gust, Math.min(1, v / 2.4));
-    } else {
-      hasMove = true;
-    }
-    lastX = e.clientX; lastY = e.clientY; lastT = now;
-    px = nx; py = ny;
-  }, { passive: true });
+    p.windowResized = layout;
 
-  window.addEventListener('resize', resize);
-  document.addEventListener('visibilitychange', function(){
-    if (document.hidden){
-      if (raf){ cancelAnimationFrame(raf); raf = null; }
-    } else if (!raf && imgReady){
-      last = 0;
-      raf = requestAnimationFrame(frame);
-    }
-  });
+    p.draw = function(){
+      p.background('#170a0e');
+      if (!ready) return;
+
+      var t = p.millis() / 1000;
+      fx = p.lerp(fx, px, .05);
+      fy = p.lerp(fy, py, .05);
+      gust *= .932;
+
+      // 叶框区域：越靠边越"有叶子"，反应越明显
+      var edgeX = p.constrain((Math.abs(fx - .5) * 2 - .5) / .5, 0, 1);
+      var edgeY = p.constrain((Math.abs(fy - .5) * 2 - .42) / .58, 0, 1);
+      var touch = Math.max(edgeX, edgeY);
+
+      var zoom = 1.10 + .012 * Math.sin(t * .12);
+      var s = Math.max(W / img.width, H / img.height) * zoom;
+      var iw = img.width * s, ih = img.height * s;
+      var ox = (W - iw) / 2 + Math.sin(t * .07) * W * .006;
+      var oy = (H - ih) / 2 + Math.cos(t * .06) * H * .006;
+      var cw = iw / COLS, ch = ih / ROWS;
+
+      for (var j = 0; j < ROWS; j++){
+        for (var i = 0; i < COLS; i++){
+          var nx = (i + .5) / COLS, ny = (j + .5) / ROWS;
+          var edge = Math.max(Math.pow(Math.abs(nx - .5) * 2, 1.25),
+                              Math.pow(Math.abs(ny - .5) * 2, 1.5));
+          var w = .26 + .74 * edge;
+
+          // 两层噪声：一层大范围气流，一层细碎叶尖抖动
+          var n1 = p.noise(nx * 2.3 - t * .16, ny * 1.7 + t * .05) - .5;
+          var n2 = p.noise(nx * 5.6 + 30, ny * 4.2 + t * .18) - .5;
+          var ambX = (n1 * 15 + n2 * 5) * w;
+          var ambY = (n1 * 6 + n2 * 3) * w;
+
+          // 指针风场：dx·e^(-d²k) 在指针处归零，不会撕开画面
+          var dx = nx - fx, dy = ny - fy;
+          var d2 = dx * dx + dy * dy;
+          var g = Math.exp(-d2 * 30);
+          var power = g * (1.0 + gust * 6.0) * (1 + touch * 1.4);
+          var dX = dx * power * 20;
+          var dY = dy * power * 12;
+          // 轻微旋转，像枝叶被拨开后的回弹
+          var swirl = g * (gust * 5 + .25) * (1 + touch);
+          dX += -dy * swirl * 4;
+          dY +=  dx * swirl * 4;
+
+          // 触叶波纹：从指针向外扩散的涟漪
+          for (var k = 0; k < ripples.length; k++){
+            var rp = ripples[k];
+            var rx = nx - rp.x, ry = ny - rp.y;
+            var dist = Math.sqrt(rx * rx + ry * ry) + 1e-4;
+            var ring = dist - rp.age * .34;
+            var wave = Math.sin(ring * 24) * Math.exp(-ring * ring * 26) *
+                       Math.exp(-rp.age * 2.1) * rp.power * 11;
+            dX += (rx / dist) * wave;
+            dY += (ry / dist) * wave;
+          }
+
+          // 缓慢的镜头呼吸 + 指针带来的整体偏移
+          dX += (fx - .5) * 9 * w;
+          dY += (fy - .5) * 4 * w;
+          dX = p.constrain(dX, -24, 24);
+          dY = p.constrain(dY, -14, 14);
+
+          var sx0 = img.width * i / COLS;
+          var sw = Math.min(img.width - sx0, img.width / COLS + 2);
+          var sy0 = img.height * j / ROWS;
+          var sh = Math.min(img.height - sy0, img.height / ROWS + 2);
+          // 注意 p5 的 9 参数顺序：目标矩形在前，源矩形在后
+          p.image(img,
+            ox + i * cw + dX, oy + j * ch + dY, cw + 2, ch + 2,
+            sx0, sy0, sw, sh);
+        }
+      }
+
+      // 指针落在叶片上：叶面泛起一层很淡的暖光
+      if (touch > .02 && gust > .015){
+        var gx = fx * W, gy = fy * H;
+        var rad = 90 + gust * 130;
+        var ctx = p.drawingContext;
+        var grd = ctx.createRadialGradient(gx, gy, 0, gx, gy, rad);
+        grd.addColorStop(0, 'rgba(214,199,155,' + (0.13 * touch * gust).toFixed(3) + ')');
+        grd.addColorStop(.55, 'rgba(184,196,163,' + (0.06 * touch * gust).toFixed(3) + ')');
+        grd.addColorStop(1, 'rgba(184,196,163,0)');
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(gx, gy, rad, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      for (var r = ripples.length - 1; r >= 0; r--){
+        ripples[r].age += .016;
+        if (ripples[r].age > 1.3) ripples.splice(r, 1);
+      }
+    };
+
+    window.addEventListener('pointermove', function(e){
+      if (!ready) return;
+      var now = performance.now();
+      var nx = e.clientX / Math.max(1, W);
+      var ny = e.clientY / Math.max(1, H);
+      if (moved){
+        var dt = Math.max(16, now - lastT);
+        var sp = Math.hypot(e.clientX - lastX, e.clientY - lastY) / dt;  // px/ms
+        gust = Math.max(gust, Math.min(1, sp / 2.0));
+        var near = Math.max(
+          Math.min(1, Math.max(0, (Math.abs(nx - .5) * 2 - .46) / .54)),
+          Math.min(1, Math.max(0, (Math.abs(ny - .5) * 2 - .40) / .60))
+        );
+        if (sp > .45 && near > .12 && now - lastRipple > 110){
+          ripples.push({ x: nx, y: ny, age: 0, power: Math.min(1, sp / 2.2) });
+          if (ripples.length > 6) ripples.shift();
+          lastRipple = now;
+        }
+      } else {
+        moved = true;
+      }
+      lastX = e.clientX; lastY = e.clientY; lastT = now;
+      px = nx; py = ny;
+    }, { passive: true });
+
+    window.addEventListener('pointerdown', function(e){
+      if (!ready) return;
+      px = e.clientX / Math.max(1, W);
+      py = e.clientY / Math.max(1, H);
+      gust = 1;
+      ripples.push({ x: px, y: py, age: 0, power: 1 });
+      if (ripples.length > 6) ripples.shift();
+    }, { passive: true });
+  }, host);
 }
 initWindFx();
 
@@ -1691,6 +1844,8 @@ function openModal(key){
   acts.insertAdjacentHTML('beforeend', '<button class="sheet-btn ghost" id="modCloseBtn" type="button">关闭 <span class="arr">×</span></button>');
 
   document.getElementById('modal').classList.add('open');
+  // display:none 时 scrollTop 不会生效，打开后再归零，避免沿用上一个弹层的位置
+  if (sheet) sheet.scrollTop = 0;
   document.body.classList.add('modal-open');
   if (window.lenis) window.lenis.stop();
   history.replaceState(null, '', '?mod=' + key);
@@ -1852,7 +2007,7 @@ document.addEventListener('keydown', function(e){
 </script>
 
 <!-- ========== p5.js（个人简介微尘效果） ========== -->
-<script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js" onload="if (window.initHomeBg) initHomeBg(); if (window.initAboutFx && document.getElementById('aboutFx')) { initAboutFx(); if (window.initAboutSpark) initAboutSpark(); }"></script>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js" onload="if (window.initHomeBg) initHomeBg(); if (window.initWindFx) initWindFx(); if (window.initAboutFx && document.getElementById('aboutFx')) { initAboutFx(); if (window.initAboutSpark) initAboutSpark(); }"></script>
 <script>if (window.p5) p5.disableFriendlyErrors = true;</script>
 
 <!-- ========== Lenis 全局平滑阻尼滚动 ========== -->
