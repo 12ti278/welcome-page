@@ -98,8 +98,9 @@
     display:inline-block; font-size:11px; letter-spacing:6px;
     color:var(--vintage); font-weight:600;
     text-transform:uppercase;
-    padding:5px 16px; border:1px solid var(--border-soft);
-    background:rgba(201,185,138,.05);
+    padding:5px 16px; border:1px solid rgba(201,185,138,.35);
+    background:rgba(23,10,14,.5);
+    text-shadow:0 1px 6px rgba(0,0,0,.65);
     animation:rise 1s ease both;
   }
   .eyebrow::before{content:"✦  "; color:var(--vintage);}
@@ -110,6 +111,7 @@
     font-size:clamp(50px, 12vw, 132px);
     font-weight:800; letter-spacing:5px; line-height:1.02;
     color:var(--text);
+    text-shadow:0 6px 34px rgba(0,0,0,.55);
     animation:rise 1s .15s ease both;
   }
   .title em{
@@ -121,6 +123,7 @@
 
   .sub{
     color:var(--text-muted); font-size:13px; letter-spacing:4px;
+    text-shadow:0 2px 10px rgba(0,0,0,.7);
     animation:rise 1s .3s ease both;
   }
 
