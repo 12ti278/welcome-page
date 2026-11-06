@@ -558,7 +558,7 @@
   </div>
   <div class="works-tape-hint">
     <span class="hud-chip" id="hudLoad">截图 <b>–</b>/3</span>
-    <span class="hud-chip">拖拽胶带 · 直线留痕</span>
+    <span class="hud-chip">拖拽胶带 · 完整贴纸留痕</span>
     <span class="hud-chip" id="hudOrbit">Orbit <b>Off</b> [Tab]</span>
     <span class="hud-chip">Rewind [Space]</span>
     <span class="hud-chip">FPS <b id="hudFps">0</b></span>
@@ -1121,9 +1121,9 @@ function initWorks3D(){
   const trailLiveCanvas = document.getElementById('tapeTrailLive');
   const trailLiveCtx = trailLiveCanvas ? trailLiveCanvas.getContext('2d') : null;
   let trailHalfWpx = 24;          // 胶带屏幕半宽（px）
-  let trailPeriodPx = 400;        // 纹理一个周期的屏幕像素
-  let trailU = 0;                 // 累计纹理 u
-  let straightDrag = null;        // 本次拖拽的直线留痕：{ anchor, end, u0 }
+  let trailPartIdx = 0;           // 下一枚要铺的完整贴纸序号
+  let trailCursor = null;         // 上一枚贴纸的终点（保证两次拖拽首尾相接）
+  let trailChain = null;          // 本次拖拽：{ cursor, startIdx, pieces }
   const _projV = new THREE.Vector3();
 
   function resizeTrailCanvas(){
@@ -1144,7 +1144,6 @@ function initWorks3D(){
     const a = new THREE.Vector3(W / 2, 0, 0).project(camera);
     const b = new THREE.Vector3(-W / 2, 0, 0).project(camera);
     trailHalfWpx = Math.max(2, Math.abs(a.x - b.x) * 0.25 * w);
-    trailPeriodPx = trailHalfWpx * 2 * (stripData ? stripData.totalW / stripData.height : 3.2);
     clearTrail();
   }
 
@@ -1155,98 +1154,129 @@ function initWorks3D(){
     return { x: (_projV.x * 0.5 + 0.5) * w, y: (-_projV.y * 0.5 + 0.5) * h };
   }
 
-  function drawTexSegment(p0, p1, ctx, startU){
-    const g = ctx || trailCtx;
-    if (!g) return startU == null ? trailU : startU;
-    const dx = p1.x - p0.x, dy = p1.y - p0.y;
-    const len = Math.hypot(dx, dy);
-    const baseU = startU == null ? trailU : startU;
-    if (len < 0.3) return baseU;
-    const ang = Math.atan2(dy, dx);
-    const halfH = trailHalfWpx;
+  // 取第 i 枚贴纸在整条纹理里的横向切片
+  function trailPartSlice(i){
+    const parts = stripData.parts;
+    const n = parts.length;
+    const k = ((i % n) + n) % n;
+    let x0 = 0;
+    for (let j = 0; j < k; j++) x0 += parts[j].w;
+    return { x0: x0, w: parts[k].w, idx: k };
+  }
 
-    // 银灰底衬：用 destination-over 垫到「已有贴纸之下」，只补贴纸纹理的透明撕边，
-    // 既保留连续胶带底，又不会盖掉此前已铺好的贴纸。
+  // 该枚贴纸按当前胶带宽度铺开后应有的屏幕长度（保持纹理比例，不拉伸）
+  function trailPartLen(i){
+    if (!stripData || !stripData.parts || !stripData.parts.length) return 0;
+    const s = trailPartSlice(i);
+    return (trailHalfWpx * 2) * (s.w / stripData.height);
+  }
+
+  // 铺一枚完整贴纸：起点 p0，方向 ang，绝不裁切贴纸
+  function stampTrailPart(p0, ang, partIdx, g, withUnderlay){
+    if (!g || !stripData || !stripData.parts || !stripData.parts.length) return { x: p0.x, y: p0.y, len: 0 };
+    const s = trailPartSlice(partIdx);
+    const len = (trailHalfWpx * 2) * (s.w / stripData.height);
+    const ex = p0.x + Math.cos(ang) * len;
+    const ey = p0.y + Math.sin(ang) * len;
+
+    // 银灰底衬：destination-over 只补撕边透明处，不盖住已铺好的贴纸
+    if (withUnderlay){
+      g.save();
+      g.globalCompositeOperation = 'destination-over';
+      g.strokeStyle = '#c8c8c6';
+      g.lineWidth = trailHalfWpx * 2;
+      g.lineCap = 'round';
+      g.lineJoin = 'round';
+      g.beginPath();
+      g.moveTo(p0.x, p0.y);
+      g.lineTo(ex, ey);
+      g.stroke();
+      g.restore();
+    }
+
+    // 左右各多取 1.2px 的胶带间隙做重叠，盖住相邻两枚之间的接缝；贴纸本身不被裁切
+    const OVER = 1.2;
+    let sx = s.x0, sw = s.w, dx = 0, dw = len;
+    if (s.x0 > 0){ sx -= OVER; sw += OVER; dx -= OVER; dw += OVER; }
+    if (s.x0 + s.w < stripData.canvas.width){ sw += OVER; dw += OVER; }
+
     g.save();
-    g.globalCompositeOperation = 'destination-over';
-    g.strokeStyle = '#c8c8c6';
-    g.lineWidth = halfH * 2;
-    g.lineCap = 'round';
-    g.lineJoin = 'round';
-    g.beginPath();
-    g.moveTo(p0.x, p0.y);
-    g.lineTo(p1.x, p1.y);
-    g.stroke();
+    g.translate(p0.x, p0.y);
+    g.rotate(ang);
+    g.drawImage(stripData.canvas, sx, 0, sw, stripData.height,
+                dx, -trailHalfWpx, dw, trailHalfWpx * 2);
     g.restore();
 
-    if (!stripData) return baseU;
+    return { x: ex, y: ey, len: len };
+  }
 
-    const texW = stripData.canvas.width, texH = stripData.canvas.height;
-    const period = trailPeriodPx;
-    // 相邻贴片左右各重叠 OVERLAP 像素，盖住小数坐标的抗锯齿透明缝，避免断断续续
-    const OVERLAP = 1.5;
-    let remaining = len, px = p0.x, py = p0.y, u = baseU % 1;
-    while (remaining > 0.01){
-      const avail = Math.max((1 - u) * period, 1);
-      const segLen = Math.min(remaining, avail);
-      const sx = u * texW;
-      const srcW = Math.min((segLen / period) * texW, texW - sx);
-      const k = srcW / segLen;
-      let sxA = sx - OVERLAP * k;
-      let sWA = srcW + OVERLAP * k * 2;
-      let dxA = -OVERLAP;
-      let dWA = segLen + OVERLAP * 2;
-      if (sxA < 0){ const sh = -sxA, dsh = sh / k; sxA = 0; sWA -= sh; dxA += dsh; dWA -= dsh; }
-      if (sxA + sWA > texW){ const ov = sxA + sWA - texW; sWA -= ov; dWA -= ov / k; }
-      if (sWA > 0 && dWA > 0){
-        g.save();
-        g.translate(px, py);
-        g.rotate(ang);
-        g.drawImage(stripData.canvas, sxA, 0, sWA, texH, dxA, -halfH, dWA, halfH * 2);
-        g.restore();
-      }
-      px += Math.cos(ang) * segLen; py += Math.sin(ang) * segLen;
-      remaining -= segLen;
-      u = 0;
+  /* 留痕 = 一串首尾相接的「完整贴纸」：
+     胶带移动够一枚贴纸的长度才落下；转角处从上一枚的终点重新取角度，
+     因此每枚贴纸始终完整，不会被切线截断。 */
+  function beginTrailChain(wx, wy){
+    if (!trailCtx || !stripData || !stripData.parts || !stripData.parts.length) return;
+    const rollP = toScreen(wx, wy);
+    // 接续上一段留痕的终点；若胶带被重置/跳得太远，则从胶带当前位置重新开始
+    let start = rollP;
+    if (trailCursor && Math.hypot(trailCursor.x - rollP.x, trailCursor.y - rollP.y) < trailHalfWpx * 6){
+      start = { x: trailCursor.x, y: trailCursor.y };
     }
-    return baseU + len / period;
+    trailChain = {
+      cursor: { x: start.x, y: start.y },
+      prevCursor: trailCursor,
+      prevIdx: trailPartIdx,
+      pieces: []
+    };
   }
 
-  /* 拖拽留痕固定为「起点 → 当前胶带位置」的直线：
-     无论拖动路径怎么弯，落下的胶带始终是一条可调角度的直线。 */
-  function beginStraightTrail(wx, wy){
-    if (!trailCtx) return;
-    straightDrag = { anchor: toScreen(wx, wy), end: null, u0: trailU };
-  }
-
-  function updateStraightTrail(wx, wy){
-    if (!straightDrag || !trailLiveCtx) return;
+  // 每帧调用：胶带移动足够一枚完整贴纸的长度，就沿当前方向铺下这一枚
+  function updateTrailChain(wx, wy){
+    if (!trailChain || !trailLiveCtx || !stripData || !stripData.parts) return;
     const cur = toScreen(wx, wy);
-    straightDrag.end = cur;
-    const w = stage.clientWidth, h = stage.clientHeight;
-    trailLiveCtx.clearRect(0, 0, w, h);
-    if (Math.hypot(cur.x - straightDrag.anchor.x, cur.y - straightDrag.anchor.y) < 2) return;
-    drawTexSegment(straightDrag.anchor, cur, trailLiveCtx, straightDrag.u0);
+    let guard = 0;
+    while (guard++ < 24){
+      const dx = cur.x - trailChain.cursor.x;
+      const dy = cur.y - trailChain.cursor.y;
+      const dist = Math.hypot(dx, dy);
+      const need = trailPartLen(trailPartIdx);
+      if (!(need > 0) || dist < need) break;   // 不足一枚就等待，绝不铺半截贴纸
+      const ang = Math.atan2(dy, dx);
+      const start = { x: trailChain.cursor.x, y: trailChain.cursor.y };
+      const end = stampTrailPart(start, ang, trailPartIdx, trailLiveCtx, true);
+      trailChain.pieces.push({ x: start.x, y: start.y, ang: ang, idx: trailPartIdx });
+      trailChain.cursor = { x: end.x, y: end.y };
+      trailCursor = { x: end.x, y: end.y };
+      trailPartIdx = (trailPartIdx + 1) % stripData.parts.length;
+    }
   }
 
-  function commitStraightTrail(){
-    if (!straightDrag) return;
-    const s = straightDrag;
-    straightDrag = null;
+  function commitTrailChain(){
+    if (!trailChain) return;
+    const c = trailChain;
+    trailChain = null;
     if (trailLiveCtx) trailLiveCtx.clearRect(0, 0, stage.clientWidth, stage.clientHeight);
-    if (!s.end) return;
-    if (Math.hypot(s.end.x - s.anchor.x, s.end.y - s.anchor.y) < 2) return;
-    trailU = drawTexSegment(s.anchor, s.end, trailCtx, s.u0) % 1000;
+    if (!c.pieces.length){
+      trailCursor = c.prevCursor;
+      trailPartIdx = c.prevIdx;
+      return;
+    }
+    c.pieces.forEach(function(p){
+      stampTrailPart({ x: p.x, y: p.y }, p.ang, p.idx, trailCtx, true);
+    });
   }
 
-  function cancelStraightTrail(){
-    straightDrag = null;
+  function cancelTrailChain(){
+    if (!trailChain) return;
+    trailCursor = trailChain.prevCursor;
+    trailPartIdx = trailChain.prevIdx;
+    trailChain = null;
     if (trailLiveCtx) trailLiveCtx.clearRect(0, 0, stage.clientWidth, stage.clientHeight);
   }
 
   function clearTrail(){
-    straightDrag = null;
-    trailU = 0;
+    trailChain = null;
+    trailCursor = null;
+    trailPartIdx = 0;
     const w = stage.clientWidth, h = stage.clientHeight;
     if (trailCtx) trailCtx.clearRect(0, 0, w, h);
     if (trailLiveCtx) trailLiveCtx.clearRect(0, 0, w, h);
@@ -1318,19 +1348,24 @@ function initWorks3D(){
     dragging = true; startX = downX = e.clientX; startY = downY = e.clientY;
     // 默认拖拽 = 移动胶带 + 留痕；按住 Shift 拖拽 = 旋转卷筒（用滚轮也能转）
     rotatingRoll = !orbitMode && e.shiftKey;
-    if (!orbitMode && !rotatingRoll) beginStraightTrail(rollGroup.position.x, rollGroup.position.y);
+    if (!orbitMode && !rotatingRoll) beginTrailChain(rollGroup.position.x, rollGroup.position.y);
     canvas.classList.add('grabbing');
     try{ stage.setPointerCapture(e.pointerId); }catch(_){}
   });
 
-  function openByAngle(hitPoint){
-    if (!stripData || !stripData.parts) return;
-    roll.updateMatrixWorld();
-    const local = roll.worldToLocal(hitPoint.clone());
-    let a = Math.atan2(local.z, local.x);
-    let u = (Math.PI / 2 - a) / (Math.PI * 2);
-    u = ((u % 1) + 1) % 1;
-    u = (u - spin / (Math.PI * 2));
+  function openByHit(hit){
+    if (!stripData || !stripData.parts || !stripData.parts.length || !hit) return;
+    // 只响应卷筒侧面的截图（materialIndex 0）；端盖/纸芯不参与跳转
+    if (hit.face && hit.face.materialIndex !== 0) return;
+    let u;
+    if (hit.uv){
+      // 直接用射线命中点的 UV：纹理上贴的是哪一枚，就打开哪一枚对应的网页
+      u = hit.uv.x;
+    } else {
+      roll.updateMatrixWorld();
+      const local = roll.worldToLocal(hit.point.clone());
+      u = Math.atan2(local.x, local.z) / (Math.PI * 2);
+    }
     u = ((u % 1) + 1) % 1;
     let cum = 0;
     let idx = stripData.parts.length - 1;
@@ -1354,10 +1389,10 @@ function initWorks3D(){
     const moved = Math.hypot(e.clientX - startX, e.clientY - startY);
     if (!wasRotate){
       if (moved >= 4){
-        updateStraightTrail(rollGroup.position.x, rollGroup.position.y);
-        commitStraightTrail();
+        updateTrailChain(rollGroup.position.x, rollGroup.position.y);
+        commitTrailChain();
       } else {
-        cancelStraightTrail();
+        cancelTrailChain();
       }
     }
     if (wasRotate) return;
@@ -1367,7 +1402,7 @@ function initWorks3D(){
     ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
     raycaster.setFromCamera(ndc, camera);
     const hits = raycaster.intersectObject(roll, false);
-    if (hits.length){ openByAngle(hits[0].point); }
+    if (hits.length){ openByHit(hits[0]); }
   }
   stage.addEventListener('pointerup', endDrag);
   stage.addEventListener('pointercancel', endDrag);
@@ -1425,7 +1460,7 @@ function initWorks3D(){
     camera.lookAt(camLook);
 
     if (dragging && !orbitMode && !rotatingRoll){
-      updateStraightTrail(rollGroup.position.x, rollGroup.position.y);
+      updateTrailChain(rollGroup.position.x, rollGroup.position.y);
     }
 
     // 旋转阻尼：平滑缓动到目标角（laxspace 式顺滑，帧率无关）
