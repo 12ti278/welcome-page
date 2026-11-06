@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -607,7 +607,6 @@ const WORKS = [
 
   { title: "全栈问答社区", url: "https://tourmaline-seahorse-ed5cef.netlify.app", thumb: "assets/qa-preview.jpg", evidence: "qa-community-evidence.html", project: "qa-community-project.html" },
   { title: "幻境回廊 · 个人博客", url: "https://jingsi-blog.netlify.app", thumb: "assets/blog-preview.jpg", evidence: "blog-evidence.html", project: "blog-project.html" },
-  { title: "梦境商城 · 电商网站", url: "https://dreamy-tanuki-bcd98e.netlify.app", thumb: "assets/mall-preview.png", evidence: "mall-evidence.html", project: "mall-project.html" },
 ];
 
 const worksOverlay = document.getElementById('worksOverlay');
@@ -1157,61 +1156,367 @@ function initWorks3D(){
     return { x: (_projV.x * 0.5 + 0.5) * w, y: (-_projV.y * 0.5 + 0.5) * h };
   }
 
-  // 沿一段直线铺贴纹理（连续采样，缝隙用 1.5px 重叠盖住）
-  function drawTrailSegment(p0, p1, g, startU){
-    if (!g) return startU;
-    const dx = p1.x - p0.x, dy = p1.y - p0.y;
-    const len = Math.hypot(dx, dy);
-    if (len < 0.01) return startU;
-    const ang = Math.atan2(dy, dx);
-    const halfH = trailHalfWpx;
+  const TRAIL_FILTER_OK = (function(){
+    try {
+      const t = document.createElement('canvas').getContext('2d');
+      if (!t) return false;
+      t.filter = 'blur(1px)';
+      return t.filter === 'blur(1px)';
+    } catch(_){ return false; }
+  })();
 
-    // 银灰底衬：destination-over 只补撕边透明处，不盖住已铺好的贴纸
+  function trailRand(n){
+    const s = Math.sin(n) * 43758.5453123;
+    return s - Math.floor(s);
+  }
+  // 低频起伏：让胶带宽度不是一条死板的等宽带
+  function trailWave(i, seed){
+    return Math.sin(i * 0.55 + seed) * 0.55
+         + Math.sin(i * 0.21 + seed * 2.1) * 0.30
+         + Math.sin(i * 1.9 + seed * 0.6) * 0.15;
+  }
+
+  // Chaikin 平滑：抹掉帧与帧之间的折角
+  function trailSmooth(raw){
+    let p = raw;
+    for (let it = 0; it < 2; it++){
+      if (p.length < 3) break;
+      const out = [p[0]];
+      for (let i = 0; i < p.length - 1; i++){
+        const a = p[i], b = p[i + 1];
+        out.push({ x: a.x * 0.75 + b.x * 0.25, y: a.y * 0.75 + b.y * 0.25 });
+        out.push({ x: a.x * 0.25 + b.x * 0.75, y: a.y * 0.25 + b.y * 0.75 });
+      }
+      out.push(p[p.length - 1]);
+      p = out;
+    }
+    return p;
+  }
+
+  // 等距重采样：纹理 u 沿长度稳定推进，重绘时不会抖动
+  function trailResample(p, step){
+    if (p.length < 2) return p;
+    const out = [{ x: p[0].x, y: p[0].y }];
+    let carry = 0;
+    for (let i = 1; i < p.length; i++){
+      const ax = p[i - 1].x, ay = p[i - 1].y;
+      const bx = p[i].x, by = p[i].y;
+      const seg = Math.hypot(bx - ax, by - ay);
+      if (seg < 1e-6) continue;
+      let t = 0;
+      while (carry + (seg - t) >= step){
+        t += step - carry;
+        const f = t / seg;
+        out.push({ x: ax + (bx - ax) * f, y: ay + (by - ay) * f });
+        carry = 0;
+      }
+      carry += seg - t;
+    }
+    const last = p[p.length - 1];
+    const tail = out[out.length - 1];
+    if (Math.hypot(last.x - tail.x, last.y - tail.y) > 0.8) out.push({ x: last.x, y: last.y });
+    return out;
+  }
+
+  // 生成胶带骨架：中心线 + 法线 + 宽度起伏 + 两侧撕边咬口
+  // 弯曲处按曲率把外侧轮廓放大，接住刚性贴纸的外角
+  function buildTrailGeometry(raw, seed){
+    if (!raw || raw.length < 2) return null;
+    const sm = trailResample(trailSmooth(raw), 4);
+    const n = sm.length;
+    if (n < 2) return null;
+    const geo = [];
+    let cum = 0;
+    for (let i = 0; i < n; i++){
+      if (i > 0) cum += Math.hypot(sm[i].x - sm[i - 1].x, sm[i].y - sm[i - 1].y);
+      let tx, ty;
+      if (i === 0){ tx = sm[1].x - sm[0].x; ty = sm[1].y - sm[0].y; }
+      else if (i === n - 1){ tx = sm[n - 1].x - sm[n - 2].x; ty = sm[n - 1].y - sm[n - 2].y; }
+      else { tx = sm[i + 1].x - sm[i - 1].x; ty = sm[i + 1].y - sm[i - 1].y; }
+      const tl = Math.hypot(tx, ty) || 1;
+      tx /= tl; ty /= tl;
+      geo.push({ x: sm[i].x, y: sm[i].y, tx, ty, nx: -ty, ny: tx, cum });
+    }
+
+    // 贴纸半长（屏幕 px）：弯曲处刚性卡片外角会探出，需要多宽的轮廓
+    const cardScale = (trailHalfWpx * 2 * 0.76) / INNER_H;
+    let avgCell = 690;
+    if (stripData && stripData.parts && stripData.parts.length){
+      let sw = 0;
+      for (let j = 0; j < stripData.parts.length; j++) sw += stripData.parts[j].cellW;
+      avgCell = sw / stripData.parts.length;
+    }
+    const cardHalfLen = avgCell * cardScale / 2;
+
+    for (let i = 0; i < n; i++){
+      const p = geo[i];
+      const i0 = Math.max(0, i - 1), i1 = Math.min(n - 1, i + 1);
+      let da = Math.atan2(geo[i1].ty, geo[i1].tx) - Math.atan2(geo[i0].ty, geo[i0].tx);
+      while (da > Math.PI) da -= Math.PI * 2;
+      while (da < -Math.PI) da += Math.PI * 2;
+      const ds = Math.max(2, geo[i1].cum - geo[i0].cum);
+      const k = da / ds;
+      // 外弯侧的额外宽度：贴着卡片外角走，弯越紧，轮廓放得越宽
+      const extra = Math.min(15, cardHalfLen * cardHalfLen * Math.abs(k) * 0.6);
+      const wob = trailWave(i * 0.42, seed);
+      const base = trailHalfWpx * (1 + 0.02 * wob + 0.012 * Math.sin(i * 2.9 + seed));
+      // k > 0：圆心在 +n（右）侧，外弯在左侧；k < 0 反之
+      p.hwR = base + (k < 0 ? extra : 0);
+      p.hwL = base + (k > 0 ? extra : 0);
+      // 撕边：只留很浅的咬口，避免边缘出现规律的锯齿
+      p.tearR = 0.2 + 1.1 * Math.pow(trailRand(i * 1.73 + 3.1 + seed), 1.8)
+              + 0.8 * Math.max(0, trailWave(i * 0.63 + 2.2, seed * 1.3));
+      p.tearL = 0.2 + 1.1 * Math.pow(trailRand(i * 2.31 + 7.9 + seed), 1.8)
+              + 0.8 * Math.max(0, trailWave(i * 0.71 + 5.6, seed * 1.7));
+    }
+
+    // 宽度与撕口沿路径做邻域平滑：弯外侧的加宽自然过渡，不出现鼓包台阶
+    for (let pass = 0; pass < 2; pass++){
+      for (let i = 1; i < n - 1; i++){
+        const pa = geo[i - 1], pb = geo[i], pc = geo[i + 1];
+        pb.hwR = pa.hwR * 0.25 + pb.hwR * 0.5 + pc.hwR * 0.25;
+        pb.hwL = pa.hwL * 0.25 + pb.hwL * 0.5 + pc.hwL * 0.25;
+        pb.tearR = pa.tearR * 0.25 + pb.tearR * 0.5 + pc.tearR * 0.25;
+        pb.tearL = pa.tearL * 0.25 + pb.tearL * 0.5 + pc.tearL * 0.25;
+      }
+    }
+    return geo;
+  }
+
+  // 一段胶带：右前 → 右后 → 左后 → 左前（所有段同向，自交只叠加不挖洞）
+  function trailQuad(g, a, b){
+    const aw = a.hwR - a.tearR * 0.9, bw = b.hwR - b.tearR * 0.9;
+    const al = a.hwL - a.tearL * 0.9, bl = b.hwL - b.tearL * 0.9;
+    g.moveTo(a.x + a.nx * aw, a.y + a.ny * aw);
+    g.lineTo(b.x + b.nx * bw, b.y + b.ny * bw);
+    g.lineTo(b.x - b.nx * bl, b.y - b.ny * bl);
+    g.lineTo(a.x - a.nx * al, a.y - a.ny * al);
+    g.closePath();
+  }
+
+  // 用逐段四边形拼出胶带本体，避免整条闭合路径把圈间空隙一起填掉
+  function traceTrailBody(g, geo, seed){
+    const n = geo.length;
+    if (!g || n < 2) return false;
+    g.beginPath();
+    const a = geo[0], b = geo[n - 1];
+    // 两端的撕口：向轨迹外侧探出一小截，宽度收窄
+    const capA = {
+      x: a.x - a.tx * (0.6 + trailRand(seed + 1.3) * 3.0),
+      y: a.y - a.ty * (0.6 + trailRand(seed + 1.3) * 3.0),
+      nx: a.nx, ny: a.ny,
+      hwR: a.hwR * (0.62 + trailRand(seed + 4.7) * 0.36),
+      hwL: a.hwL * (0.62 + trailRand(seed + 4.7) * 0.36),
+      tearR: 0.4 + trailRand(seed + 6.2) * 1.4,
+      tearL: 0.4 + trailRand(seed + 9.4) * 1.4
+    };
+    trailQuad(g, capA, a);
+    for (let i = 0; i < n - 1; i++) trailQuad(g, geo[i], geo[i + 1]);
+    const capB = {
+      x: b.x + b.tx * (0.6 + trailRand(seed + 8.1) * 3.0),
+      y: b.y + b.ty * (0.6 + trailRand(seed + 8.1) * 3.0),
+      nx: b.nx, ny: b.ny,
+      hwR: b.hwR * (0.62 + trailRand(seed + 2.9) * 0.36),
+      hwL: b.hwL * (0.62 + trailRand(seed + 2.9) * 0.36),
+      tearR: 0.4 + trailRand(seed + 5.5) * 1.4,
+      tearL: 0.4 + trailRand(seed + 7.7) * 1.4
+    };
+    trailQuad(g, b, capB);
+    return true;
+  }
+
+  // 只描一侧长边，用来做边缘纤维/暗部（不会在段与段之间留下横线）
+  function traceTrailSide(g, geo, side){
+    for (let i = 0; i < geo.length; i++){
+      const p = geo[i];
+      const w = (side > 0 ? p.hwR : p.hwL) - (side > 0 ? p.tearR : p.tearL) * 0.9;
+      const x = p.x + p.nx * w * side;
+      const y = p.y + p.ny * w * side;
+      if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+    }
+  }
+
+  // 轨迹上的位置 s（px）→ 坐标 + 切线角
+  function trailAt(geo, s){
+    let lo = 0, hi = geo.length - 1;
+    while (hi - lo > 1){
+      const mid = (lo + hi) >> 1;
+      if (geo[mid].cum <= s) lo = mid; else hi = mid;
+    }
+    const a = geo[lo], b = geo[hi];
+    const span = b.cum - a.cum || 1;
+    const f = Math.max(0, Math.min(1, (s - a.cum) / span));
+    const tx = a.tx + (b.tx - a.tx) * f;
+    const ty = a.ty + (b.ty - a.ty) * f;
+    return {
+      x: a.x + (b.x - a.x) * f,
+      y: a.y + (b.y - a.y) * f,
+      ang: Math.atan2(ty, tx)
+    };
+  }
+
+  function trailRoundRect(g, x, y, w, h, r){
+    g.beginPath();
+    g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r);
+    g.closePath();
+  }
+
+  // 极细的胶带表面颗粒，避免大面积纯色塑料感
+  let trailGrainPat = null;
+  function getTrailGrain(g){
+    if (trailGrainPat) return trailGrainPat;
+    const c = document.createElement('canvas');
+    c.width = 64; c.height = 64;
+    const cx = c.getContext('2d');
+    if (!cx) return null;
+    cx.fillStyle = '#d9d9d5';
+    cx.fillRect(0, 0, 64, 64);
+    for (let i = 0; i < 300; i++){
+      cx.fillStyle = Math.random() < 0.5
+        ? 'rgba(255,255,255,0.05)' : 'rgba(108,108,104,0.05)';
+      cx.fillRect(Math.random() * 64, Math.random() * 64, 1, 1);
+    }
+    trailGrainPat = g.createPattern(c, 'repeat');
+    return trailGrainPat;
+  }
+
+  // 单张贴纸：保持矩形，只按当地切线角度旋转（弯曲处像卡片一样转开）
+  function drawTrailCard(g, part, cx, cy, ang, scale){
+    const lw = part.cellW * scale;
+    const lh = INNER_H * scale;
+    const pw = part.photoW * scale;
+    const ph = PHOTO_H * scale;
+    const r = Math.max(1, 16 * scale);
     g.save();
-    g.globalCompositeOperation = 'destination-over';
-    g.strokeStyle = '#c8c8c6';
-    g.lineWidth = halfH * 2;
-    g.lineCap = 'round';
+    g.translate(cx, cy);
+    g.rotate(ang);
+    // 卡片投影：两层叠出柔和的落影
+    g.fillStyle = 'rgba(44,50,46,0.07)';
+    trailRoundRect(g, -lw / 2 + 3, -lh / 2 + 4.2, lw, lh, r);
+    g.fill();
+    g.fillStyle = 'rgba(44,50,46,0.10)';
+    trailRoundRect(g, -lw / 2 + 1.2, -lh / 2 + 1.8, lw, lh, r);
+    g.fill();
+    // 浅灰卡纸
+    g.fillStyle = '#e8e8e6';
+    trailRoundRect(g, -lw / 2, -lh / 2, lw, lh, r);
+    g.fill();
+    // 细边
+    g.strokeStyle = 'rgba(112,112,108,0.45)';
+    g.lineWidth = Math.max(0.6, 2.2 * scale);
+    trailRoundRect(g, -lw / 2 + 0.5, -lh / 2 + 0.5, lw - 1, lh - 1, Math.max(1, r - 0.5));
+    g.stroke();
+    // 截图
+    g.imageSmoothingEnabled = true;
+    g.imageSmoothingQuality = 'high';
+    g.drawImage(part.img, -pw / 2, -ph / 2, pw, ph);
+    g.restore();
+  }
+
+  // 沿轨迹逐张摆放贴纸：完整落入这一笔的卡片才画，避免被截断
+  function drawTrailCards(g, geo, startU){
+    if (!stripData || !stripData.parts || !stripData.parts.length) return;
+    const cardH = trailHalfWpx * 2 * 0.76;
+    const scale = cardH / INNER_H;
+    const period = trailPeriodPx || 1;
+    const total = stripData.totalW;
+    const L = geo[geo.length - 1].cum;
+    const list = [];
+    let acc = 0;
+    for (let i = 0; i < stripData.parts.length; i++){
+      const p = stripData.parts[i];
+      const uC = (acc + p.cellW / 2) / total;
+      acc += p.w;
+      const cw = p.cellW * scale;
+      const s0 = ((uC - startU) % 1 + 1) % 1 * period;
+      const m0 = Math.floor((-cw - s0) / period) + 1;
+      for (let s = s0 + m0 * period; s - cw / 2 <= L; s += period){
+        if (s + cw / 2 < 0) continue;
+        list.push({ part: p, s: s, w: cw });
+      }
+    }
+    list.sort(function(a, b){ return a.s - b.s; });
+    for (let k = 0; k < list.length; k++){
+      const c = list[k];
+      // 与轨迹有交集的卡片都画，端头由胶带撕口自然裁掉
+      if (c.s + c.w / 2 < 0 || c.s - c.w / 2 > L) continue;
+      const at = trailAt(geo, c.s);
+      drawTrailCard(g, c.part, at.x, at.y, at.ang, scale);
+    }
+  }
+
+  /* 画一整笔留痕：投影 → 银灰胶带底 → 裁剪 → 逐张卡片 → 柔光 → 内缘暗部 */
+  function renderTrailStroke(g, raw, startU, seed){
+    if (!g) return null;
+    const geo = buildTrailGeometry(raw, seed);
+    if (!geo) return null;
+
+    // 1) 投影：胶带离开纸面，边缘不再和背景硬碰硬
+    if (TRAIL_FILTER_OK){
+      g.save();
+      g.filter = 'blur(5px)';
+      g.translate(2.4, 4.2);
+      if (traceTrailBody(g, geo, seed)){
+        g.fillStyle = 'rgba(26,32,28,0.22)';
+        g.fill();
+      }
+      g.restore();
+    }
+
+    // 2) 胶带本体 + 轮廓裁剪
+    g.save();
+    if (!traceTrailBody(g, geo, seed)){ g.restore(); return geo; }
+    g.fillStyle = getTrailGrain(g) || '#d9d9d5';
+    g.fill();
+    g.clip();
+
+    // 3a) 贴纸保持矩形，弯曲处按切线转动；外弯轮廓已在骨架里加宽
+    drawTrailCards(g, geo, startU);
+
+    // 3b) 表面柔光：偏一侧的斜向高光
+    if (TRAIL_FILTER_OK){
+      g.save();
+      g.filter = 'blur(3.2px)';
+      g.lineCap = 'round';
+      g.lineJoin = 'round';
+      g.strokeStyle = 'rgba(255,255,255,0.07)';
+      g.lineWidth = trailHalfWpx * 0.42;
+      g.beginPath();
+      for (let i = 0; i < geo.length; i++){
+        const p = geo[i];
+        const off = (p.hwR + p.hwL) * 0.17;
+        const px = p.x + p.nx * off, py = p.y + p.ny * off;
+        if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+      }
+      g.stroke();
+      g.restore();
+    }
+
+    // 3c) 内缘暗部：两侧长边各压一道，边缘有厚度
+    g.save();
+    if (TRAIL_FILTER_OK) g.filter = 'blur(1.6px)';
+    g.strokeStyle = 'rgba(58,64,60,0.20)';
+    g.lineWidth = 2.4;
     g.lineJoin = 'round';
     g.beginPath();
-    g.moveTo(p0.x, p0.y);
-    g.lineTo(p1.x, p1.y);
+    traceTrailSide(g, geo, 1);
+    traceTrailSide(g, geo, -1);
     g.stroke();
     g.restore();
 
-    if (!stripData) return startU;
+    // 3d) 贴胶的轻微暖雾，压住图片边缘的数码感
+    g.fillStyle = 'rgba(236,236,228,0.05)';
+    g.fillRect(0, 0, stage.clientWidth, stage.clientHeight);
 
-    const texW = stripData.canvas.width, texH = stripData.height;
-    const period = trailPeriodPx;
-    const OVERLAP = 1.5;       // 相邻贴片左右重叠，盖住抗锯齿透明缝
-    let remaining = len, px = p0.x, py = p0.y, u = ((startU % 1) + 1) % 1;
-    while (remaining > 0.01){
-      const avail = Math.max((1 - u) * period, 1);
-      const segLen = Math.min(remaining, avail);
-      const sx = u * texW;
-      const srcW = Math.min((segLen / period) * texW, texW - sx);
-      const k = srcW / segLen;
-      let sxA = sx - OVERLAP * k;
-      let sWA = srcW + OVERLAP * k * 2;
-      let dxA = -OVERLAP;
-      let dWA = segLen + OVERLAP * 2;
-      if (sxA < 0){ const sh = -sxA, dsh = sh / k; sxA = 0; sWA -= sh; dxA += dsh; dWA -= dsh; }
-      if (sxA + sWA > texW){ const ov = sxA + sWA - texW; sWA -= ov; dWA -= ov / k; }
-      if (sWA > 0 && dWA > 0){
-        g.save();
-        g.translate(px, py);
-        g.rotate(ang);
-        g.drawImage(stripData.canvas, sxA, 0, sWA, texH, dxA, -halfH, dWA, halfH * 2);
-        g.restore();
-      }
-      px += Math.cos(ang) * segLen; py += Math.sin(ang) * segLen;
-      remaining -= segLen;
-      u = 0;
-    }
-    return startU + len / period;
+    g.restore();
+    return geo;
   }
 
-  /* 留痕沿拖拽轨迹连续铺贴：每帧取一小段，纹理 u 连续累加。
+  /* 留痕沿拖拽轨迹连续铺贴：整笔实时重绘，纹理 u 沿弧长连续推进。
      胶带可以自然弯曲，截图纹理贯穿整条轨迹，不会被相邻段切断。 */
   function beginTrailDrag(wx, wy){
     if (!trailCtx) return;
@@ -1223,41 +1528,41 @@ function initWorks3D(){
     } else {
       trailU = 0;   // 新开一笔时从完整贴纸边界开始
     }
-    trailDrag = { last: { x: start.x, y: start.y }, startU: trailU, segments: [] };
+    trailDrag = {
+      pts: [{ x: start.x, y: start.y }],
+      startU: trailU,
+      seed: Math.random() * 100,
+      last: { x: start.x, y: start.y }
+    };
   }
 
   function updateTrailDrag(wx, wy){
     if (!trailDrag || !trailLiveCtx) return;
     const cur = toScreen(wx, wy);
-    const dx = cur.x - trailDrag.last.x, dy = cur.y - trailDrag.last.y;
-    if (Math.hypot(dx, dy) < 0.75) return;
-    const u0 = trailU;
-    trailU = drawTrailSegment(trailDrag.last, cur, trailLiveCtx, u0);
-    trailDrag.segments.push({
-      x0: trailDrag.last.x, y0: trailDrag.last.y,
-      x1: cur.x, y1: cur.y, u0: u0
-    });
+    if (Math.hypot(cur.x - trailDrag.last.x, cur.y - trailDrag.last.y) < 1.2) return;
+    trailDrag.pts.push({ x: cur.x, y: cur.y });
     trailDrag.last = { x: cur.x, y: cur.y };
-    trailEnd = { x: cur.x, y: cur.y };
+    trailLiveCtx.clearRect(0, 0, stage.clientWidth, stage.clientHeight);
+    renderTrailStroke(trailLiveCtx, trailDrag.pts, trailDrag.startU, trailDrag.seed);
   }
 
   function commitTrailDrag(){
     if (!trailDrag) return;
     const d = trailDrag;
     trailDrag = null;
-    if (d.segments.length){
-      d.segments.forEach(function(s){
-        drawTrailSegment({ x: s.x0, y: s.y0 }, { x: s.x1, y: s.y1 }, trailCtx, s.u0);
-      });
-    } else {
-      trailU = d.startU;
+    if (d.pts.length >= 2){
+      const geo = renderTrailStroke(trailCtx, d.pts, d.startU, d.seed);
+      if (geo){
+        const endP = geo[geo.length - 1];
+        trailU = ((d.startU + endP.cum / (trailPeriodPx || 1)) % 1 + 1) % 1;
+        trailEnd = { x: endP.x, y: endP.y };
+      }
     }
     if (trailLiveCtx) trailLiveCtx.clearRect(0, 0, stage.clientWidth, stage.clientHeight);
   }
 
   function cancelTrailDrag(){
     if (!trailDrag) return;
-    trailU = trailDrag.startU;
     trailDrag = null;
     if (trailLiveCtx) trailLiveCtx.clearRect(0, 0, stage.clientWidth, stage.clientHeight);
   }
