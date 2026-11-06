@@ -15,13 +15,17 @@
     --surface-2:    #363d33;
     --border:       #465042;
     --border-soft:  #38402f;
+
     --text:         #e6e3d4;
     --text-muted:   #99a08c;
+
     --accent:       #b8c4a3;
     --accent-deep:  #8a9a76;
     --accent-soft:  rgba(184,196,163,.14);
+
     --vintage:      #c9b98a;
     --stamp:        #9a8556;
+
     /* 模块卡片配色（米白色） */
     --ink:#3b382f;
     --ink-muted:#7c7666;
@@ -32,7 +36,9 @@
     --green:#6f7d5e;
     --green-deep:#57634a;
   }
+
   *{margin:0;padding:0;box-sizing:border-box;}
+
   body{
     font-family:"Courier New","Songti SC","STSong","PingFang SC","Microsoft YaHei",monospace;
     background:var(--bg);
@@ -43,9 +49,11 @@
     min-height:100vh;
     overflow-x:hidden;
   }
+
   /* Lenis 平滑滚动 */
   html.lenis, html.lenis body { height:auto; }
   .lenis.lenis-smooth { scroll-behavior:auto !important; }
+
   /* 复古核 1：全局胶片颗粒 */
   body::before{
     content:""; position:fixed; inset:0;
@@ -58,6 +66,7 @@
     pointer-events:none; z-index:9997;
     background:radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.42) 100%);
   }
+
   /* 慢呼吸的光晕背景 */
   .glow{
     position:fixed; inset:0; z-index:0; pointer-events:none;
@@ -70,6 +79,7 @@
     0%,100%{opacity:.7;transform:scale(1);}
     50%{opacity:1;transform:scale(1.05);}
   }
+
   .stage{
     position:relative; z-index:1;
     min-height:100vh;
@@ -77,6 +87,7 @@
     text-align:center; gap:20px;
     padding:56px 24px;
   }
+
   .eyebrow{
     display:inline-block; font-size:11px; letter-spacing:6px;
     color:var(--vintage); font-weight:600;
@@ -87,6 +98,7 @@
   }
   .eyebrow::before{content:"✦  "; color:var(--vintage);}
   .eyebrow::after{content:"  ✦"; color:var(--vintage);}
+
   .title{
     font-family:"Courier New",monospace;
     font-size:clamp(42px, 9vw, 96px);
@@ -100,10 +112,12 @@
     letter-spacing:2px;
     text-shadow:0 0 26px rgba(201,185,138,.28);
   }
+
   .sub{
     color:var(--text-muted); font-size:13px; letter-spacing:4px;
     animation:rise 1s .3s ease both;
   }
+
   /* ---------- 相框（复古双线框 + 胶带 + 角标） ---------- */
   .frame{
     position:relative; width:min(600px, 88vw); aspect-ratio:16/10;
@@ -135,6 +149,7 @@
   .corners i:nth-child(2){top:8px;right:8px;border-left:0;border-bottom:0;}
   .corners i:nth-child(3){bottom:8px;left:8px;border-right:0;border-top:0;}
   .corners i:nth-child(4){bottom:8px;right:8px;border-left:0;border-top:0;}
+
   .slides{position:absolute; inset:0; z-index:1; overflow:hidden; cursor:pointer;}
   .slides img{
     position:absolute; inset:0; width:100%; height:100%;
@@ -143,6 +158,7 @@
     filter:sepia(.16) saturate(.86) contrast(.99);
   }
   .slides img.active{opacity:1;}
+
   /* ---------- 贴纸（印在画上）+ 边角胶带 ----------
      层级顺序：油画 img → 贴纸 → 胶带；胶带在最上层，只压住贴纸两个对角。
      贴纸/胶带不写任何 transform，完全继承 .frame 的 scale，保证三者同步不分家。 */
@@ -169,6 +185,7 @@
   }
   .sticker .s-num{ font-size:9px; letter-spacing:3px; opacity:.68; }
   .sticker .s-name{ font-size:12px; letter-spacing:2px; font-weight:700; }
+
   /* 边角胶带：只压贴纸两对角，位于最上层；旋转烧进 SVG，不用 CSS transform */
   .tape{position:absolute; z-index:7; width:56px; height:56px; pointer-events:none;
     filter:drop-shadow(0 1px 2px rgba(0,0,0,.3));}
@@ -180,6 +197,7 @@
     right:calc(var(--sticker-r) - 28px);
     bottom:calc(var(--sticker-b) - 28px);
   }
+
   /* 左右箭头 */
   .arrow{
     position:absolute; top:50%; transform:translateY(-50%);
@@ -197,6 +215,7 @@
     .arrow.left{left:8px;}
     .arrow.right{right:8px;}
   }
+
   /* 圆点 */
   .dots{
     position:absolute; z-index:6; left:50%; bottom:-34px; transform:translateX(-50%);
@@ -209,6 +228,7 @@
   }
   .dot.active{background:var(--vintage); border-color:var(--vintage);}
   .dot:hover{background:var(--accent-soft);}
+
   /* ---------- 章节目录（六个部分标题） ---------- */
   .chapters-label{
     margin-top:16px; color:var(--text-muted);
@@ -228,6 +248,7 @@
   }
   .chapters a::before{content:"#"; color:var(--vintage); margin-right:6px;}
   .chapters a:hover{color:var(--accent); border-color:var(--accent);}
+
   /* ---------- 印章式进入按钮 ---------- */
   .enter{
     margin-top:44px;
@@ -248,17 +269,21 @@
   .enter:hover::before{border-color:rgba(30,36,29,.3);}
   .enter .arr{transition:transform .3s ease;}
   .enter:hover .arr{transform:translateX(5px);}
+
   .hint{color:var(--text-muted); font-size:10.5px; letter-spacing:4px; margin-top:-8px;
     animation:rise 1s .66s ease both;}
+
   .slide-caption{
     margin-top:22px; color:var(--text); font-size:13px; letter-spacing:3px;
     animation:rise 1s .6s ease both;
   }
   .slide-caption b{color:var(--vintage); font-weight:700; margin:0 2px;}
+
   @keyframes rise{
     from{opacity:0; transform:translateY(18px);}
     to{opacity:1; transform:translateY(0);}
   }
+
   /* ============================================================
      模块详情弹层（米白色卡片）
      ============================================================ */
@@ -269,6 +294,7 @@
     padding:60px 20px;
   }
   .modal.open{display:flex;}
+
   .modal-overlay{
     position:absolute; inset:0;
     background:rgba(30,36,29,.75);
@@ -277,6 +303,7 @@
     transition:opacity .3s ease;
   }
   .modal.open .modal-overlay{opacity:1;}
+
   .modal-bg{
     position:absolute; inset:0;
     background-size:cover; background-position:center;
@@ -285,6 +312,7 @@
     transition:opacity .5s ease;
   }
   .modal.open .modal-bg{opacity:1;}
+
   .modal-close{
     position:fixed; top:18px; right:24px; z-index:1002;
     width:38px; height:38px;
@@ -300,6 +328,7 @@
   }
   .modal.open .modal-close{opacity:1; transition-delay:.15s;}
   .modal-close:hover{background:var(--vintage); color:var(--bg); border-color:var(--vintage);}
+
   .modal-sheet{
     position:relative; z-index:1001;
     width:min(720px, 92vw);
@@ -331,15 +360,19 @@
     background:rgba(201,185,138,.6); box-shadow:0 1px 3px rgba(0,0,0,.25);}
   .sheet-tape.t1{top:-14px; left:50%; transform:translateX(-50%) rotate(-3deg);}
   .sheet-tape.t2{bottom:-14px; left:50%; transform:translateX(-50%) rotate(2deg);}
+
   .sheet-eyebrow{display:inline-flex; align-items:center; gap:10px; font-size:11px; letter-spacing:4px;
     color:var(--vintage); font-weight:700; text-transform:uppercase;}
   .sheet-stamp{display:inline-grid; place-items:center; width:40px; height:40px; border:2px solid var(--vintage);
     border-radius:50%; color:var(--vintage); font-size:12px; letter-spacing:0; transform:rotate(-6deg);
     box-shadow:inset 0 0 0 2px var(--cream), inset 0 0 0 3px var(--vintage);}
+
   .sheet-title{font-size:clamp(26px,5vw,40px); font-weight:800; letter-spacing:4px; line-height:1.2; margin-top:16px; color:var(--ink);}
   .sheet-desc{color:var(--ink-muted); font-size:13.5px; margin-top:12px;}
+
   .sheet-rule{height:1px; background:linear-gradient(90deg, transparent, var(--line) 20%, var(--line) 80%, transparent);
     margin:24px 0; border:0;}
+
   /* 内容块 */
   .block{
     border:1px solid var(--line-soft); background:var(--cream-2);
@@ -355,6 +388,7 @@
   .tl-item{position:relative; padding-bottom:14px;}
   .tl-item:last-child{padding-bottom:0;}
   .tl-item::before{content:"◆"; position:absolute; left:-22px; top:2px; font-size:9px; color:var(--vintage);}
+
   /* —— 个人简介：照片 + 纸感排版 + p5 微尘 —— */
   .about-hero{position:relative; display:grid; grid-template-columns:210px 1fr; gap:26px; align-items:center; margin-bottom:16px;}
   .about-fx{position:absolute; inset:-18px; z-index:0; pointer-events:none;}
@@ -368,39 +402,37 @@
     font-size:11px; font-weight:700; letter-spacing:2.5px; color:var(--green-deep);
     font-family:"Courier New",monospace;}
   .about-portrait::after{content:""; position:absolute; top:-11px; left:50%; transform:translateX(-50%) rotate(4deg);
-    width:74px; height:20px; background:rgba(201,185,138,.62);
-    box-shadow:0 2px 4px rgba(0,0,0,.2);}
-  .about-intro h3{font-size:22px; letter-spacing:3px; margin-bottom:8px; color:var(--ink);}
-  .about-intro .role{font-size:12px; letter-spacing:3px; color:var(--green-deep); margin-bottom:14px;}
-  .about-intro p{font-size:13.5px; line-height:1.9; color:var(--ink); margin-bottom:10px;}
-  .about-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px;}
-  .stat{text-align:center; padding:10px 6px; border:1px solid var(--line); background:var(--cream);}
-  .stat-num{font-size:20px; font-weight:800; color:var(--green-deep); font-family:"Courier New",monospace;}
-  .stat-label{font-size:10px; letter-spacing:1.5px; color:var(--ink-muted); margin-top:2px;}
-  @media (max-width:600px){
-    .about-hero{grid-template-columns:1fr; justify-items:center; text-align:center;}
-    .about-portrait{width:180px;}
-    .about-stats{grid-template-columns:repeat(3,1fr);}
+    width:74px; height:20px; background:rgba(201,185,138,.62); box-shadow:0 1px 3px rgba(0,0,0,.22);}
+  .about-intro .b-title{font-size:12px; letter-spacing:2px; margin-bottom:8px;}
+  .about-intro .b-text{font-size:14px; line-height:2; letter-spacing:.5px; color:var(--ink);}
+  .about-stats{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
+  .about-stat{flex:1 1 0; min-width:80px; padding:8px 8px 7px; text-align:center;
+    border:1px solid var(--line-soft); background:rgba(251,248,239,.75);}
+  .about-stat b{display:block; font-size:19px; line-height:1.15; font-weight:800; letter-spacing:1px;
+    color:var(--green-deep); font-family:"Courier New",monospace;}
+  .about-stat b .stat-slash{font-weight:400; opacity:.55; margin:0 1px;}
+  .about-stat > span{display:block; margin-top:2px; font-size:9.5px; letter-spacing:2px;
+    color:var(--ink-muted); font-family:"Courier New",monospace;}
+  @media (max-width:560px){
+    .about-hero{grid-template-columns:1fr; gap:18px;}
+    .about-portrait{width:168px; margin:0 auto;}
+    .about-intro .b-text{font-size:13.5px;}
+    .about-stat b{font-size:17px;}
   }
-  .sheet-btn{display:inline-flex; align-items:center; gap:8px;
-    padding:10px 22px; font-size:12px; letter-spacing:2px; font-weight:700;
-    color:var(--vintage); border:1px solid var(--vintage); text-decoration:none;
-    transition:all .3s ease; font-family:"Courier New",monospace;
-    position:relative;}
-  .sheet-btn::before{content:""; position:absolute; inset:3px;
-    border:1px solid rgba(201,185,138,.4); pointer-events:none;}
-  .sheet-btn:hover{background:var(--vintage); color:var(--cream);}
-  .sheet-btn:hover::before{border-color:rgba(244,238,224,.4);}
-  /* 底部版权 */
-  .footer{
-    position:relative; z-index:1;
-    text-align:center; padding:30px 24px;
-    color:var(--text-muted); font-size:11px; letter-spacing:3px;
-    border-top:1px solid var(--border-soft);
-    opacity:.7;
-  }
-  /* 响应式 */
-  @media (max-width:600px){
+
+  .sheet-actions{margin-top:26px; display:flex; flex-wrap:wrap; gap:14px; align-items:center;}
+  .sheet-btn{display:inline-flex; align-items:center; gap:10px; text-decoration:none;
+    font-size:12.5px; letter-spacing:3px; font-weight:700; padding:12px 24px;
+    color:var(--cream); background:var(--green); border:1px solid var(--green);
+    transition:all .3s ease; cursor:pointer; font-family:inherit;}
+  .sheet-btn:hover{background:var(--green-deep); border-color:var(--green-deep);}
+  .sheet-btn.ghost{background:transparent; color:var(--green-deep); border:1px solid var(--line);}
+  .sheet-btn.ghost:hover{color:var(--cream); background:var(--green-deep); border-color:var(--green-deep);}
+  .sheet-btn .arr{transition:transform .3s ease;}
+  .sheet-btn:hover .arr{transform:translateX(5px);}
+
+  @media (max-width:640px){
+    .modal-sheet{padding:44px 26px 36px; max-height:calc(100vh - 80px);}
     .modal{padding:40px 16px;}
     .stage{gap:14px; padding:40px 18px;}
     .frame{width:92vw; --sticker-w:136px; --sticker-h:52px; --sticker-r:18px; --sticker-b:14px;}
@@ -408,19 +440,24 @@
     .sticker .s-name{font-size:10px; letter-spacing:1px;}
     .enter{margin-top:36px;}
   }
+
+  /* 防止弹层打开时背景滚动 */
+  body.modal-open{overflow:hidden;}
 </style>
 </head>
 <body>
-<div class="glow"></div>
 
-<!-- ============== 主舞台 ============== -->
-<section class="stage" id="home">
-  <span class="eyebrow">WELCOME TO MY WORLD</span>
-  <h1 class="title">幻境<em>回 廊</em></h1>
-  <p class="sub">— 静思之地 · 作品之廊 —</p>
+<div class="glow" aria-hidden="true"></div>
 
-  <!-- 相框 -->
-  <div class="frame" id="frame">
+<main class="stage">
+  <span class="eyebrow">Course Portfolio</span>
+
+  <h1 class="title">Welcome<em>My World</em></h1>
+
+  <p class="sub">欢迎来到我的世界 —— 幻境回廊</p>
+
+  <div class="frame">
+    <div class="slides" id="slides" aria-label="作品照片轮播"></div>
     <span class="corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
 
     <div class="sticker" aria-hidden="true">
@@ -428,299 +465,450 @@
       <span class="s-name" id="stickerName">个人简介</span>
     </div>
 
-    <!-- 4 层多圈胶带：左上+右上 + 左下+右下，两层叠加深厚感 -->
-    <svg class="tape t1" viewBox="0 0 56 56" aria-hidden="true">
-      <defs>
-        <linearGradient id="t1a" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#e8dbb2" stop-opacity=".92"/>
-          <stop offset="50%" stop-color="#d9c98a" stop-opacity=".78"/>
-          <stop offset="100%" stop-color="#c9b98a" stop-opacity=".88"/>
-        </linearGradient>
-        <linearGradient id="t1b" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#f0e5c0" stop-opacity=".85"/>
-          <stop offset="100%" stop-color="#d4c488" stop-opacity=".75"/>
-        </linearGradient>
-      </defs>
-      <!-- 第一层：主胶带，旋转 -28° -->
-      <g transform="rotate(-28 28 28)">
-        <rect x="2" y="18" width="52" height="20" rx="1.5" fill="url(#t1a)"/>
-        <rect x="2" y="18" width="52" height="3" fill="#fff" opacity=".25"/>
-        <rect x="2" y="35" width="52" height="3" fill="#8a7a4a" opacity=".3"/>
-        <!-- 纤维纹理 -->
-        <line x1="8" y1="20" x2="8" y2="36" stroke="#b5a068" stroke-width=".4" opacity=".5"/>
-        <line x1="20" y1="20" x2="20" y2="36" stroke="#b5a068" stroke-width=".4" opacity=".4"/>
-        <line x1="34" y1="20" x2="34" y2="36" stroke="#b5a068" stroke-width=".4" opacity=".45"/>
-        <line x1="46" y1="20" x2="46" y2="36" stroke="#b5a068" stroke-width=".4" opacity=".35"/>
-      </g>
-      <!-- 第二层：叠在上面，偏移 +7° 错开，略窄 -->
-      <g transform="rotate(-21 28 28)" opacity=".82">
-        <rect x="5" y="16" width="46" height="17" rx="1.5" fill="url(#t1b)"/>
-        <rect x="5" y="16" width="46" height="2.5" fill="#fff" opacity=".3"/>
-        <rect x="5" y="30.5" width="46" height="2.5" fill="#8a7a4a" opacity=".25"/>
-        <line x1="14" y1="17.5" x2="14" y2="32" stroke="#b5a068" stroke-width=".4" opacity=".4"/>
-        <line x1="28" y1="17.5" x2="28" y2="32" stroke="#b5a068" stroke-width=".4" opacity=".35"/>
-        <line x1="40" y1="17.5" x2="40" y2="32" stroke="#b5a068" stroke-width=".4" opacity=".3"/>
+    <svg class="tape t1" viewBox="0 0 56 56" aria-hidden="true" focusable="false">
+      <g transform="rotate(-40 28 28)">
+        <rect x="-6" y="20" width="68" height="16" rx="2" fill="rgba(201,185,138,.62)"/>
+        <rect x="-6" y="20" width="68" height="2.5" fill="rgba(255,255,255,.18)"/>
       </g>
     </svg>
-    <svg class="tape t2" viewBox="0 0 56 56" aria-hidden="true">
-      <defs>
-        <linearGradient id="t2a" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#e8dbb2" stop-opacity=".92"/>
-          <stop offset="50%" stop-color="#d9c98a" stop-opacity=".78"/>
-          <stop offset="100%" stop-color="#c9b98a" stop-opacity=".88"/>
-        </linearGradient>
-        <linearGradient id="t2b" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#f0e5c0" stop-opacity=".85"/>
-          <stop offset="100%" stop-color="#d4c488" stop-opacity=".75"/>
-        </linearGradient>
-      </defs>
-      <!-- 第一层：主胶带，旋转 32° -->
-      <g transform="rotate(32 28 28)">
-        <rect x="2" y="18" width="52" height="20" rx="1.5" fill="url(#t2a)"/>
-        <rect x="2" y="18" width="52" height="3" fill="#fff" opacity=".25"/>
-        <rect x="2" y="35" width="52" height="3" fill="#8a7a4a" opacity=".3"/>
-        <line x1="10" y1="20" x2="10" y2="36" stroke="#b5a068" stroke-width=".4" opacity=".5"/>
-        <line x1="22" y1="20" x2="22" y2="36" stroke="#b5a068" stroke-width=".4" opacity=".4"/>
-        <line x1="36" y1="20" x2="36" y2="36" stroke="#b5a068" stroke-width=".4" opacity=".45"/>
-        <line x1="48" y1="20" x2="48" y2="36" stroke="#b5a068" stroke-width=".4" opacity=".35"/>
-      </g>
-      <!-- 第二层：错开叠放 -->
-      <g transform="rotate(25 28 28)" opacity=".82">
-        <rect x="5" y="20" width="46" height="17" rx="1.5" fill="url(#t2b)"/>
-        <rect x="5" y="20" width="46" height="2.5" fill="#fff" opacity=".3"/>
-        <rect x="5" y="34.5" width="46" height="2.5" fill="#8a7a4a" opacity=".25"/>
-        <line x1="16" y1="21.5" x2="16" y2="36" stroke="#b5a068" stroke-width=".4" opacity=".4"/>
-        <line x1="30" y1="21.5" x2="30" y2="36" stroke="#b5a068" stroke-width=".4" opacity=".35"/>
-        <line x1="42" y1="21.5" x2="42" y2="36" stroke="#b5a068" stroke-width=".4" opacity=".3"/>
+    <svg class="tape t2" viewBox="0 0 56 56" aria-hidden="true" focusable="false">
+      <g transform="rotate(40 28 28)">
+        <rect x="-6" y="20" width="68" height="16" rx="2" fill="rgba(201,185,138,.62)"/>
+        <rect x="-6" y="20" width="68" height="2.5" fill="rgba(255,255,255,.18)"/>
       </g>
     </svg>
-
-    <div class="slides" id="slides">
-      <!-- 图片由 JS 动态插入 -->
-    </div>
-
-    <button class="arrow left" id="prevBtn" aria-label="上一张">‹</button>
-    <button class="arrow right" id="nextBtn" aria-label="下一张">›</button>
-
+    <button class="arrow left" id="prev" aria-label="上一张">‹</button>
+    <button class="arrow right" id="next" aria-label="下一张">›</button>
     <div class="dots" id="dots"></div>
   </div>
 
-  <p class="slide-caption" id="slideCaption">点击进入 <b>个人简介</b></p>
+  <p class="slide-caption" id="slideCaption"></p>
 
-  <p class="chapters-label">— 章 节 导 览 —</p>
-  <div class="chapters">
-    <a data-target="about">个人简介</a>
-    <a data-target="homework">阶段作业</a>
-    <a data-target="projects">项目成果</a>
-    <a data-target="evidence">过程证据</a>
-    <a data-target="iterations">迭代记录</a>
-    <a data-target="contact">联系方式</a>
-  </div>
+  <p class="chapters-label">章节目录 · CONTENTS</p>
+  <nav class="chapters" aria-label="章节目录">
+    <a data-mod="about">个人简介</a>
+    <a data-mod="homework">阶段作业</a>
+    <a data-mod="projects">项目成果</a>
+    <a data-mod="evidence">过程证据</a>
+    <a data-mod="iterations">迭代记录</a>
+    <a data-mod="review">学习复盘</a>
+  </nav>
 
-  <a href="welcome.html" class="enter">
-    进入长廊 <span class="arr">→</span>
-  </a>
-  <p class="hint">SCROLL OR CLICK TO EXPLORE</p>
-</section>
+  <a class="enter" href="总作业1.html">进入作品集 <span class="arr">→</span></a>
+  <p class="hint">ENTER THE GALLERY · 点击进入</p>
+</main>
 
-<!-- ============== 模块详情弹层 ============== -->
-<div class="modal" id="modal">
-  <div class="modal-overlay" id="modalOverlay"></div>
+<!-- ========== 模块详情弹层 ========== -->
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modTitle">
   <div class="modal-bg" id="modalBg"></div>
-  <button class="modal-close" id="modalClose" aria-label="关闭">✕</button>
-  <div class="modal-sheet" id="modalSheet">
-    <div class="sheet-corners"><i></i><i></i><i></i><i></i></div>
-    <div class="sheet-tape t1"></div>
-    <div class="sheet-tape t2"></div>
-    <div id="modalContent"></div>
-  </div>
+  <div class="modal-overlay" id="modalOverlay"></div>
+  <button class="modal-close" id="modalClose" aria-label="关闭">×</button>
+  <article class="modal-sheet" data-lenis-prevent>
+    <span class="sheet-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span class="sheet-tape t1" aria-hidden="true"></span>
+    <span class="sheet-tape t2" aria-hidden="true"></span>
+
+    <span class="sheet-eyebrow"><span class="sheet-stamp" id="modStamp">01</span> Course Module</span>
+    <h2 class="sheet-title" id="modTitle">个人简介</h2>
+    <p class="sheet-desc" id="modDesc"></p>
+
+    <hr class="sheet-rule">
+
+    <div id="modContent"></div>
+
+    <div class="sheet-actions" id="modActions"></div>
+  </article>
 </div>
 
-<div class="footer">
-  © 2026 幻境回廊 · 静思之地 · 作品之廊
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/bundled/lenis.min.js"></script>
 <script>
-(function(){
-  // ===== 6 大板块数据 =====
-  var IMGS = [
-    { key:'about',    num:'01', name:'个人简介', img:'monet_garden.jpg',
-      desc:'数字媒体艺术专业，热爱创意编程与视觉设计。',
-      html:
-        '<div class="about-hero">' +
-          '<figure class="about-portrait">' +
-            '<img src="assets/home-fullpage.png" alt="个人照片" onerror="this.style.display=\'none\'"/>' +
-            '<figcaption>12ti278</figcaption>' +
-          '</figure>' +
-          '<div class="about-intro">' +
-            '<h3>静 思</h3>' +
-            '<p class="role">数字媒体艺术 · 创意编程方向</p>' +
-            '<p>专注于 Web 交互、创意编程与视觉设计，喜欢用代码营造有氛围感的空间。</p>' +
-            '<div class="about-stats">' +
-              '<div class="stat"><div class="stat-num">4.070</div><div class="stat-label">GPA</div></div>' +
-              '<div class="stat"><div class="stat-num">10/72</div><div class="stat-label">专业排名</div></div>' +
-              '<div class="stat"><div class="stat-num">10+</div><div class="stat-label">钢琴</div></div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-        '<div class="block"><p class="b-title">技能方向</p><div class="tags"><span>HTML/CSS</span><span>JavaScript</span><span>p5.js</span><span>Three.js</span><span>Blender</span><span>Photoshop</span></div></div>',
-      action:'<a class="sheet-btn" href="https://12ti278.github.io/digital-card/" target="_blank" rel="noopener">查看数字名片 <span class="arr">→</span></a>' },
-    { key:'homework', num:'02', name:'阶段作业', img:'3e0555ad74af257cc2fdb44bc26ba4a2.jpg',
-      desc:'进入胶带画廊查看全部作业作品。',
-      html:'<div class="block"><p class="b-title">作品画廊</p><p class="b-text">共 5 件作业作品，以 3D 胶带卷形式陈列，可拖拽胶带留痕、切换视角、截图存档。</p></div>',
-      action:'<a class="sheet-btn" href="总作业1.html#works">打开 3D 胶带画廊 <span class="arr">→</span></a>' },
-    { key:'projects', num:'03', name:'项目成果', img:'monet_garden.jpg',
-      desc:'放置课程相关项目，含功能说明、技术与项目入口。',
-      html:'<div class="block"><p class="b-title">🔮 塔罗秘仪 · Tarot Arcana</p><p class="b-text">纯离线、单文件的塔罗占卜 Web 应用。整合抽牌占卜、78 张牌义词典、每日一抽、历史记录，用 p5.js 视觉与程序化音乐营造沉浸氛围。</p><div class="tags"><span>p5.js</span><span>Web Audio</span><span>localStorage</span><span>单文件</span></div><a class="entry" href="tarot-evidence.html">查看过程证据 →</a></div>' +
-           '<div class="block"><p class="b-title">💬 全栈问答社区</p><p class="b-text">功能完整的校园问答社区平台，支持提问、回答、点赞、标签分类、用户系统与搜索筛选。</p><div class="tags"><span>全栈开发</span><span>前后端分离</span><span>MySQL</span><span>Spring Boot</span></div><a class="entry" href="qa-community-project.html">查看项目成果 →</a>　<a class="entry" href="qa-community-evidence.html">查看过程证据 →</a></div>' +
-           '<div class="block"><p class="b-title">🌐 幻境回廊 · 个人博客</p><p class="b-text">复古核莫兰迪绿风格的个人作品集网站，p5.js 3D 胶带画廊、胶片颗粒质感、六大内容板块。</p><div class="tags"><span>HTML/CSS</span><span>p5.js</span><span>复古核</span><span>GitHub Pages</span></div><a class="entry" href="blog-project.html">查看项目成果 →</a>　<a class="entry" href="blog-evidence.html">查看过程证据 →</a></div>' },
-    { key:'evidence', num:'04', name:'过程证据', img:'5e1338cb48c7a7a75e04f9943fbd9220.jpg',
-      desc:'放置需求、原型与问题解决记录等过程性材料。',
-      html:'<div class="block"><p class="b-title">塔罗秘仪 · 过程证据</p><p class="b-text">从需求分析到视觉设计，从技术选型到迭代优化的完整过程记录。</p><a class="entry" href="tarot-evidence.html">查看塔罗项目过程证据 →</a></div>' +
-           '<div class="block"><p class="b-title">全栈问答社区 · 过程证据</p><p class="b-text">需求文档、原型设计、数据库设计、接口文档、测试报告全链路记录。</p><a class="entry" href="qa-community-evidence.html">查看问答社区过程证据 →</a></div>' +
-           '<div class="block"><p class="b-title">幻境回廊博客 · 过程证据</p><p class="b-text">从灵感来源到风格确定，从技术实现到上线部署的完整心路历程。</p><a class="entry" href="blog-evidence.html">查看博客项目过程证据 →</a></div>' },
-    { key:'iterations', num:'05', name:'迭代记录', img:'d2cbb2bd51789c73066e1e13c366058b.jpg',
-      desc:'按时间线记录项目的迭代历程。',
-      html:'<div class="tl">' +
-           '<div class="tl-item"><p class="b-title">2026.10.18 · 项目立项</p><p class="b-text">确定复古核莫兰迪绿风格，搭建基础 HTML 结构与配色系统。</p></div>' +
-           '<div class="tl-item"><p class="b-title">2026.10.22 · 初版上线</p><p class="b-text">欢迎页、作品集、数字名片三大板块成型，作业素材入库。</p></div>' +
-           '<div class="tl-item"><p class="b-title">2026.10.27 · 子页面扩充</p><p class="b-text">过程证据与迭代记录页上线，站点从单页扩展为多页面结构。</p></div>' +
-           '<div class="tl-item"><p class="b-title">2026.11.03 · 动效与照片简介</p><p class="b-text">胶带任意角度旋转、Lenis 平滑滚动，简介加入照片与 p5.js 微尘光晕。</p></div>' +
-           '<div class="tl-item"><p class="b-title">2026.11.04 · 个人介绍型定位</p><p class="b-text">加入 GPA 4.070、排名 10/72、钢琴特长，并补全项目成果与过程证据。</p></div>' +
-           '<div class="tl-item"><p class="b-title">2026.11.05 · 本轮改版</p><p class="b-text">迭代记录改为个人网站本身，按提交历史梳理为 7 个阶段。</p></div>' +
-           '</div>',
-      action:'<a class="sheet-btn" href="site-iterations.html">查看完整迭代记录 <span class="arr">→</span></a>' },
-    { key:'contact', num:'06', name:'联系方式', img:'7c113cd19a12080044339b36e15d4d9a.jpg',
-      desc:'欢迎交流合作，共同探索创意与技术的边界。',
-      html:'<div class="block"><p class="b-title">📧 邮箱</p><p class="b-text">zhdsghv5577@qq.com</p></div>' +
-           '<div class="block"><p class="b-title">🐙 GitHub</p><p class="b-text">github.com/12ti278</p></div>' +
-           '<div class="block"><p class="b-title">🌐 个人网站</p><p class="b-text">12ti278.github.io</p></div>' +
-           '<div class="block"><p class="b-title">💬 微信</p><p class="b-text">（可通过邮箱获取）</p></div>' }
-  ];
+/* ============================================================
+   模块数据
+   ============================================================ */
+var DIR = '作业素材/';
+var MODS = {
+  about: { num:'01', name:'个人简介', img:'12f6de95993b201be67c7d5267645f42.jpg',
+    desc:'个人背景、学业表现、学习经历与能力爱好，以及数字名片入口。',
+    html:'<div class="about-hero">' +
+           '<div class="about-fx" id="aboutFx" aria-hidden="true"></div>' +
+           '<figure class="about-portrait"><img src="作业素材/portrait.jpg" alt="在庭院木窗前的个人照片" loading="lazy"><figcaption>ENFP · 数字经济</figcaption></figure>' +
+           '<div class="about-intro">' +
+             '<p class="b-title">关于我</p>' +
+             '<p class="b-text">武汉理工大学数字经济专业在读，GPA 4.070，专业排名 10/72。喜欢做手工、看电视剧、听音乐、吃面包和各种好吃的，也会弹钢琴。MBTI 是 ENFP，很喜欢和别人聊天交流。</p>' +
+             '<div class="about-stats">' +
+               '<div class="about-stat"><b>4.070</b><span>GPA</span></div>' +
+               '<div class="about-stat"><b>10<span class="stat-slash">/</span>72</b><span>专业排名</span></div>' +
+               '<div class="about-stat"><b>钢琴</b><span>特长</span></div>' +
+             '</div>' +
+           '</div>' +
+         '</div>' +
+         '<div class="block"><p class="b-title">学习经历</p><p class="b-text">武汉理工大学 · 数字经济专业（本科在读）</p></div>' +
+         '<div class="block"><p class="b-title">能力与爱好</p><div class="tags"><span>钢琴</span><span>数字经济</span><span>手工</span><span>音乐</span><span>追剧</span><span>美食</span><span>沟通交流</span></div></div>' +
+         '<div class="block"><p class="b-title">数字名片</p><p class="b-text">已生成专属个人数字名片，支持一键拨号、邮件直达、vCard 通讯录保存，移动端体验流畅。可直接分享给他人。</p></div>',
+    action:'<a class="sheet-btn" href="https://12ti278.github.io/digital-card/" target="_blank" rel="noopener">查看数字名片 <span class="arr">→</span></a>' },
+  homework: { num:'02', name:'阶段作业', img:'3e0555ad74af257cc2fdb44bc26ba4a2.jpg',
+    desc:'进入胶带画廊查看全部作业作品。',
+    html:'<div class="block"><p class="b-title">作品画廊</p><p class="b-text">共 5 件作业作品，以 3D 胶带卷形式陈列，可拖拽胶带留痕、切换视角、截图存档。</p></div>',
+    action:'<a class="sheet-btn" href="总作业1.html#works">打开 3D 胶带画廊 <span class="arr">→</span></a>' },
+  projects: { num:'03', name:'项目成果', img:'monet_garden.jpg',
+    desc:'放置课程相关项目，含功能说明、技术与项目入口。',
+    html:'<div class="block"><p class="b-title">🔮 塔罗秘仪 · Tarot Arcana</p><p class="b-text">纯离线、单文件的塔罗占卜 Web 应用。整合抽牌占卜、78 张牌义词典、每日一抽、历史记录，用 p5.js 视觉与程序化音乐营造沉浸氛围。</p><div class="tags"><span>p5.js</span><span>Web Audio</span><span>localStorage</span><span>单文件</span></div><a class="entry" href="tarot-evidence.html">查看过程证据 →</a></div>' +
+         '<div class="block"><p class="b-title">💬 全栈问答社区</p><p class="b-text">完整的技术问答社区项目，前端 React+TS+Vite+Tailwind，后端 Express+MySQL，JWT 鉴权、点赞事务、积分体系、通知系统。</p><div class="tags"><span>React</span><span>Express</span><span>MySQL</span><span>JWT</span><span>全栈</span></div><a class="entry" href="qa-community-project.html">查看项目成果 →</a>　<a class="entry" href="qa-community-evidence.html">查看过程证据 →</a></div>' +
+         '<div class="block"><p class="b-title">🌐 幻境回廊 · 个人博客</p><p class="b-text">复古核莫兰迪绿风格的个人作品集网站，p5.js 3D 胶带画廊、胶片颗粒质感、六大内容板块。</p><div class="tags"><span>HTML/CSS</span><span>p5.js</span><span>复古核</span><span>GitHub Pages</span></div><a class="entry" href="blog-project.html">查看项目成果 →</a>　<a class="entry" href="blog-evidence.html">查看过程证据 →</a></div>' },
+  evidence: { num:'04', name:'过程证据', img:'5e1338cb48c7a7a75e04f9943fbd9220.jpg',
+    desc:'放置需求、原型与问题解决记录等过程性材料。',
+    html:'<div class="block"><p class="b-title">🔮 塔罗秘仪 · 过程证据</p><p class="b-text">从需求研究、产品需求、技术设计到问题解决，完整记录塔罗项目从 0 到 1 的全过程。</p><div class="tags"><span>需求研究</span><span>PRD</span><span>技术设计</span><span>问题解决</span></div><a class="entry" href="tarot-evidence.html">查看完整过程证据 →</a></div>' +
+         '<div class="block"><p class="b-title">💬 全栈问答社区 · 过程证据</p><p class="b-text">全栈问答社区开发全过程记录：需求研究、产品需求、技术设计、问题解决记录、UI 风格迭代。</p><div class="tags"><span>全栈</span><span>MySQL事务</span><span>JWT鉴权</span><span>UI迭代</span></div><a class="entry" href="qa-community-evidence.html">查看完整过程证据 →</a></div>' +
+         '<div class="block"><p class="b-title">🌐 幻境回廊 · 过程证据</p><p class="b-text">博客网站从 0 到 1 的完整记录：需求研究、产品设计、视觉设计、技术实现、项目成果。</p><div class="tags"><span>复古核</span><span>视觉设计</span><span>p5.js</span><span>静态站</span></div><a class="entry" href="blog-evidence.html">查看完整过程证据 →</a></div>' },
+  iterations: { num:'05', name:'迭代记录', img:'6fa9a6ad8446f1d4856543adf430ee73.jpg',
+    desc:'依据 GitHub 提交记录，回看个人网站从初版到现在的迭代过程。',
+    html:'<div class="block"><p class="b-title">🌿 幻境回廊 · 个人网站迭代记录</p><p class="b-text">基于 GitHub 仓库 <b>12ti278/welcome-page</b> 的真实提交记录整理：从初版上线、多页面扩充、交互动效，到个人介绍型定位与项目成果补全，共 <b>7 个迭代阶段</b>、<b>32 次提交</b>。每一次改动都标注了日期、提交哈希与改动原因。</p><div class="tags"><span>7 个阶段</span><span>32 次提交</span><span>GitHub 记录</span><span>持续迭代</span></div><a class="entry" href="site-iterations.html">查看完整迭代记录 →</a></div>' +
+         '<div class="block"><div class="tl">' +
+         '<div class="tl-item"><p class="b-title">2026.10.22 · 初版上线</p><p class="b-text">欢迎页、作品集、数字名片三大板块成型，作业素材入库。</p></div>' +
+         '<div class="tl-item"><p class="b-title">2026.10.27 · 子页面扩充</p><p class="b-text">过程证据与迭代记录页上线，站点从单页扩展为多页面结构。</p></div>' +
+         '<div class="tl-item"><p class="b-title">2026.11.03 · 动效与照片简介</p><p class="b-text">胶带任意角度旋转、Lenis 平滑滚动，简介加入照片与 p5.js 微尘光晕。</p></div>' +
+         '<div class="tl-item"><p class="b-title">2026.11.04 · 个人介绍型定位</p><p class="b-text">加入 GPA 4.070、排名 10/72、钢琴特长，并补全项目成果与过程证据。</p></div>' +
+         '<div class="tl-item"><p class="b-title">2026.11.05 · 本轮改版</p><p class="b-text">迭代记录改为个人网站本身，按提交历史梳理为 7 个阶段。</p></div>' +
+         '</div></div>' },
+  review: { num:'06', name:'学习复盘', img:'d31aa0ed5bb7239c9398c0404c2a69bd.jpg',
+    desc:'Vibe Coding 全课程学习复盘：七大模块、三大转变、未来行动计划。',
+    html:'<div class="block"><p class="b-title">📊 学习概览</p><p class="b-text">从 AI 基础认知到 Vibe Coding 实战落地，共完成 <b>7 大核心模块</b>、<b>1 个实战项目</b>，形成了从基础 → 工具 → 技术 → 产品 → 工程 → 实战的完整学习闭环。</p><div class="tags"><span>7 大模块</span><span>1 个实战</span><span>3 大转变</span></div></div>' +
+         '<div class="block"><p class="b-title">01 · 课程导入与 AI 基础</p><p class="b-text">建立了对 AI 编程的正确认知：AI 不是替代程序员，而是提升开发效率的放大器。理解了 LLM 的 Token、上下文窗口、生成机制等基本原理，认识到 Prompt 工程是 AI 时代程序员的核心竞争力。</p></div>' +
+         '<div class="block"><p class="b-title">02 · Vibe Coding 学习路线、工具、提示词</p><p class="b-text">掌握了 Cursor、Trae、Copilot、Claude Code 等主流工具的特点与适用场景。理解了提示词设计的核心原则：清晰性、具体性、上下文完整性。核心感悟：好的提示词不是"命令"，而是"协作沟通"。</p><div class="tags"><span>角色设定</span><span>任务分解</span><span>示例引导</span><span>迭代优化</span></div></div>' +
+         '<div class="block"><p class="b-title">03 · 提示词 & 上下文 & 项目流程</p><p class="b-text">深入学习了结构化提示词、思维链（CoT）、少样本学习（Few-shot）等进阶技巧。最大收获是建立了"上下文工程"意识——上下文是 AI 编程的"燃料"，很多时候输出不理想不是模型能力不够，而是提供的上下文不足或不精准。</p></div>' +
+         '<div class="block"><p class="b-title">04 · 软件工程 & 前端和后端设计</p><p class="b-text">夯实了模块化分层架构、代码质量保障、版本控制协作等软件工程基本功。前端掌握了组件化思维、状态管理、响应式设计；后端掌握了 API 设计、数据库设计、安全性考虑。深刻体会：AI 能生成代码，但不能代替"设计思考"。</p></div>' +
+         '<div class="block"><p class="b-title">05 · 如何做出有用的产品</p><p class="b-text">建立了用户中心的产品思维，学习了从需求洞察、MVP 验证、功能优先级到数据驱动的完整产品流程。理解了 AI Native 产品的核心：从底层用 AI 重构体验，而非简单叠加。技术决定"能不能做出来"，产品思维决定"做出来有没有用"。</p></div>' +
+         '<div class="block"><p class="b-title">06 · 开发和部署</p><p class="b-text">掌握了从开发环境搭建、代码规范、构建优化到 CI/CD 部署上线的完整工程化流程。学会了性能监控、服务可用性告警、灰度发布等运维知识。完整的开发能力不仅是"写出来"，更是"跑起来、跑得稳、跑得好"。</p></div>' +
+         '<div class="block"><p class="b-title">07 · 个人数字名片开发实战</p><p class="b-text">通过完整项目实战，将前 6 个模块的知识融会贯通。从需求梳理 → 设计方案 → 代码生成 → 迭代优化 → 部署上线，完整走通了 Vibe Coding 的全流程。人的角色从"执行者"转向了"导演 + 审核者"。</p></div>' +
+         '<div class="block"><p class="b-title">💡 三大思维转变</p><div class="tl">' +
+         '<div class="tl-item"><p class="b-title">思维转变</p><p class="b-text">从"我来写代码"到"我来描述需求、AI 来实现"的协作思维</p></div>' +
+         '<div class="tl-item"><p class="b-title">能力升级</p><p class="b-text">掌握提示词工程、上下文管理、AI 项目流程等核心技能</p></div>' +
+         '<div class="tl-item"><p class="b-title">效率提升</p><p class="b-text">Vibe Coding 显著缩短了从想法到产品的开发周期</p></div>' +
+         '</div></div>' +
+         '<div class="block"><p class="b-title">📌 下一步行动计划</p><div class="tl">' +
+         '<div class="tl-item"><p class="b-title">持续练习</p><p class="b-text">每周用 Vibe Coding 完成一个小项目，保持手感和熟练度</p></div>' +
+         '<div class="tl-item"><p class="b-title">建立提示词库</p><p class="b-text">整理和沉淀常用的提示词模板，形成个人知识库</p></div>' +
+         '<div class="tl-item"><p class="b-title">深化产品思维</p><p class="b-text">多观察好产品、多思考用户需求，技术服务于价值</p></div>' +
+         '<div class="tl-item"><p class="b-title">探索更复杂项目</p><p class="b-text">逐步尝试全栈应用、多用户系统、AI 原生产品等</p></div>' +
+         '<div class="tl-item"><p class="b-title">社区交流</p><p class="b-text">关注 AI 编程领域的最新动态，保持技术敏感度</p></div>' +
+         '</div></div>',
+    action:'<a class="sheet-btn" href="https://12ti278.github.io/learning-review/" target="_blank" rel="noopener">查看完整复盘站 <span class="arr">→</span></a>' }
+};
 
-  // ===== 初始化轮播图 =====
+/* ============================================================
+   照片轮播
+   ============================================================ */
+(function(){
+  var IMGS = [
+    { f:'12f6de95993b201be67c7d5267645f42.jpg', id:'about',      name:'个人简介' },
+    { f:'3e0555ad74af257cc2fdb44bc26ba4a2.jpg', id:'homework',   name:'阶段作业' },
+    { f:'monet_garden.jpg', id:'projects',   name:'项目成果' },
+    { f:'5e1338cb48c7a7a75e04f9943fbd9220.jpg', id:'evidence',   name:'过程证据' },
+    { f:'6fa9a6ad8446f1d4856543adf430ee73.jpg', id:'iterations', name:'迭代记录' },
+    { f:'d31aa0ed5bb7239c9398c0404c2a69bd.jpg', id:'review',     name:'学习复盘' }
+  ];
   var slides = document.getElementById('slides');
   var dots = document.getElementById('dots');
+  var idx = 0, timer = null;
+
   var caption = document.getElementById('slideCaption');
   var stickerNum = document.getElementById('stickerNum');
   var stickerName = document.getElementById('stickerName');
   IMGS.forEach(function(m, i){
     var im = document.createElement('img');
-    im.src = 'assets/' + m.img;
+    im.src = DIR + m.f;
     im.alt = m.name;
-    im.dataset.index = i;
-    if (i === 0) im.className = 'active';
-    im.onerror = function(){
-      this.style.background = 'var(--surface-2)';
-    };
+    im.title = '点击进入「' + m.name + '」';
     slides.appendChild(im);
+
     var d = document.createElement('span');
     d.className = 'dot' + (i === 0 ? ' active' : '');
-    d.dataset.index = i;
-    d.addEventListener('click', function(){ goTo(i); });
+    d.addEventListener('click', function(){ go(i); restart(); });
     dots.appendChild(d);
   });
   caption.innerHTML = '点击进入 <b>' + IMGS[0].name + '</b>';
   if (stickerNum) stickerNum.textContent = 'No.01';
   if (stickerName) stickerName.textContent = IMGS[0].name;
 
-  var current = 0;
-  function goTo(idx){
-    current = (idx + IMGS.length) % IMGS.length;
-    var imgs = slides.querySelectorAll('img');
-    var dotList = dots.querySelectorAll('.dot');
-    imgs.forEach(function(im, i){
-      im.classList.toggle('active', i === current);
-    });
-    dotList.forEach(function(d, i){
-      d.classList.toggle('active', i === current);
-    });
-    var m = IMGS[current];
-    caption.innerHTML = '点击进入 <b>' + m.name + '</b>';
-    if (stickerNum) stickerNum.textContent = 'No.' + (current < 9 ? '0' : '') + (current + 1);
-    if (stickerName) stickerName.textContent = m.name;
+  function go(n){
+    idx = (n + IMGS.length) % IMGS.length;
+    var imgs = slides.children, ds = dots.children;
+    for (var i = 0; i < imgs.length; i++) imgs[i].classList.toggle('active', i === idx);
+    for (var j = 0; j < ds.length; j++) ds[j].classList.toggle('active', j === idx);
+    caption.innerHTML = '点击进入 <b>' + IMGS[idx].name + '</b>';
+    if (stickerNum) stickerNum.textContent = 'No.0' + (idx + 1);
+    if (stickerName) stickerName.textContent = IMGS[idx].name;
   }
-  document.getElementById('prevBtn').addEventListener('click', function(e){
-    e.stopPropagation(); goTo(current - 1);
-  });
-  document.getElementById('nextBtn').addEventListener('click', function(e){
-    e.stopPropagation(); goTo(current + 1);
+  function next(){ go(idx + 1); }
+  function prev(){ go(idx - 1); }
+  function restart(){ if (timer) clearInterval(timer); timer = setInterval(next, 3200); }
+
+  document.getElementById('next').addEventListener('click', function(){ next(); restart(); });
+  document.getElementById('prev').addEventListener('click', function(){ prev(); restart(); });
+
+  document.addEventListener('keydown', function(e){
+    if (document.getElementById('modal').classList.contains('open')) return;
+    if (e.key === 'ArrowRight'){ next(); restart(); }
+    else if (e.key === 'ArrowLeft'){ prev(); restart(); }
+    else if (e.key === 'Enter'){ location.href = '总作业1.html'; }
   });
 
-  // ===== 点击相框/图片 → 打开对应板块弹层 =====
-  document.getElementById('frame').addEventListener('click', function(){
-    openModal(IMGS[current].key);
-  });
+  /* 点击照片 → 打开模块详情弹层 */
+  slides.addEventListener('click', function(){ openModal(IMGS[idx].id); });
 
-  // ===== 章节链接 → 打开对应弹层 =====
+  restart();
+
+  /* 章节目录点击 → 打开弹层 */
   document.querySelectorAll('.chapters a').forEach(function(a){
     a.addEventListener('click', function(e){
       e.preventDefault();
-      openModal(a.dataset.target);
+      openModal(this.getAttribute('data-mod'));
     });
   });
+})();
 
-  // ===== 弹层控制 =====
-  var modal = document.getElementById('modal');
-  var modalContent = document.getElementById('modalContent');
-  var modalBg = document.getElementById('modalBg');
+/* ============================================================
+   模块详情弹层控制
+   ============================================================ */
+/* 个人简介：p5.js 纸面微尘 + 暖光晕（打开时启动，关闭时清理）
+   概念：旧照片用胶带贴在纸上，细小的纸屑与尘埃在暖光里缓慢上浮。 */
+var __aboutFx = null, __aboutFxRO = null, __aboutFxDetach = null, __aboutFxWait = null, __aboutFxTries = 0;
+function removeAboutFx(){
+  clearTimeout(__aboutFxWait); __aboutFxWait = null;
+  if (__aboutFxDetach){ try{ __aboutFxDetach(); }catch(e){} __aboutFxDetach = null; }
+  if (__aboutFxRO){ try{ __aboutFxRO.disconnect(); }catch(e){} __aboutFxRO = null; }
+  if (__aboutFx){ try{ __aboutFx.remove(); }catch(e){} __aboutFx = null; }
+}
+function initAboutFx(){
+  var host = document.getElementById('aboutFx');
+  if (!host){ __aboutFxTries = 0; removeAboutFx(); return; }   // 弹层已关闭
+  if (!window.p5){                                 // CDN 可能晚于弹窗动画到达
+    if (__aboutFxTries++ > 300){ __aboutFxTries = 0; return; } // 兜底等待约 36s
+    clearTimeout(__aboutFxWait);
+    __aboutFxWait = setTimeout(initAboutFx, 120);
+    return;
+  }
+  __aboutFxTries = 0;
+  removeAboutFx();
+  var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  var COLORS = { ink:[59,56,47], green:[111,125,94], gold:[201,185,138] };  // 取自页面 :root 配色
 
-  function openModal(key){
-    var m = IMGS.find(function(x){ return x.key === key; });
-    if (!m) return;
-    var html =
-      '<div class="sheet-eyebrow"><span class="sheet-stamp">No.' + m.num + '</span> MODULE ' + m.num + '</div>' +
-      '<h2 class="sheet-title">' + m.name + '</h2>' +
-      '<p class="sheet-desc">' + m.desc + '</p>' +
-      '<hr class="sheet-rule"/>' +
-      m.html;
-    if (m.action) {
-      html += '<hr class="sheet-rule"/>' + m.action;
+  __aboutFx = new p5(function(p){
+    var W = 0, H = 0, hx = 0, hy = 0, hr = 200;
+    var motes = [], sprite = null, t0 = 0;
+    var px = 0, py = 0, tx = 0, ty = 0;   // 指针视差（缓动）
+    var LAYERS = 3;
+
+    function measure(){
+      W = Math.max(180, host.clientWidth || 0);
+      H = Math.max(180, host.clientHeight || 0);
+      var ph = host.parentNode && host.parentNode.querySelector('.about-portrait');
+      if (ph){
+        var hb = host.getBoundingClientRect(), pb = ph.getBoundingClientRect();
+        hx = pb.left - hb.left + pb.width / 2;
+        hy = pb.top - hb.top + pb.height / 2;
+        hr = Math.max(pb.height * 0.72, 150);
+      } else {
+        hx = W * 0.24; hy = H * 0.5; hr = Math.max(H * 0.65, 150);
+      }
     }
-    modalContent.innerHTML = html;
-    modalBg.style.backgroundImage = 'url(assets/' + m.img + ')';
-    modal.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    /* 一次性生成柔边光点精灵，避免每帧用 filter:blur */
+    function makeSprite(){
+      var g = p.createGraphics(64, 64);
+      g.pixelDensity(1);
+      g.clear();
+      var ctx = g.drawingContext;
+      var grd = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grd.addColorStop(0, 'rgba(255,255,255,1)');
+      grd.addColorStop(0.4, 'rgba(255,255,255,0.6)');
+      grd.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, 64, 64);
+      sprite = g;
+    }
+    function seed(){
+      motes = [];
+      for (var i = 0; i < 64; i++){
+        var z = i % LAYERS;                 // 0 近 / 2 远，远层更虚更慢
+        motes.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          z: z,
+          r: (z === 0 ? 6 : z === 1 ? 13 : 24) * (0.55 + Math.random() * 0.9),
+          sp: 0.10 + z * 0.10 + Math.random() * 0.08,
+          a: 0.05 + Math.random() * 0.07 + z * 0.015,
+          s: Math.random() * 1000
+        });
+      }
+    }
+    function halo(t){
+      var breathe = 0.5 + 0.5 * Math.sin(t * 0.55);
+      var ctx = p.drawingContext;
+      var cx = hx + px * 5, cy = hy + py * 4;
+      ctx.save();
+      var g = ctx.createRadialGradient(cx, cy, 0, cx, cy, hr);
+      g.addColorStop(0, 'rgba(201,185,138,' + (0.13 + breathe * 0.05).toFixed(3) + ')');
+      g.addColorStop(0.5, 'rgba(201,185,138,0.045)');
+      g.addColorStop(1, 'rgba(201,185,138,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+    }
+
+    p.setup = function(){
+      measure();
+      p.pixelDensity(1);                    // 环境动效不需要 retina 过采样
+      var c = p.createCanvas(W, H);
+      c.parent(host);
+      c.style('position', 'absolute');
+      c.style('left', '0');
+      c.style('top', '0');
+      p.frameRate(30);
+      p.noStroke();
+      makeSprite();
+      seed();
+      t0 = p.millis();
+
+      if (reduce){
+        p.noLoop();
+        p.redraw();                         // 仅静止渲染一帧
+      } else {
+        var hero = host.parentNode;
+        if (hero){
+          var onMove = function(e){
+            var b = host.getBoundingClientRect();
+            tx = ((e.clientX - b.left) / Math.max(1, b.width) - 0.5) * 2;
+            ty = ((e.clientY - b.top) / Math.max(1, b.height) - 0.5) * 2;
+          };
+          hero.addEventListener('pointermove', onMove);
+          __aboutFxDetach = function(){ hero.removeEventListener('pointermove', onMove); };
+        }
+      }
+
+      if (window.ResizeObserver){
+        __aboutFxRO = new ResizeObserver(function(){
+          var nw = Math.max(180, host.clientWidth || 0);
+          var nh = Math.max(180, host.clientHeight || 0);
+          if (Math.abs(nw - W) > 2 || Math.abs(nh - H) > 2){
+            measure(); p.resizeCanvas(W, H); seed();
+            if (reduce) p.redraw();
+          }
+        });
+        __aboutFxRO.observe(host);
+      }
+    };
+
+    p.draw = function(){
+      var t = (p.millis() - t0) / 1000;
+      px += (tx - px) * 0.045;
+      py += (ty - py) * 0.045;
+      p.clear();
+      halo(t);
+
+      for (var i = 0; i < motes.length; i++){
+        var m = motes[i];
+        m.y -= m.sp * (0.55 + p.noise(m.s, t * 0.22) * 0.9);
+        m.x += (p.noise(m.s + 37, t * 0.18) - 0.5) * 0.9 * (m.z + 1);
+        if (m.y < -40){ m.y = H + 40; m.x = Math.random() * W; }
+        if (m.x < -40) m.x = W + 40; else if (m.x > W + 40) m.x = -40;
+
+        var off = (m.z + 1) * 2.6;
+        var col = m.z === 0 ? COLORS.ink : (m.z === 1 ? COLORS.green : COLORS.gold);
+        var tw = 0.7 + 0.3 * Math.sin(t * 1.3 + m.s);
+        p.tint(col[0], col[1], col[2], m.a * tw * 255);
+        p.image(sprite, m.x + px * off - m.r, m.y + py * off - m.r, m.r * 2, m.r * 2);
+      }
+      p.noTint();
+    };
+  });
+}
+
+function openModal(key){
+  var m = MODS[key];
+  if (!m) return;
+
+  document.getElementById('modalBg').style.backgroundImage = "url('" + DIR + m.img + "')";
+  document.getElementById('modStamp').textContent = m.num;
+  document.getElementById('modTitle').textContent = m.name;
+  document.getElementById('modDesc').textContent = m.desc;
+  document.getElementById('modContent').innerHTML = m.html;
+  if (key === 'about') setTimeout(initAboutFx, 120); else removeAboutFx();
+
+  var acts = document.getElementById('modActions');
+  acts.innerHTML = '';
+  if (m.action) acts.insertAdjacentHTML('beforeend', m.action);
+  acts.insertAdjacentHTML('beforeend', '<button class="sheet-btn ghost" id="modCloseBtn" type="button">关闭 <span class="arr">×</span></button>');
+
+  document.getElementById('modal').classList.add('open');
+  document.body.classList.add('modal-open');
+  if (window.lenis) window.lenis.stop();
+  history.replaceState(null, '', '?mod=' + key);
+
+  document.getElementById('modCloseBtn').addEventListener('click', closeModal);
+}
+
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  document.body.classList.remove('modal-open');
+  if (window.lenis) window.lenis.start();
+  removeAboutFx();
+  history.replaceState(null, '', location.pathname);
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', closeModal);
+
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && document.getElementById('modal').classList.contains('open')){
+    closeModal();
   }
-  function closeModal(){
-    modal.classList.remove('open');
-    document.body.style.overflow = '';
+});
+
+/* 页面加载时检查 URL 参数，自动打开对应模块 */
+(function(){
+  var q = location.search.match(/[?&]mod=([a-z]+)/i);
+  if (q && MODS[q[1]]){
+    setTimeout(function(){ openModal(q[1]); }, 100);
   }
-  document.getElementById('modalClose').addEventListener('click', closeModal);
-  document.getElementById('modalOverlay').addEventListener('click', closeModal);
-  document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+})();
+</script>
+
+<!-- ========== p5.js（个人简介微尘效果） ========== -->
+<script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js" onload="if (window.initAboutFx && document.getElementById('aboutFx')) initAboutFx();"></script>
+<script>if (window.p5) p5.disableFriendlyErrors = true;</script>
+
+<!-- ========== Lenis 全局平滑阻尼滚动 ========== -->
+<script src="https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js"></script>
+<script>
+/* ============================================================
+   Lenis · 全局平滑阻尼滚动（参考 laxspace.co 的滚动手感）
+   ============================================================ */
+(function(){
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!window.Lenis || reduce) return;    // CDN 未加载 / 系统减少动效 → 回退原生滚动
+
+  window.lenis = new Lenis({
+    duration: 1.2,                        // 阻尼时长，越小越跟手
+    easing: function(t){ return Math.min(1, 1.001 - Math.pow(2, -10 * t)); },
+    smoothWheel: true
   });
 
-  // ===== Lenis 平滑滚动 =====
-  if (window.Lenis) {
-    var lenis = new Lenis({
-      duration: 1.2,
-      easing: function(t){ return Math.min(1, 1.001 - Math.pow(2, -10 * t)); },
-      smoothWheel: true
-    });
-    function raf(time){
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
-    // 锚点平滑滚动
-    document.querySelectorAll('a[href^="#"]').forEach(function(a){
-      a.addEventListener('click', function(e){
-        var el = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
-        if (!el) return;
-        var hash = el.getAttribute('href');
-        if (!hash || hash.length < 2) return;
-        var target = document.querySelector(hash);
-        if (!target) return;
-        e.preventDefault();
-        window.lenis.scrollTo(target, { duration: 1.4 });
-      });
-    });
-  }
+  function raf(time){ window.lenis.raf(time); requestAnimationFrame(raf); }
+  requestAnimationFrame(raf);
+
+  /* 同页锚点平滑滚动 */
+  document.addEventListener('click', function(e){
+    var el = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
+    if (!el) return;
+    var hash = el.getAttribute('href');
+    if (!hash || hash.length < 2) return;
+    var target = document.querySelector(hash);
+    if (!target) return;
+    e.preventDefault();
+    window.lenis.scrollTo(target, { duration: 1.4 });
+  });
 })();
 </script>
 
 </body>
 </html>
+
