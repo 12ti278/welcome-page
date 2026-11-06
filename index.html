@@ -383,6 +383,49 @@
   .tags{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px;}
   .tags span{font-size:12px; letter-spacing:1px; color:var(--green-deep);
     border:1px solid var(--line); padding:3px 12px; background:var(--cream);}
+
+  /* —— 能力与爱好：悬停/轻触标签 → 弹起并弹出纸质照片 —— */
+  .b-hint{font-size:10px; letter-spacing:1px; color:var(--vintage); font-weight:400; margin-left:8px;}
+  .tags .hobby-chip{
+    cursor:default; position:relative;
+    transition:transform .32s cubic-bezier(.2,.9,.3,1.35), background-color .28s,
+      border-color .28s, color .28s, box-shadow .28s;
+  }
+  .tags .hobby-chip.has-photo{cursor:pointer;}
+  .tags .hobby-chip.is-hot{
+    transform:translateY(-5px) rotate(-3deg) scale(1.06);
+    background:var(--cream-2); border-color:var(--green-deep);
+    color:var(--green-deep);
+    box-shadow:0 8px 16px rgba(59,56,47,.20);
+  }
+  .tags .hobby-chip:focus-visible{outline:1px dashed var(--vintage); outline-offset:3px;}
+
+  .hobby-photo{
+    position:fixed; left:0; top:0; z-index:1200; width:186px;
+    padding:8px 8px 28px; background:#fbf8ef; border:1px solid var(--line);
+    box-shadow:0 18px 36px rgba(0,0,0,.34), 0 2px 6px rgba(0,0,0,.16);
+    transform:translate(-50%,-100%) rotate(-3deg) scale(.84);
+    transform-origin:50% 100%;
+    opacity:0; visibility:hidden; pointer-events:none;
+    transition:opacity .2s ease, transform .34s cubic-bezier(.2,.9,.3,1.4), visibility 0s linear .34s;
+  }
+  .hobby-photo.on{
+    opacity:1; visibility:visible;
+    transform:translate(-50%,-100%) rotate(-2deg) scale(1);
+    transition:opacity .18s ease, transform .38s cubic-bezier(.2,.9,.3,1.45), visibility 0s;
+  }
+  .hobby-photo.below{transform:translate(-50%,0) rotate(-3deg) scale(.84); transform-origin:50% 0;}
+  .hobby-photo.below.on{transform:translate(-50%,0) rotate(-2deg) scale(1);}
+  .hobby-photo img{display:block; width:100%; height:172px; object-fit:cover; background:#e3dcc8;}
+  .hobby-photo .hp-cap{position:absolute; left:8px; right:8px; bottom:6px; text-align:center;
+    font-size:11px; letter-spacing:2px; color:var(--ink-muted);}
+  .hobby-photo .hp-tape{position:absolute; top:-11px; left:50%; width:72px; height:22px;
+    transform:translateX(-50%) rotate(-4deg); background:rgba(201,185,138,.72);
+    box-shadow:0 1px 3px rgba(0,0,0,.18);}
+  @media (prefers-reduced-motion: reduce){
+    .tags .hobby-chip, .hobby-photo{transition-duration:.01s;}
+    .tags .hobby-chip.is-hot{transform:none;}
+  }
   .entry{display:block; font-size:12.5px; letter-spacing:1px; color:var(--vintage); margin-top:10px;}
   .tl{position:relative; padding-left:16px; border-left:1px solid var(--line);}
   .tl-item{position:relative; padding-bottom:14px;}
@@ -520,6 +563,13 @@
   </article>
 </div>
 
+<!-- 能力与爱好：悬停 / 轻触标签时弹出的纸质照片 -->
+<div class="hobby-photo" id="hobbyPhoto" aria-hidden="true">
+  <span class="hp-tape"></span>
+  <img id="hobbyPhotoImg" alt="">
+  <span class="hp-cap" id="hobbyPhotoCap"></span>
+</div>
+
 <script>
 /* ============================================================
    模块数据
@@ -542,7 +592,12 @@ var MODS = {
            '</div>' +
          '</div>' +
          '<div class="block"><p class="b-title">学习经历</p><p class="b-text">武汉理工大学 · 数字经济专业（本科在读）</p></div>' +
-         '<div class="block"><p class="b-title">能力与爱好</p><div class="tags"><span>钢琴</span><span>数字经济</span><span>手工</span><span>音乐</span><span>追剧</span><span>美食</span><span>沟通交流</span></div></div>' +
+         '<div class="block"><p class="b-title">能力与爱好<span class="b-hint">悬停 / 轻触标签看照片</span></p><div class="tags tags-hobby">' +
+           '<span class="hobby-chip">钢琴</span><span class="hobby-chip">数字经济</span><span class="hobby-chip">手工</span><span class="hobby-chip">音乐</span>' +
+           '<span class="hobby-chip has-photo" tabindex="0" role="button" data-photo="assets/hobby-drama.jpg" data-cap="追剧">追剧</span>' +
+           '<span class="hobby-chip has-photo" tabindex="0" role="button" data-photo="assets/hobby-food.jpg" data-cap="美食">美食</span>' +
+           '<span class="hobby-chip">沟通交流</span>' +
+         '</div></div>' +
          '<div class="block"><p class="b-title">数字名片</p><p class="b-text">已生成专属个人数字名片，支持一键拨号、邮件直达、vCard 通讯录保存，移动端体验流畅。可直接分享给他人。</p></div>',
     action:'<a class="sheet-btn" href="https://12ti278.github.io/digital-card/" target="_blank" rel="noopener">查看数字名片 <span class="arr">→</span></a>' },
   homework: { num:'02', name:'阶段作业', img:'3e0555ad74af257cc2fdb44bc26ba4a2.jpg',
@@ -868,6 +923,129 @@ document.addEventListener('keydown', function(e){
   var q = location.search.match(/[?&]mod=([a-z]+)/i);
   if (q && MODS[q[1]]){
     setTimeout(function(){ openModal(q[1]); }, 100);
+  }
+})();
+
+/* ============================================================
+   能力与爱好：悬停 / 轻触标签 → 轻微弹起，并在标签旁弹出一张纸质照片
+   ============================================================ */
+(function(){
+  var card = document.getElementById('hobbyPhoto');
+  var img = document.getElementById('hobbyPhotoImg');
+  var cap = document.getElementById('hobbyPhotoCap');
+  if (!card || !img) return;
+
+  var activeChip = null;
+
+  // 预载照片，第一次悬停时不会闪白
+  ['assets/hobby-drama.jpg', 'assets/hobby-food.jpg'].forEach(function(src){
+    var i = new Image(); i.src = src;
+  });
+
+  function placePhoto(chip){
+    var r = chip.getBoundingClientRect();
+    var w = card.offsetWidth || 186;
+    var h = card.offsetHeight || 214;
+    var x = r.left + r.width / 2;
+    x = Math.max(w / 2 + 10, Math.min(window.innerWidth - w / 2 - 10, x));
+    var below = false;
+    var y = r.top - 12;
+    if (y - h < 10){ below = true; y = r.bottom + 12; }
+    card.style.left = x + 'px';
+    card.style.top = y + 'px';
+    card.classList.toggle('below', below);
+  }
+
+  function showPhoto(chip){
+    var src = chip.getAttribute('data-photo');
+    if (img.getAttribute('src') !== src) img.src = src;
+    img.alt = chip.textContent + ' 的照片';
+    cap.textContent = chip.getAttribute('data-cap') || chip.textContent;
+    placePhoto(chip);
+    // 先摆好位置再显示，卡片不会从上一张的位置飞过来
+    void card.offsetWidth;
+    card.classList.add('on');
+  }
+
+  function hidePhoto(){ card.classList.remove('on'); }
+
+  function activate(chip){
+    if (!chip || activeChip === chip) return;
+    if (activeChip) activeChip.classList.remove('is-hot');
+    activeChip = chip;
+    chip.classList.add('is-hot');
+    if (chip.hasAttribute('data-photo')) showPhoto(chip); else hidePhoto();
+  }
+
+  function deactivate(chip){
+    if (!chip) return;
+    chip.classList.remove('is-hot');
+    if (activeChip === chip) activeChip = null;
+    hidePhoto();
+  }
+
+  function chipFrom(el){
+    return el && el.closest ? el.closest('.hobby-chip') : null;
+  }
+
+  // 鼠标悬停
+  document.addEventListener('pointerover', function(e){
+    if (e.pointerType === 'touch') return;
+    var chip = chipFrom(e.target);
+    if (chip) activate(chip);
+    else if (activeChip && !card.contains(e.target)) deactivate(activeChip);
+  });
+  document.addEventListener('pointerout', function(e){
+    if (e.pointerType === 'touch') return;
+    var chip = chipFrom(e.target);
+    if (!chip || chip !== activeChip) return;
+    if (chip.contains(e.relatedTarget)) return;          // 还在标签内部
+    if (chipFrom(e.relatedTarget)) return;               // 直接移到另一个标签
+    deactivate(chip);
+  });
+
+  // 触屏轻触 / 键盘焦点
+  document.addEventListener('pointerdown', function(e){
+    var chip = chipFrom(e.target);
+    if (!chip){
+      if (activeChip) deactivate(activeChip);
+      return;
+    }
+    if (e.pointerType === 'touch'){
+      if (chip === activeChip) deactivate(chip); else activate(chip);
+    }
+  });
+  document.addEventListener('focusin', function(e){
+    var chip = chipFrom(e.target);
+    if (chip) activate(chip);
+  });
+  document.addEventListener('focusout', function(e){
+    var chip = chipFrom(e.target);
+    if (chip) deactivate(chip);
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && activeChip) deactivate(activeChip);
+  });
+
+  // 弹层内滚动 / 窗口尺寸变化时，卡片跟着标签走
+  function reposition(){
+    if (activeChip && card.classList.contains('on')) placePhoto(activeChip);
+  }
+  window.addEventListener('scroll', reposition, true);
+  window.addEventListener('resize', reposition);
+
+  // 关闭弹层或换一个模块时收起照片
+  function resetHobby(){
+    if (activeChip){ activeChip.classList.remove('is-hot'); activeChip = null; }
+    hidePhoto();
+  }
+  var modal = document.getElementById('modal');
+  if (modal){
+    new MutationObserver(function(){
+      if (!modal.classList.contains('open')) resetHobby();
+    }).observe(modal, { attributes: true, attributeFilter: ['class'] });
+    var content = document.getElementById('modContent');
+    if (content) new MutationObserver(resetHobby).observe(content, { childList: true });
   }
 })();
 </script>
