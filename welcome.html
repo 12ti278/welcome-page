@@ -71,6 +71,20 @@
   .bg-art{
     position:fixed; inset:0; z-index:-1; pointer-events:none;
     background:#170a0e url("assets/mint-silence-bg.webp") center center / cover no-repeat;
+    transform-origin:50% 46%;
+    animation:bgDrift 42s ease-in-out infinite alternate;
+    will-change:transform;
+  }
+  /* 缓慢推拉平移，像镜头在叶影间呼吸 */
+  @keyframes bgDrift{
+    0%{transform:scale(1.03) translate3d(-.6%, .4%, 0);}
+    50%{transform:scale(1.075) translate3d(.8%, -.6%, 0);}
+    100%{transform:scale(1.04) translate3d(-.5%, -1%, 0);}
+  }
+  /* 首页 p5 微尘层：固定在背景之上、内容之下 */
+  .home-fx{
+    position:fixed !important; inset:0; z-index:-1;
+    pointer-events:none; display:block;
   }
 
   /* 慢呼吸的光晕背景 */
@@ -450,6 +464,7 @@
     transform:translateX(-50%) rotate(-4deg); background:rgba(201,185,138,.72);
     box-shadow:0 1px 3px rgba(0,0,0,.18);}
   @media (prefers-reduced-motion: reduce){
+    .bg-art, .glow{animation:none;}
     .tags .hobby-chip, .hobby-photo{transition-duration:.01s;}
     .tags .hobby-chip.is-hot{transform:none;}
     .tags-hobby .hobby-chip, .tags .hobby-chip.is-hot,
@@ -681,12 +696,14 @@ var MODS = {
     desc:'放置课程相关项目，含功能说明、技术与项目入口。',
     html:'<div class="block"><p class="b-title">🔮 塔罗秘仪 · Tarot Arcana</p><p class="b-text">纯离线、单文件的塔罗占卜 Web 应用。整合抽牌占卜、78 张牌义词典、每日一抽、历史记录，用 p5.js 视觉与程序化音乐营造沉浸氛围。</p><div class="tags"><span>p5.js</span><span>Web Audio</span><span>localStorage</span><span>单文件</span></div><a class="entry" href="tarot-evidence.html">查看过程证据 →</a></div>' +
          '<div class="block"><p class="b-title">💬 全栈问答社区</p><p class="b-text">完整的技术问答社区项目，前端 React+TS+Vite+Tailwind，后端 Express+MySQL，JWT 鉴权、点赞事务、积分体系、通知系统。</p><div class="tags"><span>React</span><span>Express</span><span>MySQL</span><span>JWT</span><span>全栈</span></div><a class="entry" href="qa-community-project.html">查看项目成果 →</a>　<a class="entry" href="qa-community-evidence.html">查看过程证据 →</a></div>' +
-         '<div class="block"><p class="b-title">🌐 幻境回廊 · 个人博客</p><p class="b-text">复古核莫兰迪绿风格的个人作品集网站，p5.js 3D 胶带画廊、胶片颗粒质感、六大内容板块。</p><div class="tags"><span>HTML/CSS</span><span>p5.js</span><span>复古核</span><span>GitHub Pages</span></div><a class="entry" href="blog-project.html">查看项目成果 →</a>　<a class="entry" href="blog-evidence.html">查看过程证据 →</a></div>' },
+         '<div class="block"><p class="b-title">🌐 幻境回廊 · 个人博客</p><p class="b-text">复古核莫兰迪绿风格的个人作品集网站，p5.js 3D 胶带画廊、胶片颗粒质感、六大内容板块。</p><div class="tags"><span>HTML/CSS</span><span>p5.js</span><span>复古核</span><span>GitHub Pages</span></div><a class="entry" href="blog-project.html">查看项目成果 →</a>　<a class="entry" href="blog-evidence.html">查看过程证据 →</a></div>' +
+         '<div class="block"><p class="b-title">🕰️ 时光商社 · 中古商城</p><p class="b-text">复古中古电商网站，包含商品分类、商品搜索、优惠券、购物车与登录入口，暖木色与烫金质感还原旧货商行的氛围。</p><div class="tags"><span>电商</span><span>商品分类</span><span>购物车</span><span>复古视觉</span></div><a class="entry" href="https://share.traecontent.cn/artifact/A2MECA.VHO0RIZ" target="_blank" rel="noopener">查看项目成果 →</a></div>' },
   evidence: { num:'04', name:'过程证据', img:'5e1338cb48c7a7a75e04f9943fbd9220.jpg',
     desc:'放置需求、原型与问题解决记录等过程性材料。',
     html:'<div class="block"><p class="b-title">🔮 塔罗秘仪 · 过程证据</p><p class="b-text">从需求研究、产品需求、技术设计到问题解决，完整记录塔罗项目从 0 到 1 的全过程。</p><div class="tags"><span>需求研究</span><span>PRD</span><span>技术设计</span><span>问题解决</span></div><a class="entry" href="tarot-evidence.html">查看完整过程证据 →</a></div>' +
          '<div class="block"><p class="b-title">💬 全栈问答社区 · 过程证据</p><p class="b-text">全栈问答社区开发全过程记录：需求研究、产品需求、技术设计、问题解决记录、UI 风格迭代。</p><div class="tags"><span>全栈</span><span>MySQL事务</span><span>JWT鉴权</span><span>UI迭代</span></div><a class="entry" href="qa-community-evidence.html">查看完整过程证据 →</a></div>' +
-         '<div class="block"><p class="b-title">🌐 幻境回廊 · 过程证据</p><p class="b-text">博客网站从 0 到 1 的完整记录：需求研究、产品设计、视觉设计、技术实现、项目成果。</p><div class="tags"><span>复古核</span><span>视觉设计</span><span>p5.js</span><span>静态站</span></div><a class="entry" href="blog-evidence.html">查看完整过程证据 →</a></div>' },
+         '<div class="block"><p class="b-title">🌐 幻境回廊 · 过程证据</p><p class="b-text">博客网站从 0 到 1 的完整记录：需求研究、产品设计、视觉设计、技术实现、项目成果。</p><div class="tags"><span>复古核</span><span>视觉设计</span><span>p5.js</span><span>静态站</span></div><a class="entry" href="blog-evidence.html">查看完整过程证据 →</a></div>' +
+         '<div class="block"><p class="b-title">🕰️ 时光商社 · 过程证据</p><p class="b-text">中古商城项目从需求梳理、信息架构、视觉风格到页面落地与问题解决的完整过程记录。</p><div class="tags"><span>需求研究</span><span>视觉设计</span><span>页面实现</span><span>问题解决</span></div><a class="entry" href="https://share.traecontent.cn/artifact/ZRF1QSCK57TEC8" target="_blank" rel="noopener">查看完整过程证据 →</a></div>' },
   iterations: { num:'05', name:'迭代记录', img:'6fa9a6ad8446f1d4856543adf430ee73.jpg',
     desc:'依据 GitHub 提交记录，回看个人网站从初版到现在的迭代过程。',
     html:'<div class="block"><p class="b-title">🌿 幻境回廊 · 个人网站迭代记录</p><p class="b-text">基于 GitHub 仓库 <b>12ti278/welcome-page</b> 的真实提交记录整理：从初版上线、多页面扩充、交互动效，到个人介绍型定位与项目成果补全，共 <b>7 个迭代阶段</b>、<b>32 次提交</b>。每一次改动都标注了日期、提交哈希与改动原因。</p><div class="tags"><span>7 个阶段</span><span>32 次提交</span><span>GitHub 记录</span><span>持续迭代</span></div><a class="entry" href="site-iterations.html">查看完整迭代记录 →</a></div>' +
@@ -806,6 +823,85 @@ function removeAboutFx(){
   if (__aboutFxRO){ try{ __aboutFxRO.disconnect(); }catch(e){} __aboutFxRO = null; }
   if (__aboutFx){ try{ __aboutFx.remove(); }catch(e){} __aboutFx = null; }
 }
+/* 首页背景：暖金微尘在叶影里缓慢上浮（与 CSS 背景推拉叠加，不依赖 p5） */
+var __homeBg = null;
+function initHomeBg(){
+  if (__homeBg) return;
+  var reduce = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  if (reduce) return;
+
+  var canvas = document.createElement('canvas');
+  canvas.className = 'home-fx';
+  canvas.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(canvas);
+  var ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  __homeBg = canvas;
+
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var W = 0, H = 0, motes = [], raf = null, last = 0, tick = 0;
+  var GOLD = [201, 185, 138], GREEN = [184, 196, 163];
+
+  function make(init){
+    return {
+      x: Math.random() * (W || window.innerWidth),
+      y: init ? Math.random() * (H || window.innerHeight) : (H || window.innerHeight) + 8 + Math.random() * 22,
+      r: 0.7 + Math.random() * 1.7,
+      vy: 0.12 + Math.random() * 0.3,
+      ph: Math.random() * Math.PI * 2,
+      drift: (Math.random() - 0.5) * 0.18,
+      a: 0.18 + Math.random() * 0.32,
+      gold: Math.random() < 0.72
+    };
+  }
+  function resize(){
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = Math.max(1, Math.floor(W * dpr));
+    canvas.height = Math.max(1, Math.floor(H * dpr));
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  resize();
+  for (var i = 0; i < 44; i++) motes.push(make(true));
+
+  function frame(t){
+    raf = requestAnimationFrame(frame);
+    if (t - last < 33) return;          // 约 30fps，省电
+    last = t;
+    tick++;
+    ctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < motes.length; i++){
+      var m = motes[i];
+      m.y -= m.vy;
+      m.x += Math.sin(tick * 0.016 + m.ph) * 0.22 + m.drift * 0.12;
+      if (m.y < -14){ motes[i] = make(false); continue; }
+      if (m.x < -14) m.x = W + 14;
+      else if (m.x > W + 14) m.x = -14;
+      var col = m.gold ? GOLD : GREEN;
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(' + col[0] + ',' + col[1] + ',' + col[2] + ',' + (m.a * 0.16) + ')';
+      ctx.arc(m.x, m.y, m.r * 3.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(' + col[0] + ',' + col[1] + ',' + col[2] + ',' + m.a + ')';
+      ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  raf = requestAnimationFrame(frame);
+
+  window.addEventListener('resize', resize);
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden){
+      if (raf){ cancelAnimationFrame(raf); raf = null; }
+    } else if (!raf){
+      last = 0;
+      raf = requestAnimationFrame(frame);
+    }
+  });
+}
+initHomeBg();
 function initAboutFx(){
   var host = document.getElementById('aboutFx');
   if (!host){ __aboutFxTries = 0; removeAboutFx(); return; }   // 弹层已关闭
@@ -1359,7 +1455,7 @@ document.addEventListener('keydown', function(e){
 </script>
 
 <!-- ========== p5.js（个人简介微尘效果） ========== -->
-<script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js" onload="if (window.initAboutFx && document.getElementById('aboutFx')) { initAboutFx(); if (window.initAboutSpark) initAboutSpark(); }"></script>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.11.3/lib/p5.min.js" onload="if (window.initHomeBg) initHomeBg(); if (window.initAboutFx && document.getElementById('aboutFx')) { initAboutFx(); if (window.initAboutSpark) initAboutSpark(); }"></script>
 <script>if (window.p5) p5.disableFriendlyErrors = true;</script>
 
 <!-- ========== Lenis 全局平滑阻尼滚动 ========== -->
