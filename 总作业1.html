@@ -691,9 +691,12 @@ function preloadAll(cb){
   if (total === 0) { cb(); return; }
   WORKS.forEach(function(w, i){
     const img = new Image();
+    let settled = false;   // onload / onerror / 兜底只计一次，避免同一张图重复计数
     if (/^https?:\/\//i.test(w.thumb)) img.crossOrigin = 'anonymous';
 
     function onDone(ok){
+      if (settled) return;
+      settled = true;
       workImages[i] = ok ? img : null;
       const loaded = workImages.filter(Boolean).length;
       const hudLoad = document.getElementById('hudLoad');
@@ -715,11 +718,10 @@ function preloadAll(cb){
     img.onerror = function(){ onDone(false); };
     img.src = w.thumb;
 
+    // 慢网络下 5s 常常还没下完，兜底放宽到 12s，避免把仍在加载的截图标成失败而少一个作品
     setTimeout(function(){
-      if (!img.complete || !img.naturalWidth){
-        if (workImages[i] === undefined) onDone(false);
-      }
-    }, 5000);
+      if (!settled) onDone(img.complete && img.naturalWidth > 0);
+    }, 12000);
   });
 }
 
