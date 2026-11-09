@@ -583,6 +583,61 @@
   .hobby-photo .hp-tape{position:absolute; top:-11px; left:50%; width:72px; height:22px;
     transform:translateX(-50%) rotate(-4deg); background:rgba(201,185,138,.72);
     box-shadow:0 1px 3px rgba(0,0,0,.18);}
+
+  /* —— 能力与爱好：点击「音乐」→ 纸质歌单卡片（网易云播放器） —— */
+  .hobby-chip.has-music{cursor:pointer;}
+  .hobby-chip.has-music::after{content:"♪"; margin-left:6px; font-size:10px; color:var(--vintage);}
+  .music-card{
+    position:fixed; left:50%; top:50%; z-index:1210;
+    width:min(392px, calc(100vw - 28px));
+    max-height:calc(100vh - 28px);
+    padding:14px 14px 12px;
+    display:flex; flex-direction:column;
+    background:linear-gradient(180deg, #fbf8ef 0%, #f3ecda 100%);
+    border:1px solid var(--line);
+    box-shadow:0 28px 64px rgba(0,0,0,.42), 0 3px 10px rgba(0,0,0,.2);
+    transform:translate(-50%, -47%) rotate(-1.4deg) scale(.92);
+    transform-origin:50% 50%;
+    opacity:0; visibility:hidden; pointer-events:none;
+    transition:opacity .22s ease, transform .38s cubic-bezier(.2,.9,.3,1.35), visibility 0s linear .38s;
+  }
+  .music-card.on{
+    opacity:1; visibility:visible; pointer-events:auto;
+    transform:translate(-50%, -50%) rotate(-.4deg) scale(1);
+    transition:opacity .18s ease, transform .42s cubic-bezier(.2,.9,.3,1.4), visibility 0s;
+  }
+  .music-card .mc-tape{position:absolute; top:-12px; left:50%; width:86px; height:24px;
+    transform:translateX(-50%) rotate(-4deg); background:rgba(201,185,138,.74);
+    box-shadow:0 1px 3px rgba(0,0,0,.18); pointer-events:none;}
+  .music-head{position:relative; padding:2px 40px 10px 2px;}
+  .music-kicker{display:block; font-size:9px; letter-spacing:3px; font-weight:700; color:var(--vintage);}
+  .music-head b{display:block; margin-top:3px; font-size:18px; letter-spacing:2px; color:var(--green-deep);}
+  .music-sub{display:block; margin-top:3px; font-size:10.5px; letter-spacing:1px; color:var(--ink-muted);}
+  .music-close{
+    position:absolute; top:0; right:0; width:28px; height:28px;
+    display:flex; align-items:center; justify-content:center;
+    padding:0; border:1px solid var(--line); background:var(--cream);
+    color:var(--green-deep); font-size:16px; line-height:1; cursor:pointer;
+    transition:background-color .2s, color .2s, transform .2s;
+  }
+  .music-close:hover{background:var(--green-deep); color:var(--cream); transform:rotate(90deg);}
+  .music-frame-wrap{
+    flex:1 1 auto; min-height:0; overflow:hidden;
+    border:1px solid var(--line);
+    background:#f4f0e8;
+    box-shadow:inset 0 0 0 4px rgba(255,255,255,.35);
+  }
+  .music-frame-wrap iframe{display:block; width:100%; height:clamp(340px, 56vh, 460px); border:0; background:#f4f0e8;}
+  .music-link{display:block; margin-top:9px; font-size:10.5px; letter-spacing:1.2px; font-weight:600;
+    color:#6f5b30; text-align:right; text-decoration:none;}
+  .music-link:hover{color:var(--green-deep); text-decoration:underline; text-underline-offset:3px;}
+  @media (max-width:560px){
+    .music-head b{font-size:16px;}
+    .music-frame-wrap iframe{height:clamp(320px, 52vh, 420px);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .music-card{transition-duration:.01s;}
+  }
   @media (prefers-reduced-motion: reduce){
     .bg-art, .glow{animation:none;}
     .tags .hobby-chip, .hobby-photo{transition-duration:.01s;}
@@ -870,6 +925,21 @@
   <span class="hp-cap" id="hobbyPhotoCap"></span>
 </div>
 
+<!-- 能力与爱好：点击「音乐」时弹出的纸质歌单卡片 -->
+<div class="music-card" id="musicCard" role="dialog" aria-label="我的网易云音乐歌单" aria-hidden="true">
+  <span class="mc-tape" aria-hidden="true"></span>
+  <div class="music-head">
+    <span class="music-kicker">MUSIC · 私人歌单</span>
+    <b>耳机里的回声</b>
+    <span class="music-sub">网易云音乐 · 可上下滚动选歌</span>
+    <button class="music-close" id="musicClose" type="button" aria-label="关闭歌单">×</button>
+  </div>
+  <div class="music-frame-wrap">
+    <iframe id="musicFrame" title="网易云音乐歌单：耳机里的回声" loading="lazy" allow="autoplay; encrypted-media" referrerpolicy="no-referrer" data-src="https://music.163.com/outchain/player?type=0&amp;id=7996104840&amp;auto=0&amp;height=460"></iframe>
+  </div>
+  <a class="music-link" href="https://music.163.com/playlist?id=7996104840" target="_blank" rel="noopener">在网易云打开歌单 →</a>
+</div>
+
 <!-- 个人简介：p5 纸屑粒子层（GPA / 排名 / 爱好悬停时迸出） -->
 <div class="about-spark" id="aboutSpark" aria-hidden="true"></div>
 
@@ -915,7 +985,7 @@ var MODS = {
          '</div>' +
          '<div class="block"><p class="b-title">学习经历</p><p class="b-text">武汉理工大学 · 数字经济专业（本科在读）</p></div>' +
          '<div class="block"><p class="b-title">能力与爱好<span class="b-hint">悬停 / 轻触标签看照片</span></p><div class="tags tags-hobby">' +
-           '<span class="hobby-chip" style="--i:0">钢琴</span><span class="hobby-chip" style="--i:1">数字经济</span><span class="hobby-chip" style="--i:2">手工</span><span class="hobby-chip" style="--i:3">音乐</span>' +
+           '<span class="hobby-chip" style="--i:0">钢琴</span><span class="hobby-chip" style="--i:1">数字经济</span><span class="hobby-chip" style="--i:2">手工</span><span class="hobby-chip has-music" style="--i:3" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="musicCard" data-music="7996104840">音乐</span>' +
            '<span class="hobby-chip has-photo" style="--i:4" tabindex="0" role="button" data-photo="assets/hobby-drama.jpg" data-cap="追剧">追剧</span>' +
            '<span class="hobby-chip has-photo" style="--i:5" tabindex="0" role="button" data-photo="assets/hobby-food.jpg" data-cap="美食">美食</span>' +
            '<span class="hobby-chip" style="--i:6">沟通交流</span>' +
@@ -2344,6 +2414,129 @@ document.addEventListener('keydown', function(e){
     var content = document.getElementById('modContent');
     if (content) new MutationObserver(resetHobby).observe(content, { childList: true });
   }
+})();
+
+/* ============================================================
+   能力与爱好：点击「音乐」→ 弹出可滚动的网易云歌单纸卡
+   ============================================================ */
+(function(){
+  var card = document.getElementById('musicCard');
+  var frame = document.getElementById('musicFrame');
+  var closeBtn = document.getElementById('musicClose');
+  if (!card || !frame) return;
+
+  var activeChip = null;
+  var frameReady = false;
+
+  function decorateMusicChips(){
+    var chips = document.querySelectorAll('#modContent .tags-hobby .hobby-chip');
+    for (var i = 0; i < chips.length; i++){
+      var chip = chips[i];
+      if (chip.textContent.trim() === '音乐' && !chip.classList.contains('has-music')){
+        chip.classList.add('has-music');
+        chip.setAttribute('tabindex', '0');
+        chip.setAttribute('role', 'button');
+        chip.setAttribute('aria-haspopup', 'dialog');
+        chip.setAttribute('aria-expanded', 'false');
+        chip.setAttribute('aria-controls', 'musicCard');
+        chip.setAttribute('data-music', '7996104840');
+      }
+    }
+  }
+
+  function ensureFrame(){
+    if (frameReady) return;
+    // type=0 是歌单播放器；高度跟着屏幕走，歌曲列表在 iframe 内滚动
+    var h = Math.max(220, Math.min(460, Math.round(window.innerHeight - 200)));
+    frame.style.height = h + 'px';
+    frame.src = 'https://music.163.com/outchain/player?type=0&id=7996104840&auto=0&height=' + h;
+    frameReady = true;
+  }
+
+  // 收起卡片时停掉播放，避免声音在看不见的地方继续响；下次打开重新加载
+  function stopFrame(){
+    if (!frameReady) return;
+    frameReady = false;
+    frame.src = 'about:blank';
+  }
+
+  function musicChipFrom(el){
+    return el && el.closest ? el.closest('.hobby-chip.has-music') : null;
+  }
+
+  function openMusic(chip){
+    ensureFrame();
+    activeChip = chip;
+    chip.setAttribute('aria-expanded', 'true');
+    card.classList.add('on');
+    card.setAttribute('aria-hidden', 'false');
+    setTimeout(function(){ if (closeBtn) closeBtn.focus({ preventScroll: true }); }, 40);
+  }
+
+  function closeMusic(restoreFocus){
+    if (!card.classList.contains('on')) return;
+    stopFrame();
+    card.classList.remove('on');
+    card.setAttribute('aria-hidden', 'true');
+    if (activeChip){
+      activeChip.setAttribute('aria-expanded', 'false');
+      if (restoreFocus) activeChip.focus({ preventScroll: true });
+      activeChip = null;
+    }
+  }
+
+  function toggleMusic(chip){
+    if (card.classList.contains('on') && activeChip === chip) closeMusic(false);
+    else openMusic(chip);
+  }
+
+  document.addEventListener('click', function(e){
+    var chip = musicChipFrom(e.target);
+    if (chip){
+      e.preventDefault();
+      toggleMusic(chip);
+      return;
+    }
+    if (card.classList.contains('on') && !card.contains(e.target)) closeMusic(false);
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && card.classList.contains('on')){
+      e.preventDefault();
+      closeMusic(true);
+      return;
+    }
+    var chip = musicChipFrom(e.target);
+    if (chip && (e.key === 'Enter' || e.key === ' ')){
+      e.preventDefault();
+      toggleMusic(chip);
+    }
+  });
+
+  if (closeBtn) closeBtn.addEventListener('click', function(){ closeMusic(true); });
+
+  var modal = document.getElementById('modal');
+  if (modal){
+    new MutationObserver(function(){
+      if (!modal.classList.contains('open')) closeMusic(false);
+      else setTimeout(decorateMusicChips, 0);
+    }).observe(modal, { attributes: true, attributeFilter: ['class'] });
+  }
+  // 只在切换模块时收起歌单：标题变化 / 点击章节，避免模块内部的异步渲染误关
+  var title = document.getElementById('modTitle');
+  if (title){
+    new MutationObserver(function(){
+      closeMusic(false);
+      decorateMusicChips();
+    }).observe(title, { childList: true, characterData: true, subtree: true });
+  }
+  var chapters = document.querySelector('.chapters');
+  if (chapters){
+    chapters.addEventListener('click', function(e){
+      if (e.target.closest && e.target.closest('a[data-mod]')) closeMusic(false);
+    });
+  }
+  decorateMusicChips();
 })();
 </script>
 
