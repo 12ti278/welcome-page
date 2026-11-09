@@ -704,6 +704,9 @@
     if (e.status === 409) return '仓库刚刚被其他人更新，请重试一次。';
     if (e.status === 422) return '提交被拒绝（可能是并发更新），请重试一次。';
     if (e.status === 429) return '请求太频繁，请稍后再试。';
+    if (!e.status && /Failed to fetch|NetworkError|Load failed/i.test(e.message || '')) {
+      return '网络请求失败：请检查网络连接，并确认浏览器插件没有拦截 GitHub API 请求。';
+    }
     return e.message || '请求失败';
   }
 
@@ -1381,19 +1384,20 @@
 
   function commitData(json) {
     var message = 'chore(content): 后台更新站点内容';
+    var base = '/repos/' + REPO;
     function attempt(n) {
       var ref, head, headCommit;
-      return api('/git/ref/heads/' + BRANCH)
-        .then(function (r) { ref = r; head = r.object.sha; return api('/git/commits/' + head); })
+      return api(base + '/git/ref/heads/' + BRANCH)
+        .then(function (r) { ref = r; head = r.object.sha; return api(base + '/git/commits/' + head); })
         .then(function (c) {
           headCommit = c;
-          return api('/git/blobs', {
+          return api(base + '/git/blobs', {
             method: 'POST',
             body: { content: b64encodeUtf8(json), encoding: 'base64' }
           });
         })
         .then(function (blob) {
-          return api('/git/trees', {
+          return api(base + '/git/trees', {
             method: 'POST',
             body: {
               base_tree: headCommit.tree.sha,
@@ -1402,13 +1406,13 @@
           });
         })
         .then(function (tree) {
-          return api('/git/commits', {
+          return api(base + '/git/commits', {
             method: 'POST',
             body: { message: message, tree: tree.sha, parents: [head] }
           });
         })
         .then(function (commit) {
-          return api('/git/refs/heads/' + BRANCH, {
+          return api(base + '/git/refs/heads/' + BRANCH, {
             method: 'PATCH',
             body: { sha: commit.sha, force: false }
           }).then(function () { return commit; });
