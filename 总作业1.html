@@ -595,6 +595,9 @@
 })();
 </script>
 
+<!-- 线上内容数据（后台管理写入 data/site-data.json） -->
+<script src="site-data.js"></script>
+
 <script>
 /* ============================================================
    作品数据 —— 换成你自己的截图和链接
@@ -610,16 +613,99 @@ const WORKS = [
   { title: "时光商社 · 中古商城", url: "https://dreamy-tanuki-bcd98e.netlify.app/", thumb: "assets/mall-preview.jpg" },
 ];
 
+/* ============================================================
+   后台作品数据覆盖（data/site-data.json）
+   - 缩略图留空时，按链接沿用内置截图；新作品则用标题生成占位图
+   - 后台把所有作品都停用/删除时，自动回到内置的 7 件作品
+   ============================================================ */
+var HJ_DEFAULT_WORKS = WORKS.slice();
+
+function hjSafeWorkUrl(u){
+  u = String(u == null ? '' : u).trim();
+  if (!u) return '';
+  if (/^(https?:)?\/\//i.test(u)) return u;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return '';   // 拒绝 javascript: 等协议
+  return u;
+}
+
+function hjPlaceholderThumb(title){
+  try {
+    var c = document.createElement('canvas');
+    c.width = 800; c.height = 500;
+    var g = c.getContext('2d');
+    if (!g) return '';
+    var grd = g.createLinearGradient(0, 0, 800, 500);
+    grd.addColorStop(0, '#232b20');
+    grd.addColorStop(0.55, '#2e3729');
+    grd.addColorStop(1, '#3d4734');
+    g.fillStyle = grd; g.fillRect(0, 0, 800, 500);
+    g.strokeStyle = 'rgba(201,185,138,.45)'; g.lineWidth = 3;
+    g.strokeRect(30, 30, 740, 440);
+    g.fillStyle = 'rgba(201,185,138,.8)';
+    g.font = '16px "Courier New",monospace';
+    g.textAlign = 'center';
+    g.fillText('WORK · PREVIEW', 400, 120);
+    g.fillStyle = '#e6e3d4';
+    g.font = '700 42px "Songti SC","STSong","Microsoft YaHei",serif';
+    var text = String(title || '未命名作品');
+    var lines = [], max = 12;
+    for (var i = 0; i < text.length && lines.length < 3; i += max){
+      lines.push(text.slice(i, i + max));
+    }
+    lines.forEach(function(line, idx){
+      g.fillText(line, 400, 250 + (idx - (lines.length - 1) / 2) * 58);
+    });
+    g.fillStyle = 'rgba(184,196,163,.85)';
+    g.font = '18px "Courier New",monospace';
+    g.fillText('幻境回廊 · 阶段作业', 400, 430);
+    return c.toDataURL('image/jpeg', 0.86);
+  } catch (e) { return ''; }
+}
+
+function hjRestoreWorks(){
+  WORKS.length = 0;
+  HJ_DEFAULT_WORKS.forEach(function(w){ WORKS.push(w); });
+}
+
+function hjApplyWorks(data){
+  if (!data || data.version !== 1) return false;
+  var list = (data.works || []).filter(function(w){
+    return w && w.enabled !== false && w.title;
+  });
+  if (!list.length){ hjRestoreWorks(); return false; }
+  WORKS.length = 0;
+  list.forEach(function(w){
+    var thumb = String(w.thumb || '').trim();
+    if (!thumb){
+      for (var i = 0; i < HJ_DEFAULT_WORKS.length; i++){
+        if (HJ_DEFAULT_WORKS[i].url === w.url){
+          thumb = HJ_DEFAULT_WORKS[i].thumb;
+          break;
+        }
+      }
+    }
+    if (!thumb) thumb = hjPlaceholderThumb(w.title);
+    WORKS.push({ title: w.title, url: hjSafeWorkUrl(w.url), thumb: thumb });
+  });
+  return true;
+}
+
+/* 先用本机缓存，避免首屏闪回旧数据 */
+(function(){
+  if (!window.HJSiteData) return;
+  var c = HJSiteData.cached();
+  if (c) hjApplyWorks(c);
+})();
+
 const worksOverlay = document.getElementById('worksOverlay');
 const worksCountHome = document.getElementById('worksCountHome');
-if (worksCountHome) worksCountHome.textContent = WORKS.length;
 const hudLoadInit = document.getElementById('hudLoad');
-if (hudLoadInit) hudLoadInit.innerHTML = '截图 <b>–</b>/' + WORKS.length;
 
 /* ---------- 入口卡片扇形缩略图 ---------- */
-(function renderEntryPreview(){
+function renderEntryPreview(){
   const host = document.getElementById('worksEntryPreview');
   if (!host) return;
+  host.innerHTML = '';
   WORKS.slice(0, 3).forEach(function(w){
     const d = document.createElement('div');
     d.className = 'wep-card';
@@ -629,7 +715,14 @@ if (hudLoadInit) hudLoadInit.innerHTML = '截图 <b>–</b>/' + WORKS.length;
     d.appendChild(img);
     host.appendChild(d);
   });
-})();
+}
+
+function hjSyncWorksUI(){
+  if (worksCountHome) worksCountHome.textContent = WORKS.length;
+  if (hudLoadInit) hudLoadInit.innerHTML = '截图 <b>–</b>/' + WORKS.length;
+  renderEntryPreview();
+}
+hjSyncWorksUI();
 
 /* ---------- 打开/关闭 ---------- */
 function openWorks(){
@@ -1890,7 +1983,20 @@ function initWorks3D(){
 
 /* ---------- 启动 ---------- */
 function boot(){
-  preloadAll(function(){ initWorks3D(); });
+  function start(){
+    hjSyncWorksUI();
+    preloadAll(function(){ initWorks3D(); });
+  }
+  /* 先等线上数据（最多 2.5s），保证胶带上的作品与后台一致；
+     超时就使用本机缓存或内置数据，不阻塞 3D。 */
+  if (window.HJSiteData && HJSiteData.fetchFresh){
+    HJSiteData.fetchFresh(2500).then(function(d){
+      if (d) hjApplyWorks(d);
+      start();
+    });
+  } else {
+    start();
+  }
 }
 if (typeof THREE !== 'undefined') boot();
 else window.__threeReady = boot;

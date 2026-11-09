@@ -729,6 +729,20 @@
 
   /* 防止弹层打开时背景滚动 */
   body.modal-open{overflow:hidden;}
+
+  /* ---------- 内容后台入口（右下角，低调） ---------- */
+  .admin-entry{
+    position:fixed; right:18px; bottom:16px; z-index:60;
+    font-family:"Courier New",monospace; font-size:11px; letter-spacing:2px;
+    color:var(--text-muted); text-decoration:none; padding:7px 12px;
+    border:1px solid rgba(201,185,138,.25); background:rgba(30,36,29,.6);
+    -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+    transition:all .3s ease;
+  }
+  .admin-entry:hover{color:var(--vintage); border-color:var(--vintage); background:rgba(30,36,29,.9);}
+  @media (max-width:560px){
+    .admin-entry{right:10px; bottom:10px; font-size:10px; padding:6px 9px; letter-spacing:1px;}
+  }
 </style>
 </head>
 <body>
@@ -784,6 +798,8 @@
 
   <a class="enter" href="总作业1.html">进入作品集 <span class="arr">→</span></a>
   <p class="hint">ENTER THE GALLERY · 点击进入</p>
+
+  <a class="admin-entry" href="admin.html" title="内容后台（需要 GitHub 令牌）">⚙ 内容后台</a>
 </main>
 
 <!-- ========== 模块详情弹层 ========== -->
@@ -817,6 +833,9 @@
 
 <!-- 个人简介：p5 纸屑粒子层（GPA / 排名 / 爱好悬停时迸出） -->
 <div class="about-spark" id="aboutSpark" aria-hidden="true"></div>
+
+<!-- 线上内容数据（后台管理写入 data/site-data.json） -->
+<script src="site-data.js"></script>
 
 <script>
 /* ============================================================
@@ -925,6 +944,115 @@ var MODS = {
 };
 
 /* ============================================================
+   线上内容覆盖（后台管理写入 data/site-data.json）
+   - 首页文案、项目成果列表、六个模块的名称/简介/正文/按钮
+   - 先应用本机缓存，再应用线上最新数据；每次应用都从内置默认重置，保证可回退
+   ============================================================ */
+var __MODS_DEFAULT = JSON.parse(JSON.stringify(MODS));
+window.__HJ_MODS_DEFAULT = __MODS_DEFAULT;   // 后台读取内置文案（不会被线上覆盖影响）
+
+/* 首页内置文案快照：线上覆盖被删除/清空时用它还原 */
+var __HOME_DEFAULT = (function(){
+  var t = document.querySelector('.title');
+  var s = document.querySelector('.sub');
+  var l = document.querySelector('.chapters-label');
+  var h = document.querySelector('.hint');
+  return {
+    titleHtml: t ? t.innerHTML : '',
+    sub: s ? s.textContent : '',
+    chaptersLabel: l ? l.textContent : '',
+    hint: h ? h.textContent : ''
+  };
+})();
+
+function hjEsc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+  });
+}
+function hjSafeUrl(u){
+  u = String(u == null ? '' : u).trim();
+  if (!u) return '';
+  if (/^(https?:)?\/\//i.test(u)) return u;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return '';   // 拒绝 javascript: / data: 等协议
+  return u;
+}
+
+function hjBuildProjects(list){
+  return list.filter(function(p){
+    return p && p.enabled !== false && p.title;
+  }).map(function(p){
+    var tags = Array.isArray(p.tags) ? p.tags.filter(Boolean) : [];
+    var link = hjSafeUrl(p.link);
+    return '<div class="block">' +
+      '<p class="b-title">' + hjEsc(p.title) + '</p>' +
+      (p.desc ? '<p class="b-text">' + hjEsc(p.desc) + '</p>' : '') +
+      (tags.length ? '<div class="tags">' + tags.map(function(t){ return '<span>' + hjEsc(t) + '</span>'; }).join('') + '</div>' : '') +
+      (link ? '<a class="entry" href="' + hjEsc(link) + '" target="_blank" rel="noopener">查看项目成果 →</a>' : '') +
+      '</div>';
+  }).join('');
+}
+
+function hjApplySiteData(data){
+  if (!data || data.version !== 1) return;
+
+  // 1. 从内置默认重置，避免删掉的线上文案还残留
+  Object.keys(MODS).forEach(function(k){
+    MODS[k] = JSON.parse(JSON.stringify(__MODS_DEFAULT[k]));
+  });
+
+  // 2. 首页文案（每次先从内置快照还原，再套用线上覆盖）
+  var h = data.home || {};
+  var titleEl = document.querySelector('.title');
+  if (titleEl){
+    if (typeof h.title === 'string' || typeof h.titleEm === 'string'){
+      var t1 = typeof h.title === 'string' ? h.title : 'Welcome';
+      var t2 = typeof h.titleEm === 'string' ? h.titleEm : 'My World';
+      titleEl.innerHTML = hjEsc(t1) + (t2 ? '<em>' + hjEsc(t2) + '</em>' : '');
+    } else {
+      titleEl.innerHTML = __HOME_DEFAULT.titleHtml;
+    }
+  }
+  var subEl = document.querySelector('.sub');
+  if (subEl) subEl.textContent = (typeof h.sub === 'string' && h.sub) ? h.sub : __HOME_DEFAULT.sub;
+  var labelEl = document.querySelector('.chapters-label');
+  if (labelEl) labelEl.textContent = (typeof h.chaptersLabel === 'string' && h.chaptersLabel) ? h.chaptersLabel : __HOME_DEFAULT.chaptersLabel;
+  var hintEl = document.querySelector('.hint');
+  if (hintEl) hintEl.textContent = (typeof h.hint === 'string' && h.hint) ? h.hint : __HOME_DEFAULT.hint;
+
+  // 3. 项目成果列表
+  if (Array.isArray(data.projects) && data.projects.length){
+    var built = hjBuildProjects(data.projects);
+    if (built) MODS.projects.html = built;
+  }
+
+  // 4. 六个模块的文案覆盖（留空 = 使用内置默认/列表数据）
+  var mods = data.modules || {};
+  Object.keys(mods).forEach(function(k){
+    var m = mods[k];
+    if (!MODS[k] || !m || typeof m !== 'object') return;
+    if (typeof m.name === 'string' && m.name) MODS[k].name = m.name;
+    if (typeof m.desc === 'string' && m.desc) MODS[k].desc = m.desc;
+    if (typeof m.html === 'string' && m.html) MODS[k].html = m.html;
+    if (typeof m.action === 'string' && m.action) MODS[k].action = m.action;
+  });
+
+  // 5. 同步章节目录 / 轮播贴纸名称
+  document.querySelectorAll('.chapters a[data-mod]').forEach(function(a){
+    var k = a.getAttribute('data-mod');
+    if (MODS[k] && MODS[k].name) a.textContent = MODS[k].name;
+  });
+  if (window.__HJ_CAROUSEL) window.__HJ_CAROUSEL.refreshNames();
+
+  // 6. 数据晚到时，如果弹层已经打开，用新文案重绘一次
+  if (window.__hjOpenKey) openModal(window.__hjOpenKey);
+}
+
+setTimeout(function(){
+  if (window.HJSiteData) window.HJSiteData.onData(3000, hjApplySiteData);
+}, 0);
+
+/* ============================================================
    照片轮播
    ============================================================ */
 (function(){
@@ -986,6 +1114,16 @@ var MODS = {
   slides.addEventListener('click', function(){ openModal(IMGS[idx].id); });
 
   restart();
+
+  /* 后台改了模块名称后，同步轮播贴纸 / 说明文字 */
+  window.__HJ_CAROUSEL = {
+    refreshNames: function(){
+      IMGS.forEach(function(m){
+        if (MODS[m.id] && MODS[m.id].name) m.name = MODS[m.id].name;
+      });
+      go(idx);
+    }
+  };
 
   /* 章节目录点击 → 打开弹层 */
   document.querySelectorAll('.chapters a').forEach(function(a){
@@ -1816,6 +1954,7 @@ function initReviewFx(){
 function openModal(key){
   var m = MODS[key];
   if (!m) return;
+  window.__hjOpenKey = key;
 
   document.getElementById('modalBg').style.backgroundImage = "url('" + DIR + m.img + "')";
   document.getElementById('modStamp').textContent = m.num;
@@ -1854,6 +1993,7 @@ function openModal(key){
 }
 
 function closeModal(){
+  window.__hjOpenKey = null;
   document.getElementById('modal').classList.remove('open');
   document.body.classList.remove('modal-open');
   if (window.lenis) window.lenis.start();

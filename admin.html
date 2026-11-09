@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>后台管理 · 幻境回廊</title>
+<style>
+  :root{
+    --bg:#141914;
+    --bg-2:#1a2019;
+    --panel:#1e241d;
+    --panel-2:#242b22;
+    --line:#39422f;
+    --line-soft:rgba(201,185,138,.16);
+    --text:#e6e3d4;
+    --muted:#99a08c;
+    --accent:#b8c4a3;
+    --accent-deep:#8a9a76;
+    --gold:#c9b98a;
+    --cream:#f3efe3;
+    --danger:#c98a7a;
+    --ok:#9fbe8f;
+    --shadow:0 18px 50px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;min-height:100%;}
+  body{
+    background:
+      radial-gradient(1100px 620px at 80% -10%, rgba(184,196,163,.10), transparent 60%),
+      radial-gradient(900px 520px at 0% 100%, rgba(201,185,138,.07), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:"Courier New","Songti SC","STSong","PingFang SC","Microsoft YaHei",monospace;
+    font-size:14px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--gold); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  button,input,textarea,select{font-family:inherit;}
+  button{cursor:pointer;}
+  [hidden]{display:none !important;}
+  code{font-family:"Courier New",monospace; background:rgba(201,185,138,.12); padding:1px 5px; color:var(--gold);}
+  .muted{color:var(--muted);}
+  .small{font-size:12px;}
+
+  /* ---------- 顶栏 ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:40;
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    padding:14px 22px;
+    background:rgba(20,25,20,.88);
+    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .brand{display:flex; align-items:baseline; gap:12px; margin-right:auto;}
+  .brand b{
+    font-family:"Songti SC","STSong",serif; font-size:19px; letter-spacing:3px; color:var(--text);
+    font-weight:700;
+  }
+  .brand span{
+    font-size:10px; letter-spacing:4px; color:var(--gold); text-transform:uppercase;
+  }
+  .head-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .status{font-size:12px; color:var(--muted); letter-spacing:1px;}
+  .status.ok{color:var(--ok);}
+  .status.err{color:var(--danger);}
+  .badge{
+    font-size:11px; letter-spacing:1px; padding:4px 9px; border:1px solid var(--line);
+    color:var(--muted); background:var(--panel);
+  }
+  .badge.dirty{color:var(--gold); border-color:rgba(201,185,138,.5);}
+
+  /* ---------- 按钮 ---------- */
+  .btn{
+    appearance:none; border:1px solid var(--line); background:var(--panel-2); color:var(--text);
+    padding:9px 16px; font-size:12px; letter-spacing:2px; transition:all .22s ease;
+    display:inline-flex; align-items:center; gap:8px; text-decoration:none !important;
+  }
+  .btn:hover{border-color:var(--accent-deep); color:var(--cream); background:#2b3328;}
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#1c2219; font-weight:700;}
+  .btn.primary:hover{background:var(--cream); border-color:var(--cream);}
+  .btn.gold{background:transparent; border-color:var(--gold); color:var(--gold);}
+  .btn.gold:hover{background:var(--gold); color:#1c2219;}
+  .btn.ghost{background:transparent;}
+  .btn.danger{color:var(--danger); border-color:rgba(201,138,122,.4); background:transparent;}
+  .btn.danger:hover{background:rgba(201,138,122,.12); border-color:var(--danger); color:#e6b0a4;}
+  .btn:disabled{opacity:.4; cursor:not-allowed;}
+  .btn.tiny{padding:6px 10px; font-size:11px; letter-spacing:1px;}
+  .wide{width:100%; justify-content:center; padding:12px 16px;}
+
+  /* ---------- 登录 ---------- */
+  .login-wrap{
+    min-height:calc(100vh - 64px);
+    display:flex; align-items:center; justify-content:center;
+    padding:38px 18px 60px;
+  }
+  .login-card{
+    position:relative; width:100%; max-width:560px;
+    background:linear-gradient(180deg, rgba(36,43,34,.96), rgba(26,32,25,.98));
+    border:1px solid var(--line);
+    box-shadow:var(--shadow);
+    padding:44px 42px 34px;
+  }
+  .login-card::before{
+    content:""; position:absolute; inset:8px; border:1px solid var(--line-soft); pointer-events:none;
+  }
+  .corner{position:absolute; width:16px; height:16px; border:1px solid var(--gold); opacity:.65;}
+  .corner.tl{left:-1px; top:-1px; border-right:0; border-bottom:0;}
+  .corner.tr{right:-1px; top:-1px; border-left:0; border-bottom:0;}
+  .corner.bl{left:-1px; bottom:-1px; border-right:0; border-top:0;}
+  .corner.br{right:-1px; bottom:-1px; border-left:0; border-top:0;}
+  .eyebrow{
+    display:block; text-align:center; color:var(--gold);
+    font-size:11px; letter-spacing:5px; text-transform:uppercase; margin-bottom:10px;
+  }
+  .login-card h1{
+    margin:0 0 14px; text-align:center;
+    font-family:"Songti SC","STSong",serif; font-size:34px; letter-spacing:8px; font-weight:700;
+    color:var(--cream);
+  }
+  .lead{color:var(--muted); font-size:13px; line-height:1.9; text-align:center; margin:0 0 26px;}
+
+  .field{display:block; margin-bottom:16px;}
+  .field > span{
+    display:block; margin-bottom:7px; font-size:11px; letter-spacing:2px; color:var(--muted);
+  }
+  .field > span em{font-style:normal; color:var(--gold); opacity:.8; letter-spacing:1px;}
+  .field input[type=text],.field input[type=url],.field input[type=password],.field textarea{
+    width:100%; padding:11px 12px; color:var(--text);
+    background:rgba(20,25,20,.72); border:1px solid var(--line);
+    outline:none; transition:border-color .2s ease, box-shadow .2s ease;
+    font-size:13px; line-height:1.6;
+  }
+  .field input:focus,.field textarea:focus{border-color:var(--accent-deep); box-shadow:0 0 0 2px rgba(184,196,163,.12);}
+  .field textarea{resize:vertical; min-height:74px;}
+  .field textarea.mono{font-family:"Courier New",monospace; font-size:12.5px; line-height:1.7;}
+  .token-row{display:flex; gap:8px;}
+  .token-row input{flex:1;}
+  .token-row button{
+    flex:0 0 auto; padding:0 14px; background:var(--panel-2); color:var(--muted);
+    border:1px solid var(--line); font-size:12px; letter-spacing:1px;
+  }
+  .token-row button:hover{color:var(--cream); border-color:var(--accent-deep);}
+  .error{min-height:20px; margin:12px 0 0; color:var(--danger); font-size:12.5px; letter-spacing:1px;}
+  .help{margin-top:20px; border-top:1px solid var(--line-soft); padding-top:16px;}
+  .help summary{cursor:pointer; color:var(--accent); font-size:12.5px; letter-spacing:1px;}
+  .help ol{margin:12px 0 0; padding-left:20px; color:var(--muted); font-size:12.5px; line-height:2;}
+  .help li::marker{color:var(--gold);}
+  .fineprint{margin:20px 0 0; color:var(--muted); font-size:11.5px; line-height:1.9; opacity:.8;}
+
+  /* ---------- 主框架 ---------- */
+  .dash{
+    display:grid; grid-template-columns:224px minmax(0,1fr);
+    gap:0; max-width:1360px; margin:0 auto; min-height:calc(100vh - 64px);
+  }
+  .side{
+    padding:24px 16px 40px; border-right:1px solid var(--line-soft);
+    position:sticky; top:65px; align-self:start; max-height:calc(100vh - 65px); overflow:auto;
+  }
+  .user-chip{
+    display:flex; align-items:center; gap:10px; padding:10px; margin-bottom:20px;
+    border:1px solid var(--line-soft); background:rgba(36,43,34,.5);
+  }
+  .user-chip img{width:34px; height:34px; border-radius:50%; border:1px solid var(--line);}
+  .user-chip .u-name{font-size:12.5px; color:var(--text); word-break:break-all;}
+  .user-chip .u-repo{font-size:10.5px; color:var(--muted); word-break:break-all;}
+  .tabs{display:flex; flex-direction:column; gap:4px;}
+  .tab{
+    appearance:none; text-align:left; border:1px solid transparent; background:transparent;
+    color:var(--muted); padding:11px 13px; font-size:13px; letter-spacing:2px;
+    transition:all .2s ease; display:flex; justify-content:space-between; align-items:center;
+  }
+  .tab:hover{color:var(--text); background:rgba(184,196,163,.06);}
+  .tab.active{color:var(--gold); border-color:var(--line-soft); background:rgba(201,185,138,.06);}
+  .tab .n{font-size:10px; color:var(--muted);}
+  .side-foot{margin-top:24px; padding-top:16px; border-top:1px solid var(--line-soft); color:var(--muted); font-size:11px; line-height:1.9;}
+
+  .main{padding:26px 30px 70px; min-width:0;}
+  .panel-head{display:flex; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:20px;}
+  .panel-head h2{
+    margin:0; font-family:"Songti SC","STSong",serif; font-size:26px; letter-spacing:4px; font-weight:700;
+    color:var(--cream);
+  }
+  .panel-head p{margin:0 0 3px; color:var(--muted); font-size:12px; letter-spacing:1px;}
+  .panel-head .spacer{flex:1;}
+
+  .banner{
+    padding:13px 16px; margin-bottom:20px; font-size:12.5px; line-height:1.9;
+    border:1px solid rgba(201,185,138,.28); background:rgba(201,185,138,.06); color:var(--text);
+  }
+  .banner b{color:var(--gold);}
+  .banner.warn{border-color:rgba(201,138,122,.4); background:rgba(201,138,122,.07);}
+  .banner.warn b{color:var(--danger);}
+
+  /* ---------- 概览 ---------- */
+  .stats{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; margin-bottom:24px;}
+  .stat{
+    position:relative; padding:18px 18px 16px; background:var(--panel);
+    border:1px solid var(--line-soft);
+  }
+  .stat::after{content:""; position:absolute; right:12px; top:12px; width:6px; height:6px; background:var(--gold); opacity:.55;}
+  .stat .k{font-size:11px; letter-spacing:2px; color:var(--muted);}
+  .stat .v{font-size:30px; font-family:"Songti SC","STSong",serif; color:var(--cream); line-height:1.2; margin-top:6px;}
+  .stat .v small{font-size:13px; color:var(--muted); font-family:inherit;}
+  .stat .d{font-size:11px; color:var(--muted); margin-top:4px;}
+  .blocks{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .card{
+    background:var(--panel); border:1px solid var(--line-soft); padding:20px 22px;
+  }
+  .card h3{
+    margin:0 0 12px; font-size:13px; letter-spacing:3px; color:var(--gold); font-weight:700;
+  }
+  .card p{margin:0 0 10px; color:var(--muted); font-size:12.5px; line-height:1.95;}
+  .card p:last-child{margin-bottom:0;}
+  .link-list{display:flex; flex-direction:column; gap:8px; margin-top:6px;}
+  .link-list a{font-size:12.5px; letter-spacing:1px;}
+  .flow{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:6px; font-size:12px; color:var(--muted);}
+  .flow span{padding:5px 10px; border:1px solid var(--line); background:var(--panel-2);}
+  .flow i{font-style:normal; color:var(--gold);}
+
+  /* ---------- 列表项 ---------- */
+  .list{display:flex; flex-direction:column; gap:14px;}
+  .item-card{
+    display:grid; grid-template-columns:172px minmax(0,1fr); gap:16px;
+    padding:14px; background:var(--panel); border:1px solid var(--line-soft);
+  }
+  .item-card.is-off{opacity:.55;}
+  .item-thumb{
+    position:relative; aspect-ratio:8/5; width:100%; overflow:hidden;
+    border:1px solid var(--line); background:linear-gradient(145deg,#232b20,#3d4734);
+    cursor:pointer;
+  }
+  .item-thumb img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;}
+  .thumb-fallback{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:"Songti SC",serif; font-size:40px; color:rgba(230,227,212,.5);
+  }
+  .item-body{min-width:0; display:flex; flex-direction:column; gap:10px;}
+  .row{display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;}
+  .row .grow{flex:1; min-width:160px;}
+  .item-body .field{margin:0;}
+  .item-actions{justify-content:flex-start; align-items:center; margin-top:2px;}
+  .file-btn{position:relative; overflow:hidden;}
+  .file-btn input{position:absolute; inset:0; opacity:0; cursor:pointer;}
+  .check{
+    display:flex; align-items:center; gap:7px; font-size:12px; color:var(--muted);
+    padding-bottom:11px; white-space:nowrap; cursor:pointer;
+  }
+  .check input{accent-color:var(--accent); width:15px; height:15px;}
+  .empty{
+    padding:34px 20px; text-align:center; color:var(--muted); font-size:13px; letter-spacing:1px;
+    border:1px dashed var(--line); background:rgba(36,43,34,.35);
+  }
+  .section-actions{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px;}
+
+  /* ---------- 文案编辑 ---------- */
+  .module-card{background:var(--panel); border:1px solid var(--line-soft); margin-bottom:16px;}
+  .module-head{
+    display:flex; align-items:center; gap:12px; padding:14px 18px;
+    border-bottom:1px solid var(--line-soft); cursor:pointer; user-select:none;
+  }
+  .module-head .stamp{
+    font-size:11px; letter-spacing:2px; color:var(--gold); border:1px solid var(--line);
+    padding:2px 7px; background:var(--panel-2);
+  }
+  .module-head .mtitle{font-family:"Songti SC",serif; font-size:17px; letter-spacing:3px; color:var(--cream);}
+  .module-head .hint{font-size:11px; color:var(--muted); margin-left:auto;}
+  .module-head .caret{color:var(--muted); font-size:12px; transition:transform .2s ease;}
+  .module-card.open .caret{transform:rotate(90deg);}
+  .module-body{display:none; padding:18px;}
+  .module-card.open .module-body{display:block;}
+  .module-body .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .module-actions{display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;}
+  .module-card .note{font-size:11.5px; color:var(--gold); opacity:.85; margin:-4px 0 12px;}
+
+  /* ---------- 设置 ---------- */
+  .settings-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .settings-grid .card h3{letter-spacing:2px;}
+  .kv{display:flex; justify-content:space-between; gap:14px; padding:8px 0; border-bottom:1px dashed var(--line-soft); font-size:12px;}
+  .kv:last-child{border-bottom:0;}
+  .kv b{font-weight:400; color:var(--text); word-break:break-all; text-align:right;}
+  .danger-zone{border-color:rgba(201,138,122,.3);}
+  .danger-zone h3{color:var(--danger);}
+
+  /* ---------- 预览弹窗 ---------- */
+  .modal{position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center; padding:22px;}
+  .modal-mask{position:absolute; inset:0; background:rgba(8,10,8,.78); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);}
+  .modal-box{
+    position:relative; width:min(980px,100%); height:min(86vh,900px);
+    display:flex; flex-direction:column; background:var(--panel); border:1px solid var(--line);
+    box-shadow:var(--shadow);
+  }
+  .modal-box header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:11px 16px; border-bottom:1px solid var(--line-soft);
+    font-size:12px; letter-spacing:2px; color:var(--gold);
+  }
+  .modal-box header button{background:transparent; border:0; color:var(--muted); font-size:20px; line-height:1; padding:0 4px;}
+  .modal-box header button:hover{color:var(--cream);}
+  .modal-box iframe{flex:1; width:100%; border:0; background:#f3efe3;}
+
+  /* ---------- Toast ---------- */
+  #toast{
+    position:fixed; left:50%; bottom:26px; transform:translate(-50%,20px);
+    z-index:120; padding:11px 20px; font-size:12.5px; letter-spacing:1px;
+    background:var(--panel-2); border:1px solid var(--line); color:var(--text);
+    box-shadow:var(--shadow); opacity:0; pointer-events:none; transition:all .3s ease;
+    max-width:88vw; text-align:center;
+  }
+  #toast.show{opacity:1; transform:translate(-50%,0);}
+  #toast.ok{border-color:var(--accent-deep); color:var(--cream);}
+  #toast.err{border-color:rgba(201,138,122,.6); color:#efbdb1;}
+
+  .loading{padding:40px 20px; text-align:center; color:var(--muted); font-size:12.5px; letter-spacing:2px;}
+  .spinner{display:inline-block; width:14px; height:14px; margin-right:8px; vertical-align:-2px;
+    border:1px solid var(--line); border-top-color:var(--gold); border-radius:50%; animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  @media (max-width:980px){
+    .stats{grid-template-columns:1fr 1fr;}
+    .blocks,.settings-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width:860px){
+    .dash{grid-template-columns:1fr;}
+    .side{position:static; max-height:none; border-right:0; border-bottom:1px solid var(--line-soft); padding:16px;}
+    .tabs{flex-direction:row; overflow:auto; gap:6px;}
+    .tab{white-space:nowrap; padding:9px 12px;}
+    .side-foot{display:none;}
+    .main{padding:20px 16px 60px;}
+    .item-card{grid-template-columns:1fr;}
+    .item-thumb{max-width:240px;}
+    .module-body .grid2{grid-template-columns:1fr;}
+  }
+  @media (max-width:560px){
+    .topbar{padding:12px 14px;}
+    .brand span{display:none;}
+    .login-card{padding:34px 22px 26px;}
+    .login-card h1{font-size:28px; letter-spacing:5px;}
+    .stats{grid-template-columns:1fr 1fr;}
+    .stat .v{font-size:24px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= 顶栏 ================= -->
+<header class="topbar">
+  <div class="brand">
+    <b>幻境回廊</b>
+    <span>Content Studio</span>
+  </div>
+  <div class="head-actions" id="headActions" hidden>
+    <span class="status" id="deployStatus"></span>
+    <span class="badge" id="dirtyBadge">已同步</span>
+    <button class="btn primary" id="saveBtn" type="button" disabled>保存到 GitHub</button>
+    <a class="btn ghost" href="welcome.html" target="_blank" rel="noopener">查看网站 ↗</a>
+    <button class="btn ghost" id="logoutBtn" type="button">退出</button>
+  </div>
+</header>
+
+<!-- ================= 登录 ================= -->
+<section class="login-wrap" id="loginView">
+  <article class="login-card">
+    <span class="corner tl"></span><span class="corner tr"></span>
+    <span class="corner bl"></span><span class="corner br"></span>
+    <span class="eyebrow">Content Studio</span>
+    <h1>后台管理</h1>
+    <p class="lead">用 GitHub 访问令牌登录。内容会提交到仓库，GitHub Pages 构建完成后全站生效。</p>
+
+    <form id="loginForm" autocomplete="off">
+      <label class="field">
+        <span>GitHub 访问令牌</span>
+        <div class="token-row">
+          <input id="tokenInput" type="password" autocomplete="new-password" spellcheck="false" placeholder="github_pat_… 或 ghp_…">
+          <button id="toggleToken" type="button">显示</button>
+        </div>
+      </label>
+      <button class="btn primary wide" id="loginBtn" type="submit">登录</button>
+      <p class="error" id="loginError" role="alert"></p>
+    </form>
+
+    <details class="help">
+      <summary>如何创建令牌？</summary>
+      <ol>
+        <li>打开 GitHub 的 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Fine-grained tokens</a> 页面。</li>
+        <li>Repository access 选择 <b>Only select repositories</b> → <code>12ti278/welcome-page</code>。</li>
+        <li>Permissions → Repository permissions → <b>Contents: Read and write</b>；想看构建状态的话再加 <b>Pages: Read</b>。</li>
+        <li>生成后粘贴到上方。令牌只保存在当前标签页，关闭页面即失效，不会写进任何网站文件。</li>
+      </ol>
+    </details>
+
+    <p class="fineprint">这是纯前端后台：登录凭据就是你的 GitHub 令牌，数据直接提交到本仓库。请只在私人电脑上使用，不要把令牌发给别人。</p>
+  </article>
+</section>
+
+<!-- ================= 后台 ================= -->
+<section class="dash" id="dashView" hidden>
+  <aside class="side">
+    <div class="user-chip" id="userChip">
+      <img id="userAvatar" alt="">
+      <div>
+        <div class="u-name" id="userLogin">—</div>
+        <div class="u-repo">12ti278/welcome-page</div>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="后台导航">
+      <button class="tab active" type="button" data-tab="overview">概览 <span class="n">01</span></button>
+      <button class="tab" type="button" data-tab="works">阶段作业作品 <span class="n" id="tabWorksN">0</span></button>
+      <button class="tab" type="button" data-tab="projects">项目成果 <span class="n" id="tabProjectsN">0</span></button>
+      <button class="tab" type="button" data-tab="copy">全站模块文案 <span class="n" id="tabCopyN">0</span></button>
+      <button class="tab" type="button" data-tab="settings">设置 <span class="n">05</span></button>
+    </nav>
+    <div class="side-foot">
+      数据文件 <code>data/site-data.json</code><br>
+      保存后由 GitHub Pages 自动构建。<br>
+      令牌仅存在本标签页。
+    </div>
+  </aside>
+
+  <div class="main">
+    <!-- 概览 -->
+    <section class="panel" id="panel-overview">
+      <div class="panel-head">
+        <h2>概览</h2>
+        <p>当前站点的内容数据与发布状态</p>
+      </div>
+      <div id="overviewPermWarn"></div>
+      <div class="stats" id="overviewStats"></div>
+      <div class="blocks">
+        <article class="card">
+          <h3>数据怎么流转</h3>
+          <div class="flow"><span>后台编辑</span><i>→</i><span>提交 data/site-data.json</span><i>→</i><span>Pages 构建</span><i>→</i><span>全站生效</span></div>
+          <p style="margin-top:14px">首页、六个模块弹层和 3D 胶带作品都从这个 JSON 读取内容；读取失败时自动退回网页内置的默认内容。</p>
+          <p class="small">本机缓存只用于首屏加速，不会替代仓库里的数据。</p>
+        </article>
+        <article class="card">
+          <h3>快捷入口</h3>
+          <div class="link-list">
+            <a href="welcome.html" target="_blank" rel="noopener">打开首页 ↗</a>
+            <a href="总作业1.html" target="_blank" rel="noopener">打开展示胶带 ↗</a>
+            <a id="repoFileLink" href="https://github.com/12ti278/welcome-page/blob/main/data/site-data.json" target="_blank" rel="noopener">在 GitHub 查看数据文件 ↗</a>
+            <a id="pagesLink" href="https://github.com/12ti278/welcome-page/actions" target="_blank" rel="noopener">GitHub 提交记录 ↗</a>
+            <a href="https://12ti278.github.io/welcome-page/" target="_blank" rel="noopener">线上站点 ↗</a>
+          </div>
+        </article>
+        <article class="card" style="grid-column:1/-1">
+          <h3>登录与安全</h3>
+          <p>登录用的是 GitHub <b>fine-grained token</b>，权限只覆盖本仓库的 Contents（读/写）。令牌保存在 <code>sessionStorage</code>，关闭标签页即清除；它不会写进 HTML、不会提交到仓库，也不会出现在任何日志里。</p>
+          <p>这个后台是纯静态页面：能访问 <code>admin.html</code> 的人很多，但没有你的令牌就无法读写仓库。令牌泄露时，请立刻到 GitHub 撤销并重新生成。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- 阶段作业 -->
+    <section class="panel" id="panel-works" hidden>
+      <div class="panel-head">
+        <h2>阶段作业作品</h2>
+        <p>对应 3D 胶带上的贴纸；顺序就是胶带上的顺序</p>
+        <span class="spacer"></span>
+        <div class="section-actions">
+          <button class="btn gold" id="addWorkBtn" type="button">＋ 新增作品</button>
+          <button class="btn ghost" id="restoreWorksBtn" type="button">恢复内置作品</button>
+        </div>
+      </div>
+      <div class="banner">
+        缩略图可以填图片 URL、相对路径，或直接上传（会自动压缩成 800×500 的 JPEG）。留空时会按“链接”复用胶带内置截图；新链接则自动生成一张复古占位图。
+        <br><b>远程图片需要允许跨域（CORS）才能贴上 3D 胶带；不确定时请用「上传图片」。</b>
+      </div>
+      <div class="list" id="worksList"></div>
+    </section>
+
+    <!-- 项目成果 -->
+    <section class="panel" id="panel-projects" hidden>
+      <div class="panel-head">
+        <h2>项目成果</h2>
+        <p>对应首页「项目成果」弹层里的四个项目卡片</p>
+        <span class="spacer"></span>
+        <div class="section-actions">
+          <button class="btn gold" id="addProjectBtn" type="button">＋ 新增项目</button>
+          <button class="btn ghost" id="restoreProjectsBtn" type="button">恢复内置项目</button>
+        </div>
+      </div>
+      <div class="banner">
+        标签用中文或英文逗号分隔，例如 <code>React, Express, MySQL</code>。链接可以是 <code>https://…</code>，也可以是站内相对路径。
+      </div>
+      <div class="list" id="projectsList"></div>
+    </section>
+
+    <!-- 模块文案 -->
+    <section class="panel" id="panel-copy" hidden>
+      <div class="panel-head">
+        <h2>全站模块文案</h2>
+        <p>首页标题 + 六个模块的名称、简介、正文与按钮</p>
+      </div>
+      <div id="copyBody"><div class="loading"><span class="spinner"></span>正在读取站点内置文案…</div></div>
+    </section>
+
+    <!-- 设置 -->
+    <section class="panel" id="panel-settings" hidden>
+      <div class="panel-head">
+        <h2>设置</h2>
+        <p>导入导出、刷新与危险操作</p>
+      </div>
+      <div class="settings-grid">
+        <article class="card">
+          <h3>备份与恢复</h3>
+          <p class="small">导出当前草稿为 JSON；也可以把备份导入回来（导入后记得点击「保存到 GitHub」）。</p>
+          <div class="section-actions" style="margin-top:14px">
+            <button class="btn" id="exportBtn" type="button">导出 JSON</button>
+            <label class="btn ghost file-btn">导入 JSON<input type="file" id="importFile" accept="application/json,.json" hidden></label>
+          </div>
+        </article>
+        <article class="card">
+          <h3>刷新</h3>
+          <p class="small">从 GitHub 重新读取最新数据会丢弃未保存的修改。</p>
+          <div class="section-actions" style="margin-top:14px">
+            <button class="btn" id="refreshBtn" type="button">从 GitHub 重新读取</button>
+            <button class="btn ghost" id="clearCacheBtn" type="button">清除本机阅读缓存</button>
+          </div>
+        </article>
+        <article class="card">
+          <h3>账号</h3>
+          <div class="kv"><span>GitHub 用户</span><b id="settingsUser">—</b></div>
+          <div class="kv"><span>仓库</span><b>12ti278/welcome-page</b></div>
+          <div class="kv"><span>分支</span><b>main</b></div>
+          <div class="kv"><span>令牌权限</span><b id="settingsPerm">—</b></div>
+          <div class="section-actions" style="margin-top:14px">
+            <button class="btn ghost" id="logoutBtn2" type="button">退出登录</button>
+          </div>
+        </article>
+        <article class="card danger-zone">
+          <h3>危险操作</h3>
+          <p class="small">把作品和项目恢复成内置的 7 件作品 / 4 个项目，并清空所有文案覆盖。此操作只改当前草稿，仍需点击保存才会提交。</p>
+          <div class="section-actions" style="margin-top:14px">
+            <button class="btn danger" id="resetAllBtn" type="button">清空所有覆盖</button>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+</section>
+
+<!-- 预览弹窗 -->
+<div class="modal" id="previewModal" hidden>
+  <div class="modal-mask" id="previewMask"></div>
+  <div class="modal-box">
+    <header><span>正文预览 · 只读沙箱</span><button id="previewClose" type="button" aria-label="关闭">×</button></header>
+    <iframe id="previewFrame" sandbox="allow-same-origin" title="正文预览"></iframe>
+  </div>
+</div>
+
+<div id="toast" role="status"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ============================================================
+     常量
+     ============================================================ */
+  var REPO = '12ti278/welcome-page';
+  var BRANCH = 'main';
+  var DATA_PATH = 'data/site-data.json';
+  var TOKEN_KEY = 'hjAdminToken';
+  var CACHE_KEY = 'hjSiteDataCache:v1';
+  var VERSION = 1;
+
+  var HOME_DEFAULTS = {
+    title: 'Welcome',
+    titleEm: 'My World',
+    sub: '欢迎来到我的世界 —— 幻境回廊',
+    chaptersLabel: '章节目录 · CONTENTS',
+    hint: 'ENTER THE GALLERY · 点击进入'
+  };
+
+  var MODULE_KEYS = ['about', 'homework', 'projects', 'evidence', 'iterations', 'review'];
+
+  var SEED_WORKS = [
+    { title: '星谕塔罗 · 每日灵感', url: 'https://app-e8vxshlorev5.miaoda.online' },
+    { title: '塔罗秘仪 · 占卜仪式', url: 'https://11125.mindock.ai/B06rBK' },
+    { title: '被裁掉的女孩 · 文字冒险', url: 'https://11125.mindock.ai/CAX2OQ' },
+    { title: '我的书斋 · 习惯打卡', url: 'https://habit-tracker-12ti278.netlify.app' },
+    { title: '全栈问答社区', url: 'https://tourmaline-seahorse-ed5cef.netlify.app' },
+    { title: '幻境回廊 · 个人博客', url: 'https://jingsi-blog.netlify.app' },
+    { title: '时光商社 · 中古商城', url: 'https://dreamy-tanuki-bcd98e.netlify.app/' }
+  ];
+
+  var SEED_PROJECTS = [
+    {
+      title: '🔮 塔罗秘仪 · Tarot Arcana',
+      desc: '纯离线、单文件的塔罗占卜 Web 应用。整合抽牌占卜、78 张牌义词典、每日一抽、历史记录，用 p5.js 视觉与程序化音乐营造沉浸氛围。',
+      tags: ['p5.js', 'Web Audio', 'localStorage', '单文件'],
+      link: 'https://11125.mindock.ai/B06rBK'
+    },
+    {
+      title: '💬 全栈问答社区',
+      desc: '完整的技术问答社区项目，前端 React+TS+Vite+Tailwind，后端 Express+MySQL，JWT 鉴权、点赞事务、积分体系、通知系统。',
+      tags: ['React', 'Express', 'MySQL', 'JWT', '全栈'],
+      link: 'qa-community-project.html'
+    },
+    {
+      title: '🌐 幻境回廊 · 个人博客',
+      desc: '复古核莫兰迪绿风格的个人作品集网站，p5.js 3D 胶带画廊、胶片颗粒质感、六大内容板块。',
+      tags: ['HTML/CSS', 'p5.js', '复古核', 'GitHub Pages'],
+      link: 'blog-project.html'
+    },
+    {
+      title: '🕰️ 时光商社 · 中古商城',
+      desc: '复古中古电商网站，包含商品分类、商品搜索、优惠券、购物车与登录入口，暖木色与烫金质感还原旧货商行的氛围。',
+      tags: ['电商', '商品分类', '购物车', '复古视觉'],
+      link: 'https://12ti278.github.io/welcome-page/mall-project.html'
+    }
+  ];
+
+  /* ============================================================
+     状态
+     ============================================================ */
+  var state = {
+    token: '',
+    user: null,
+    repo: null,
+    data: null,
+    baseline: '',
+    dirty: false,
+    saving: false,
+    tab: 'overview',
+    copyRendered: false,
+    defaultsReady: false,
+    defaultsPromise: null,
+    defaultsModules: null,
+    siteCss: '',
+    thumbsByUrl: {},
+    tapeScan: null
+  };
+
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function uid() {
+    return 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+  function trim(s) { return String(s == null ? '' : s).trim(); }
+  function b64encodeUtf8(str) {
+    var bytes = new TextEncoder().encode(str);
+    var bin = '';
+    var chunk = 0x8000;
+    for (var i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(bin);
+  }
+  function b64decodeUtf8(b64) {
+    var bin = atob(String(b64).replace(/\s/g, ''));
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+
+  /* ============================================================
+     GitHub API
+     ============================================================ */
+  function api(path, opts) {
+    opts = opts || {};
+    var headers = {
+      'Authorization': 'Bearer ' + state.token,
+      'Accept': 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28'
+    };
+    if (opts.body) headers['Content-Type'] = 'application/json';
+    return fetch('https://api.github.com' + path, {
+      method: opts.method || 'GET',
+      headers: headers,
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+      cache: 'no-store'
+    }).then(function (res) {
+      return res.text().then(function (text) {
+        var json = null;
+        if (text) {
+          try { json = JSON.parse(text); } catch (e) { json = null; }
+        }
+        if (!res.ok) {
+          var err = new Error((json && json.message) || ('GitHub API HTTP ' + res.status));
+          err.status = res.status;
+          err.data = json;
+          throw err;
+        }
+        return json;
+      });
+    });
+  }
+
+  function friendlyError(e) {
+    if (!e) return '未知错误';
+    if (e.status === 401) return '令牌无效或已过期，请重新生成。';
+    if (e.status === 403) return '令牌权限不足或已触发频率限制。请确认 Contents 为 Read and write。';
+    if (e.status === 404) return '仓库或文件不存在，或者令牌没有访问该仓库的权限。';
+    if (e.status === 409) return '仓库刚刚被其他人更新，请重试一次。';
+    if (e.status === 422) return '提交被拒绝（可能是并发更新），请重试一次。';
+    if (e.status === 429) return '请求太频繁，请稍后再试。';
+    return e.message || '请求失败';
+  }
+
+  /* ============================================================
+     Toast / 状态
+     ============================================================ */
+  var toastTimer = null;
+  function toast(msg, kind) {
+    var el = $('#toast');
+    el.textContent = msg;
+    el.className = 'show' + (kind ? ' ' + kind : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.className = ''; }, 4200);
+  }
+  function setDeploy(msg, kind) {
+    var el = $('#deployStatus');
+    el.textContent = msg || '';
+    el.className = 'status' + (kind ? ' ' + kind : '');
+  }
+
+  /* ============================================================
+     数据规范化
+     ============================================================ */
+  function normalizeData(d) {
+    d = (d && typeof d === 'object') ? d : {};
+    return {
+      version: VERSION,
+      updatedAt: typeof d.updatedAt === 'string' ? d.updatedAt : '',
+      home: (d.home && typeof d.home === 'object' && !Array.isArray(d.home)) ? d.home : {},
+      works: Array.isArray(d.works) ? d.works.map(normalizeWork) : [],
+      projects: Array.isArray(d.projects) ? d.projects.map(normalizeProject) : [],
+      modules: (d.modules && typeof d.modules === 'object' && !Array.isArray(d.modules)) ? d.modules : {}
+    };
+  }
+  function normalizeWork(w) {
+    w = w || {};
+    return {
+      id: w.id || uid(),
+      title: String(w.title || ''),
+      url: String(w.url || ''),
+      thumb: String(w.thumb || ''),
+      enabled: w.enabled !== false
+    };
+  }
+  function normalizeProject(p) {
+    p = p || {};
+    return {
+      id: p.id || uid(),
+      title: String(p.title || ''),
+      desc: String(p.desc || ''),
+      tags: Array.isArray(p.tags) ? p.tags.map(function (t) { return String(t); }).filter(Boolean) : [],
+      link: String(p.link || ''),
+      enabled: p.enabled !== false
+    };
+  }
+
+  function defaultData() {
+    return normalizeData({
+      version: VERSION,
+      updatedAt: new Date().toISOString(),
+      home: {},
+      works: SEED_WORKS.map(function (w, i) {
+        return { id: 'w' + (i + 1), title: w.title, url: w.url, thumb: '', enabled: true };
+      }),
+      projects: SEED_PROJECTS.map(function (p, i) {
+        return {
+          id: 'p' + (i + 1), title: p.title, desc: p.desc,
+          tags: p.tags.slice(), link: p.link, enabled: true
+        };
+      }),
+      modules: {}
+    });
+  }
+
+  /* ============================================================
+     登录
+     ============================================================ */
+  function showLogin(message) {
+    $('#loginView').hidden = false;
+    $('#dashView').hidden = true;
+    $('#headActions').hidden = true;
+    setLoginError(message || '');
+    setLoginBusy(false);
+    setTimeout(function () { $('#tokenInput').focus(); }, 60);
+  }
+  function setLoginError(msg) {
+    $('#loginError').textContent = msg || '';
+  }
+  function setLoginBusy(busy) {
+    $('#loginBtn').disabled = !!busy;
+    $('#tokenInput').disabled = !!busy;
+    $('#loginBtn').textContent = busy ? '验证中…' : '登录';
+  }
+
+  function login(token) {
+    state.token = trim(token);
+    if (!state.token) {
+      setLoginError('请输入 GitHub 访问令牌。');
+      return Promise.resolve();
+    }
+    setLoginError('');
+    setLoginBusy(true);
+    return api('/user')
+      .then(function (user) {
+        state.user = user;
+        return api('/repos/' + REPO);
+      })
+      .then(function (repo) {
+        state.repo = repo;
+        try { sessionStorage.setItem(TOKEN_KEY, state.token); } catch (e) {}
+        enterDashboard();
+      })
+      .catch(function (e) {
+        state.token = '';
+        setLoginError(friendlyError(e));
+      })
+      .then(function () { setLoginBusy(false); });
+  }
+
+  function enterDashboard() {
+    $('#loginView').hidden = true;
+    $('#dashView').hidden = false;
+    $('#headActions').hidden = false;
+    $('#tokenInput').value = '';
+    $('#userLogin').textContent = state.user ? state.user.login : '—';
+    $('#userAvatar').src = state.user ? state.user.avatar_url : '';
+    $('#userAvatar').alt = state.user ? state.user.login : '';
+    $('#settingsUser').textContent = state.user ? state.user.login : '—';
+    var canPush = !!(state.repo && state.repo.permissions && state.repo.permissions.push);
+    $('#settingsPerm').textContent = canPush ? '可写入（push）' : '未检测到 push 权限，保存时会验证';
+    $('#overviewPermWarn').innerHTML = canPush ? '' :
+      '<div class="banner warn"><b>提示：</b>GitHub 没有在这个令牌的仓库信息里返回 push 权限。如果保存时报 403/404，请确认令牌的 Contents 权限是 <b>Read and write</b>。</div>';
+    setDeploy('正在读取数据…');
+    loadData();
+  }
+
+  /* ============================================================
+     读取数据
+     ============================================================ */
+  function loadData() {
+    return api('/repos/' + REPO + '/contents/' + DATA_PATH + '?ref=' + BRANCH)
+      .then(function (file) {
+        if (!file) throw new Error('数据文件为空');
+        // 文件超过 1MB 时 contents API 不返回 content，只给 download_url
+        if (!file.content && file.download_url) {
+          return fetch(file.download_url + '?t=' + Date.now(), { cache: 'no-store' }).then(function (r) {
+            if (!r.ok) throw new Error('下载数据文件失败 HTTP ' + r.status);
+            return r.json();
+          });
+        }
+        if (!file.content) throw new Error('数据文件为空');
+        return JSON.parse(b64decodeUtf8(file.content));
+      })
+      .catch(function (e) {
+        if (e.status === 404) {
+          toast('还没有数据文件，已载入内置内容作为初始数据。', 'ok');
+          return defaultData();
+        }
+        throw e;
+      })
+      .then(function (d) {
+        state.data = normalizeData(d);
+        state.baseline = JSON.stringify(state.data);
+        state.dirty = false;
+        state.copyRendered = false;
+        setDeploy('已同步', 'ok');
+        renderAll();
+      })
+      .catch(function (e) {
+        setDeploy('读取失败', 'err');
+        toast(friendlyError(e), 'err');
+        var panel = $('#panel-overview');
+        $$('.panel', $('.main')).forEach(function (p) { p.hidden = p !== panel; });
+        setTabActive('overview');
+        $('#overviewStats').innerHTML = '<div class="banner warn"><b>读取失败：</b>' + esc(friendlyError(e)) + '</div>';
+      });
+  }
+
+  /* ============================================================
+     扫描胶带页，拿到内置缩略图（只用于后台预览，不写进 JSON）
+     ============================================================ */
+  function scanTape() {
+    if (state.tapeScan) return state.tapeScan;
+    state.tapeScan = fetch('总作业1.html?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.text(); })
+      .then(function (src) {
+        var re = /\{\s*title:\s*"([^"]*)",\s*url:\s*"([^"]*)",\s*thumb:\s*"([^"]*)"\s*\}/g;
+        var m, out = [];
+        while ((m = re.exec(src))) {
+          state.thumbsByUrl[m[2]] = m[3];
+          out.push({ title: m[1], url: m[2] });
+        }
+        return out;
+      })
+      .catch(function () { return []; });
+    return state.tapeScan;
+  }
+
+  /* ============================================================
+     渲染：通用
+     ============================================================ */
+  function renderAll() {
+    renderOverview();
+    renderWorks();
+    renderProjects();
+    renderSettings();
+    if (state.tab === 'copy') renderCopy();
+    updateSaveUI();
+    if (!state.thumbsByUrl || Object.keys(state.thumbsByUrl).length === 0) {
+      scanTape().then(function () { refreshAllThumbPreviews(); });
+    }
+  }
+
+  function markDirty() {
+    state.dirty = JSON.stringify(state.data) !== state.baseline;
+    updateSaveUI();
+    renderOverview();
+    renderCounts();
+  }
+
+  function updateSaveUI() {
+    var badge = $('#dirtyBadge');
+    var btn = $('#saveBtn');
+    if (!badge || !btn) return;
+    if (state.saving) {
+      badge.textContent = '正在提交…';
+      badge.className = 'badge dirty';
+      btn.disabled = true;
+      return;
+    }
+    if (state.dirty) {
+      badge.textContent = '有未保存修改';
+      badge.className = 'badge dirty';
+      btn.disabled = false;
+    } else {
+      badge.textContent = '已同步';
+      badge.className = 'badge';
+      btn.disabled = true;
+    }
+  }
+
+  function renderCounts() {
+    if (!state.data) return;
+    var worksOn = state.data.works.filter(function (w) { return w.enabled !== false && w.title; }).length;
+    $('#tabWorksN').textContent = worksOn;
+    $('#tabProjectsN').textContent = state.data.projects.filter(function (p) { return p.enabled !== false && p.title; }).length;
+    $('#tabCopyN').textContent = Object.keys(state.data.modules || {}).length;
+  }
+
+  /* ============================================================
+     渲染：概览
+     ============================================================ */
+  function renderOverview() {
+    if (!state.data) return;
+    var works = state.data.works;
+    var worksOn = works.filter(function (w) { return w.enabled !== false && w.title; }).length;
+    var projects = state.data.projects;
+    var projectsOn = projects.filter(function (p) { return p.enabled !== false && p.title; }).length;
+    var mods = Object.keys(state.data.modules || {}).length;
+    var homeOverrides = Object.keys(state.data.home || {}).length;
+    var updated = state.data.updatedAt ? formatTime(state.data.updatedAt) : '—';
+
+    $('#overviewStats').innerHTML =
+      '<div class="stat"><div class="k">阶段作业作品</div><div class="v">' + worksOn + ' <small>/ ' + works.length + '</small></div><div class="d">' + (worksOn ? '正在胶带上展示' : '未启用，将回退内置作品') + '</div></div>' +
+      '<div class="stat"><div class="k">项目成果</div><div class="v">' + projectsOn + ' <small>/ ' + projects.length + '</small></div><div class="d">首页弹层项目卡片</div></div>' +
+      '<div class="stat"><div class="k">文案覆盖</div><div class="v">' + mods + ' <small>个模块</small></div><div class="d">首页文案 ' + homeOverrides + ' 处</div></div>' +
+      '<div class="stat"><div class="k">数据更新时间</div><div class="v" style="font-size:16px;line-height:1.5">' + esc(updated) + '</div><div class="d">保存后自动更新</div></div>';
+
+    renderCounts();
+    $('#repoFileLink').href = 'https://github.com/' + REPO + '/blob/' + BRANCH + '/' + DATA_PATH;
+    $('#pagesLink').href = 'https://github.com/' + REPO + '/commits/' + BRANCH;
+  }
+
+  function formatTime(iso) {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    function p(n) { return n < 10 ? '0' + n : '' + n; }
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  /* ============================================================
+     渲染：阶段作业
+     ============================================================ */
+  function thumbSrc(w) {
+    return trim(w.thumb) || state.thumbsByUrl[trim(w.url)] || '';
+  }
+
+  function thumbHtml(w) {
+    var src = thumbSrc(w);
+    var ch = (trim(w.title) || '作').charAt(0);
+    return '<span class="thumb-fallback">' + esc(ch) + '</span>' +
+      (src ? '<img src="' + esc(src) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '');
+  }
+
+  function renderWorks() {
+    var host = $('#worksList');
+    if (!host || !state.data) return;
+    if (!state.data.works.length) {
+      host.innerHTML = '<div class="empty">还没有作品。点右上角「新增作品」，或「恢复内置作品」。</div>';
+      return;
+    }
+    host.innerHTML = state.data.works.map(function (w, i) {
+      return '<article class="item-card' + (w.enabled === false ? ' is-off' : '') + '" data-id="' + esc(w.id) + '">' +
+        '<div class="item-thumb" data-act="pick" title="点击上传缩略图">' + thumbHtml(w) + '</div>' +
+        '<div class="item-body">' +
+          '<div class="row">' +
+            '<label class="field grow"><span>标题</span><input type="text" data-f="title" value="' + esc(w.title) + '" placeholder="作品标题"></label>' +
+            '<label class="check"><input type="checkbox" data-f="enabled"' + (w.enabled !== false ? ' checked' : '') + '> 显示</label>' +
+          '</div>' +
+          '<label class="field"><span>链接</span><input type="text" data-f="url" value="' + esc(w.url) + '" placeholder="https://… 或相对路径"></label>' +
+          '<label class="field"><span>缩略图 <em>留空则按链接复用内置截图</em></span><input type="text" data-f="thumb" value="' + esc(w.thumb) + '" placeholder="图片 URL / 相对路径 / 上传"></label>' +
+          '<div class="row item-actions">' +
+            '<label class="btn tiny ghost file-btn">上传图片<input type="file" accept="image/*" data-file hidden></label>' +
+            '<button class="btn tiny ghost" type="button" data-act="up"' + (i === 0 ? ' disabled' : '') + '>↑ 上移</button>' +
+            '<button class="btn tiny ghost" type="button" data-act="down"' + (i === state.data.works.length - 1 ? ' disabled' : '') + '>↓ 下移</button>' +
+            '<button class="btn tiny danger" type="button" data-act="del">删除</button>' +
+            '<span class="muted small">顺序即胶带上的顺序</span>' +
+          '</div>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  function refreshAllThumbPreviews() {
+    if (!state.data) return;
+    $$('#worksList .item-card').forEach(function (card) {
+      var w = state.data.works.find(function (x) { return x.id === card.dataset.id; });
+      var box = $('.item-thumb', card);
+      if (w && box && !trim(w.thumb)) box.innerHTML = thumbHtml(w);
+    });
+  }
+
+  function workById(id) {
+    return state.data.works.find(function (w) { return w.id === id; });
+  }
+  function workIndex(id) {
+    return state.data.works.findIndex(function (w) { return w.id === id; });
+  }
+
+  /* ============================================================
+     渲染：项目成果
+     ============================================================ */
+  function renderProjects() {
+    var host = $('#projectsList');
+    if (!host || !state.data) return;
+    if (!state.data.projects.length) {
+      host.innerHTML = '<div class="empty">还没有项目。点右上角「新增项目」，或「恢复内置项目」。</div>';
+      return;
+    }
+    host.innerHTML = state.data.projects.map(function (p, i) {
+      return '<article class="item-card' + (p.enabled === false ? ' is-off' : '') + '" data-id="' + esc(p.id) + '" style="grid-template-columns:1fr">' +
+        '<div class="item-body">' +
+          '<div class="row">' +
+            '<label class="field grow"><span>标题</span><input type="text" data-f="title" value="' + esc(p.title) + '" placeholder="🔮 项目名称"></label>' +
+            '<label class="check"><input type="checkbox" data-f="enabled"' + (p.enabled !== false ? ' checked' : '') + '> 显示</label>' +
+          '</div>' +
+          '<label class="field"><span>简介</span><textarea data-f="desc" rows="3" placeholder="一两句话介绍这个项目">' + esc(p.desc) + '</textarea></label>' +
+          '<div class="row">' +
+            '<label class="field grow"><span>标签 <em>逗号分隔</em></span><input type="text" data-f="tags" value="' + esc(p.tags.join(', ')) + '" placeholder="React, Express, MySQL"></label>' +
+            '<label class="field grow"><span>成果链接</span><input type="text" data-f="link" value="' + esc(p.link) + '" placeholder="https://… 或 qa-community-project.html"></label>' +
+          '</div>' +
+          '<div class="row item-actions">' +
+            '<button class="btn tiny ghost" type="button" data-act="up"' + (i === 0 ? ' disabled' : '') + '>↑ 上移</button>' +
+            '<button class="btn tiny ghost" type="button" data-act="down"' + (i === state.data.projects.length - 1 ? ' disabled' : '') + '>↓ 下移</button>' +
+            '<button class="btn tiny danger" type="button" data-act="del">删除</button>' +
+          '</div>' +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  function projectById(id) {
+    return state.data.projects.find(function (p) { return p.id === id; });
+  }
+  function projectIndex(id) {
+    return state.data.projects.findIndex(function (p) { return p.id === id; });
+  }
+
+  /* ============================================================
+     渲染：模块文案
+     ============================================================ */
+  function ensureDefaults() {
+    if (state.defaultsReady) return Promise.resolve(true);
+    if (state.defaultsPromise) return state.defaultsPromise;
+    state.defaultsPromise = new Promise(function (resolve) {
+      var f = document.createElement('iframe');
+      f.setAttribute('aria-hidden', 'true');
+      f.tabIndex = -1;
+      f.style.cssText = 'position:fixed;width:1px;height:1px;left:-9999px;top:-9999px;border:0;visibility:hidden;';
+      var done = false;
+      var poll = null;
+      function finish() {
+        if (done) return;
+        done = true;
+        if (poll) { clearInterval(poll); poll = null; }
+        try {
+          var w = f.contentWindow;
+          var doc = f.contentDocument;
+          if (w && w.__HJ_MODS_DEFAULT) {
+            state.defaultsModules = JSON.parse(JSON.stringify(w.__HJ_MODS_DEFAULT));
+            state.siteCss = Array.prototype.map.call(doc.querySelectorAll('style'), function (s) {
+              return s.textContent || '';
+            }).join('\n');
+            state.defaultsReady = true;
+          }
+        } catch (e) {}
+        try { f.remove(); } catch (e) {}
+        resolve(state.defaultsReady);
+      }
+      f.onload = function () { setTimeout(finish, 150); };
+      var tries = 0;
+      var poll = setInterval(function () {
+        tries++;
+        try {
+          if (f.contentWindow && f.contentWindow.__HJ_MODS_DEFAULT) {
+            clearInterval(poll);
+            finish();
+            return;
+          }
+        } catch (e) {}
+        if (tries >= 70) {
+          clearInterval(poll);
+          if (!done) {
+            try { finish(); } catch (e) { resolve(false); }
+          }
+        }
+      }, 100);
+      f.src = 'welcome.html?adminseed=1&t=' + Date.now();
+      document.body.appendChild(f);
+    });
+    return state.defaultsPromise;
+  }
+
+  function moduleDefault(k) {
+    return (state.defaultsModules && state.defaultsModules[k]) || {
+      num: '', name: '', img: '', desc: '', html: '', action: ''
+    };
+  }
+
+  function renderCopy() {
+    if (state.copyRendered) return;
+    var host = $('#copyBody');
+    host.innerHTML = '<div class="loading"><span class="spinner"></span>正在读取站点内置文案…</div>';
+    ensureDefaults().then(function (ok) {
+      if (!ok || !state.defaultsModules) {
+        host.innerHTML = '<div class="banner warn"><b>无法读取内置文案。</b>模块编辑器需要同源读取 <code>welcome.html</code>；请通过 GitHub Pages（http/https）打开本后台，不要直接双击本地文件。' +
+          '<div class="section-actions" style="margin-top:12px"><button class="btn" type="button" id="retryCopyBtn">重试</button></div></div>';
+        var retry = $('#retryCopyBtn');
+        if (retry) retry.addEventListener('click', function () {
+          state.defaultsPromise = null;
+          state.defaultsReady = false;
+          renderCopyForce();
+        });
+        return;
+      }
+      state.copyRendered = true;
+      host.innerHTML = homeCardHtml() + MODULE_KEYS.map(moduleCardHtml).join('');
+    });
+  }
+  function renderCopyForce() {
+    state.copyRendered = false;
+    renderCopy();
+  }
+
+  function homeCardHtml() {
+    var h = state.data.home || {};
+    function v(f) { return typeof h[f] === 'string' ? h[f] : HOME_DEFAULTS[f]; }
+    return '<article class="module-card open" data-home-card>' +
+      '<div class="module-head" data-toggle><span class="stamp">HOME</span><span class="mtitle">首页文案</span><span class="hint">标题 / 副标题 / 目录标题 / 底部提示</span><span class="caret">›</span></div>' +
+      '<div class="module-body">' +
+        '<p class="note">留空或恢复默认会回到网页内置文案；只保存与默认不同的字段。</p>' +
+        '<div class="grid2">' +
+          '<label class="field"><span>主标题</span><input type="text" data-home="title" value="' + esc(v('title')) + '"></label>' +
+          '<label class="field"><span>主标题斜体部分</span><input type="text" data-home="titleEm" value="' + esc(v('titleEm')) + '"></label>' +
+        '</div>' +
+        '<label class="field"><span>副标题</span><input type="text" data-home="sub" value="' + esc(v('sub')) + '"></label>' +
+        '<div class="grid2">' +
+          '<label class="field"><span>章节目录标题</span><input type="text" data-home="chaptersLabel" value="' + esc(v('chaptersLabel')) + '"></label>' +
+          '<label class="field"><span>底部提示</span><input type="text" data-home="hint" value="' + esc(v('hint')) + '"></label>' +
+        '</div>' +
+        '<div class="module-actions"><button class="btn tiny ghost" type="button" data-home-reset>恢复默认</button></div>' +
+      '</div>' +
+    '</article>';
+  }
+
+  function moduleCardHtml(k) {
+    var d = moduleDefault(k);
+    var o = (state.data.modules && state.data.modules[k]) || {};
+    var name = typeof o.name === 'string' ? o.name : (d.name || '');
+    var desc = typeof o.desc === 'string' ? o.desc : (d.desc || '');
+    var html = typeof o.html === 'string' ? o.html : (d.html || '');
+    var action = typeof o.action === 'string' ? o.action : (d.action || '');
+    var keyNote = k === 'projects'
+      ? '<p class="note">「项目成果」的正文默认由上面的项目列表自动生成；在这里填写正文会覆盖列表。想编辑卡片，请用左侧「项目成果」。</p>'
+      : '';
+    return '<article class="module-card" data-mod-card="' + esc(k) + '">' +
+      '<div class="module-head" data-toggle><span class="stamp">' + esc(d.num || '') + '</span><span class="mtitle">' + esc(d.name || k) + '</span><span class="hint">' + (o && Object.keys(o).length ? '已覆盖' : '内置内容') + '</span><span class="caret">›</span></div>' +
+      '<div class="module-body">' +
+        keyNote +
+        '<div class="grid2">' +
+          '<label class="field"><span>模块名称</span><input type="text" data-mod="name" value="' + esc(name) + '"></label>' +
+          '<label class="field"><span>简介（弹层标题下方那行）</span><input type="text" data-mod="desc" value="' + esc(desc) + '"></label>' +
+        '</div>' +
+        '<label class="field"><span>正文 HTML <em>只粘贴可信内容</em></span><textarea class="mono" data-mod="html" rows="10">' + esc(html) + '</textarea></label>' +
+        '<label class="field"><span>底部按钮 HTML <em>留空则使用内置按钮</em></span><textarea class="mono" data-mod="action" rows="3">' + esc(action) + '</textarea></label>' +
+        '<div class="module-actions">' +
+          '<button class="btn tiny ghost" type="button" data-preview>预览正文</button>' +
+          '<button class="btn tiny ghost" type="button" data-reset>恢复默认</button>' +
+        '</div>' +
+      '</div>' +
+    '</article>';
+  }
+
+  function bindCopyEvents() {
+    var host = $('#copyBody');
+
+    host.addEventListener('click', function (e) {
+      var toggle = e.target.closest('[data-toggle]');
+      if (toggle) {
+        var card = toggle.closest('.module-card');
+        if (card) card.classList.toggle('open');
+        return;
+      }
+      var preview = e.target.closest('[data-preview]');
+      if (preview) {
+        var pc = preview.closest('[data-mod-card]');
+        if (pc) previewModule(pc);
+        return;
+      }
+      var reset = e.target.closest('[data-reset]');
+      if (reset) {
+        var rc = reset.closest('[data-mod-card]');
+        if (!rc) return;
+        var k = rc.dataset.modCard;
+        delete state.data.modules[k];
+        var d = moduleDefault(k);
+        $('[data-mod="name"]', rc).value = d.name || '';
+        $('[data-mod="desc"]', rc).value = d.desc || '';
+        $('[data-mod="html"]', rc).value = d.html || '';
+        $('[data-mod="action"]', rc).value = d.action || '';
+        updateModuleHint(rc, k);
+        markDirty();
+        toast('已恢复「' + (d.name || k) + '」的内置文案（仍需保存才提交）', 'ok');
+        return;
+      }
+      var homeReset = e.target.closest('[data-home-reset]');
+      if (homeReset) {
+        state.data.home = {};
+        $$('#copyBody [data-home]').forEach(function (input) {
+          input.value = HOME_DEFAULTS[input.dataset.home] || '';
+        });
+        markDirty();
+        toast('首页文案已恢复默认（仍需保存才提交）', 'ok');
+      }
+    });
+
+    host.addEventListener('input', function (e) {
+      var modInput = e.target.closest('[data-mod]');
+      if (modInput) {
+        var card = modInput.closest('[data-mod-card]');
+        if (card) syncModule(card);
+        return;
+      }
+      var homeInput = e.target.closest('[data-home]');
+      if (homeInput) syncHome();
+    });
+  }
+
+  function syncModule(card) {
+    var k = card.dataset.modCard;
+    var d = moduleDefault(k);
+    var v = {
+      name: $('[data-mod="name"]', card).value,
+      desc: $('[data-mod="desc"]', card).value,
+      html: $('[data-mod="html"]', card).value,
+      action: $('[data-mod="action"]', card).value
+    };
+    var o = {};
+    if (v.name !== (d.name || '')) o.name = v.name;
+    if (v.desc !== (d.desc || '')) o.desc = v.desc;
+    if (v.html !== (d.html || '')) o.html = v.html;
+    if (v.action !== (d.action || '')) o.action = v.action;
+    if (Object.keys(o).length) state.data.modules[k] = o;
+    else delete state.data.modules[k];
+    updateModuleHint(card, k);
+    markDirty();
+  }
+
+  function updateModuleHint(card, k) {
+    var hint = $('.hint', card);
+    if (!hint) return;
+    var o = state.data.modules[k];
+    hint.textContent = (o && Object.keys(o).length) ? '已覆盖' : '内置内容';
+  }
+
+  function syncHome() {
+    var vals = {};
+    $$('#copyBody [data-home]').forEach(function (input) {
+      vals[input.dataset.home] = input.value;
+    });
+    var o = {};
+    Object.keys(HOME_DEFAULTS).forEach(function (f) {
+      if (vals[f] !== HOME_DEFAULTS[f]) o[f] = vals[f];
+    });
+    state.data.home = o;
+    markDirty();
+  }
+
+  function previewModule(card) {
+    var k = card.dataset.modCard;
+    var html = $('[data-mod="html"]', card).value;
+    var name = $('[data-mod="name"]', card).value || moduleDefault(k).name || '';
+    var desc = $('[data-mod="desc"]', card).value || '';
+    var action = $('[data-mod="action"]', card).value || '';
+    var css = state.siteCss || 'body{background:#1e241d;color:#e6e3d4;font-family:serif;padding:24px}.block{margin:18px 0}.b-title{font-size:20px}.b-text{line-height:1.9}.tags span{display:inline-block;border:1px solid #8a9a76;padding:3px 8px;margin:3px}.entry{color:#c9b98a}';
+    var extra = 'html,body{margin:0}body{padding:26px;background:#1e241d}' +
+      '.modal-sheet{position:relative;max-width:820px;margin:0 auto;top:auto;left:auto;right:auto;bottom:auto;transform:none;max-height:none;overflow:visible}' +
+      '.sheet-actions{margin-top:26px}';
+    var doc = '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">' +
+      '<style>' + css + '\n' + extra + '</style></head><body>' +
+      '<article class="modal-sheet">' +
+        '<span class="sheet-eyebrow"><span class="sheet-stamp">' + esc(moduleDefault(k).num || '') + '</span> Course Module</span>' +
+        '<h2 class="sheet-title">' + esc(name) + '</h2>' +
+        (desc ? '<p class="sheet-desc">' + esc(desc) + '</p>' : '') +
+        '<hr class="sheet-rule">' +
+        '<div>' + html + '</div>' +
+        (action ? '<div class="sheet-actions">' + action + '</div>' : '') +
+      '</article></body></html>';
+    var frame = $('#previewFrame');
+    frame.srcdoc = doc;
+    $('#previewModal').hidden = false;
+  }
+
+  /* ============================================================
+     渲染：设置
+     ============================================================ */
+  function renderSettings() {
+    if (!state.user) return;
+    $('#settingsUser').textContent = state.user.login;
+  }
+
+  /* ============================================================
+     保存
+     ============================================================ */
+  function save() {
+    if (!state.data || state.saving || !state.dirty) return;
+    state.saving = true;
+    updateSaveUI();
+    setDeploy('正在提交…');
+    state.data.updatedAt = new Date().toISOString();
+    var json = JSON.stringify(state.data, null, 2) + '\n';
+
+    commitData(json)
+      .then(function (commit) {
+        state.baseline = JSON.stringify(state.data);
+        state.dirty = false;
+        try { localStorage.setItem(CACHE_KEY, JSON.stringify(state.data)); } catch (e) {}
+        toast('已提交 ' + commit.sha.slice(0, 7) + '，等待 Pages 构建', 'ok');
+        pollPages(commit.sha);
+        renderOverview();
+        renderSettings();
+        return commit;
+      })
+      .catch(function (e) {
+        setDeploy('提交失败', 'err');
+        toast(friendlyError(e), 'err');
+        // 提交失败时回退 updatedAt，避免时间戳无意义地变化
+        state.data.updatedAt = state.baseline ? (JSON.parse(state.baseline).updatedAt || '') : '';
+      })
+      .then(function () {
+        state.saving = false;
+        updateSaveUI();
+      });
+  }
+
+  function commitData(json) {
+    var message = 'chore(content): 后台更新站点内容';
+    function attempt(n) {
+      var ref, head, headCommit;
+      return api('/git/ref/heads/' + BRANCH)
+        .then(function (r) { ref = r; head = r.object.sha; return api('/git/commits/' + head); })
+        .then(function (c) {
+          headCommit = c;
+          return api('/git/blobs', {
+            method: 'POST',
+            body: { content: b64encodeUtf8(json), encoding: 'base64' }
+          });
+        })
+        .then(function (blob) {
+          return api('/git/trees', {
+            method: 'POST',
+            body: {
+              base_tree: headCommit.tree.sha,
+              tree: [{ path: DATA_PATH, mode: '100644', type: 'blob', sha: blob.sha }]
+            }
+          });
+        })
+        .then(function (tree) {
+          return api('/git/commits', {
+            method: 'POST',
+            body: { message: message, tree: tree.sha, parents: [head] }
+          });
+        })
+        .then(function (commit) {
+          return api('/git/refs/heads/' + BRANCH, {
+            method: 'PATCH',
+            body: { sha: commit.sha, force: false }
+          }).then(function () { return commit; });
+        })
+        .catch(function (e) {
+          if (n > 0 && (e.status === 409 || e.status === 422)) return attempt(n - 1);
+          throw e;
+        });
+    }
+    return attempt(1);
+  }
+
+  var pagesTimer = null;
+  function pollPages(sha) {
+    if (pagesTimer) clearInterval(pagesTimer);
+    var tries = 0;
+    setDeploy('Pages 构建中…');
+    pagesTimer = setInterval(function () {
+      tries++;
+      api('/repos/' + REPO + '/pages/builds/latest')
+        .then(function (b) {
+          if (!b) return;
+          if (b.status === 'built') {
+            clearInterval(pagesTimer); pagesTimer = null;
+            setDeploy('已发布 · ' + (b.commit || sha).slice(0, 7), 'ok');
+          } else if (b.status === 'errored') {
+            clearInterval(pagesTimer); pagesTimer = null;
+            setDeploy('Pages 构建失败', 'err');
+            toast('GitHub Pages 构建失败，请到仓库 Actions 查看日志。', 'err');
+          }
+        })
+        .catch(function (e) {
+          if (e.status === 404 || e.status === 403) {
+            clearInterval(pagesTimer); pagesTimer = null;
+            setDeploy('已提交 · 等待 Pages 发布', 'ok');
+          }
+        });
+      if (tries >= 40 && pagesTimer) {
+        clearInterval(pagesTimer); pagesTimer = null;
+        setDeploy('已提交，构建仍在进行', 'ok');
+      }
+    }, 6000);
+  }
+
+  /* ============================================================
+     事件绑定
+     ============================================================ */
+  function bindStatic() {
+    $('#loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      login($('#tokenInput').value);
+    });
+    $('#toggleToken').addEventListener('click', function () {
+      var input = $('#tokenInput');
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      this.textContent = show ? '隐藏' : '显示';
+    });
+    $('#logoutBtn').addEventListener('click', logout);
+    $('#logoutBtn2').addEventListener('click', logout);
+    $('#saveBtn').addEventListener('click', save);
+
+    $$('.tab').forEach(function (tab) {
+      tab.addEventListener('click', function () { switchTab(tab.dataset.tab); });
+    });
+
+    $('#addWorkBtn').addEventListener('click', function () {
+      state.data.works.push({ id: uid(), title: '新作品', url: '', thumb: '', enabled: true });
+      renderWorks();
+      markDirty();
+      var cards = $$('#worksList .item-card');
+      var last = cards[cards.length - 1];
+      if (last) {
+        last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        var t = $('[data-f="title"]', last);
+        if (t) { t.focus(); t.select(); }
+      }
+    });
+    $('#restoreWorksBtn').addEventListener('click', function () {
+      if (!confirm('把作品列表恢复成内置的 7 件作品？当前列表会被替换（保存后才提交）。')) return;
+      state.data.works = defaultData().works;
+      renderWorks();
+      markDirty();
+      scanTape().then(refreshAllThumbPreviews);
+      toast('已恢复内置作品（仍需保存才提交）', 'ok');
+    });
+    $('#addProjectBtn').addEventListener('click', function () {
+      state.data.projects.push({ id: uid(), title: '新项目', desc: '', tags: [], link: '', enabled: true });
+      renderProjects();
+      markDirty();
+      var cards = $$('#projectsList .item-card');
+      var last = cards[cards.length - 1];
+      if (last) {
+        last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        var t = $('[data-f="title"]', last);
+        if (t) { t.focus(); t.select(); }
+      }
+    });
+    $('#restoreProjectsBtn').addEventListener('click', function () {
+      if (!confirm('把项目列表恢复成内置的 4 个项目？当前列表会被替换（保存后才提交）。')) return;
+      state.data.projects = defaultData().projects;
+      renderProjects();
+      markDirty();
+      toast('已恢复内置项目（仍需保存才提交）', 'ok');
+    });
+
+    bindListEvents('#worksList', 'works');
+    bindListEvents('#projectsList', 'projects');
+    bindCopyEvents();
+
+    $('#exportBtn').addEventListener('click', function () {
+      var blob = new Blob([JSON.stringify(state.data, null, 2) + '\n'], { type: 'application/json' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'site-data.json';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+      toast('已导出当前草稿', 'ok');
+    });
+    $('#importFile').addEventListener('change', function () {
+      var file = this.files && this.files[0];
+      this.value = '';
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var d = JSON.parse(String(reader.result || ''));
+          if (!d || d.version !== VERSION) throw new Error('版本号不是 1');
+          var n = normalizeData(d);
+          if (!Array.isArray(n.works) || !Array.isArray(n.projects)) throw new Error('缺少作品或项目数组');
+          state.data = n;
+          state.copyRendered = false;
+          renderAll();
+          markDirty();
+          toast('已导入，请检查后点击「保存到 GitHub」', 'ok');
+        } catch (e) {
+          toast('导入失败：' + e.message, 'err');
+        }
+      };
+      reader.readAsText(file);
+    });
+    $('#refreshBtn').addEventListener('click', function () {
+      if (state.dirty && !confirm('有未保存的修改，重新读取会丢弃它们。继续？')) return;
+      loadData();
+    });
+    $('#clearCacheBtn').addEventListener('click', function () {
+      try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
+      toast('已清除本机阅读缓存；下次打开前台会重新拉取', 'ok');
+    });
+    $('#resetAllBtn').addEventListener('click', function () {
+      if (!confirm('清空所有文案覆盖，并把作品/项目恢复成内置内容？此操作只改当前草稿。')) return;
+      state.data = defaultData();
+      state.copyRendered = false;
+      renderAll();
+      markDirty();
+      toast('已重置草稿（仍需保存才提交）', 'ok');
+    });
+
+    $('#previewClose').addEventListener('click', function () { $('#previewModal').hidden = true; });
+    $('#previewMask').addEventListener('click', function () { $('#previewModal').hidden = true; });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !$('#previewModal').hidden) $('#previewModal').hidden = true;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        if (state.dirty && !state.saving) save();
+      }
+    });
+    window.addEventListener('beforeunload', function (e) {
+      if (state.dirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+  }
+
+  function bindListEvents(sel, kind) {
+    var host = $(sel);
+    host.addEventListener('input', function (e) {
+      var card = e.target.closest('.item-card');
+      if (!card) return;
+      var id = card.dataset.id;
+      var f = e.target.dataset.f;
+      if (!f) return;
+      var item = kind === 'works' ? workById(id) : projectById(id);
+      if (!item) return;
+      if (f === 'tags') {
+        item.tags = e.target.value.split(/[,，、]/).map(trim).filter(Boolean);
+      } else if (f === 'enabled') {
+        return;
+      } else {
+        item[f] = e.target.value;
+      }
+      if (f === 'thumb') {
+        // 输入过程中不重绘，失焦时再更新预览
+        card.dataset.thumbPending = '1';
+      }
+      markDirty();
+    });
+    host.addEventListener('change', function (e) {
+      var card = e.target.closest('.item-card');
+      if (!card) return;
+      var id = card.dataset.id;
+      if (e.target.dataset.f === 'enabled') {
+        var item = kind === 'works' ? workById(id) : projectById(id);
+        if (!item) return;
+        item.enabled = e.target.checked;
+        card.classList.toggle('is-off', !e.target.checked);
+        markDirty();
+        return;
+      }
+      if (e.target.matches('[data-file]')) {
+        var file = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        fileToThumb(file).then(function (dataUrl) {
+          var item = kind === 'works' ? workById(id) : projectById(id);
+          if (!item) return;
+          item.thumb = dataUrl;
+          if (kind === 'works') {
+            var input = $('[data-f="thumb"]', card);
+            if (input) input.value = dataUrl;
+            var box = $('.item-thumb', card);
+            if (box) box.innerHTML = thumbHtml(item);
+          }
+          markDirty();
+          toast('缩略图已压缩并写入草稿', 'ok');
+        }).catch(function () {
+          toast('图片读取失败，请换一张试试', 'err');
+        });
+      }
+    });
+    host.addEventListener('focusout', function (e) {
+      if (e.target.dataset && e.target.dataset.f === 'thumb') {
+        var card = e.target.closest('.item-card');
+        if (!card) return;
+        var item = kind === 'works' ? workById(card.dataset.id) : null;
+        if (item) {
+          var box = $('.item-thumb', card);
+          if (box) box.innerHTML = thumbHtml(item);
+        }
+        delete card.dataset.thumbPending;
+      }
+    });
+    host.addEventListener('click', function (e) {
+      var card = e.target.closest('.item-card');
+      if (!card) return;
+      var id = card.dataset.id;
+      var act = e.target.closest('[data-act]');
+      if (!act) return;
+      var name = act.dataset.act;
+      var list = kind === 'works' ? state.data.works : state.data.projects;
+      var idx = kind === 'works' ? workIndex(id) : projectIndex(id);
+      if (idx < 0) return;
+
+      if (name === 'pick') {
+        var fileInput = $('[data-file]', card);
+        if (fileInput) fileInput.click();
+        return;
+      }
+      if (name === 'up' && idx > 0) {
+        var tmp = list[idx - 1]; list[idx - 1] = list[idx]; list[idx] = tmp;
+      } else if (name === 'down' && idx < list.length - 1) {
+        var tmp2 = list[idx + 1]; list[idx + 1] = list[idx]; list[idx] = tmp2;
+      } else if (name === 'del') {
+        var item = list[idx];
+        if (!confirm('删除「' + (item.title || '未命名') + '」？保存后才会从线上移除。')) return;
+        list.splice(idx, 1);
+      } else {
+        return;
+      }
+      if (kind === 'works') renderWorks(); else renderProjects();
+      markDirty();
+    });
+  }
+
+  function fileToThumb(file) {
+    return new Promise(function (resolve, reject) {
+      if (!file.type || file.type.indexOf('image/') !== 0) {
+        reject(new Error('not an image'));
+        return;
+      }
+      var reader = new FileReader();
+      reader.onerror = function () { reject(reader.error || new Error('read error')); };
+      reader.onload = function () {
+        var img = new Image();
+        img.onerror = function () { reject(new Error('decode error')); };
+        img.onload = function () {
+          var maxW = 800, maxH = 500;
+          var scale = Math.min(1, maxW / (img.width || 1), maxH / (img.height || 1));
+          var c = document.createElement('canvas');
+          c.width = Math.max(1, Math.round((img.width || maxW) * scale));
+          c.height = Math.max(1, Math.round((img.height || maxH) * scale));
+          var g = c.getContext('2d');
+          g.fillStyle = '#1e241d';
+          g.fillRect(0, 0, c.width, c.height);
+          g.drawImage(img, 0, 0, c.width, c.height);
+          resolve(c.toDataURL('image/jpeg', 0.82));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* ============================================================
+     标签页
+     ============================================================ */
+  function switchTab(name) {
+    state.tab = name;
+    $$('.panel', $('.main')).forEach(function (p) { p.hidden = p.id !== 'panel-' + name; });
+    setTabActive(name);
+    if (name === 'overview') renderOverview();
+    if (name === 'copy' && !state.copyRendered) renderCopy();
+    if (name === 'settings') renderSettings();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function setTabActive(name) {
+    $$('.tab').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === name); });
+  }
+
+  function logout() {
+    if (state.dirty && !confirm('有未保存的修改，确定退出？')) return;
+    state.token = '';
+    try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) {}
+    state.user = null; state.repo = null; state.data = null; state.baseline = ''; state.dirty = false;
+    if (pagesTimer) { clearInterval(pagesTimer); pagesTimer = null; }
+    showLogin('已退出登录。');
+    setDeploy('');
+  }
+
+  /* ============================================================
+     启动
+     ============================================================ */
+  function init() {
+    bindStatic();
+    var token = '';
+    try { token = sessionStorage.getItem(TOKEN_KEY) || ''; } catch (e) {}
+    if (token) {
+      state.token = token;
+      setLoginBusy(true);
+      setLoginError('');
+      api('/user')
+        .then(function (user) {
+          state.user = user;
+          return api('/repos/' + REPO);
+        })
+        .then(function (repo) {
+          state.repo = repo;
+          enterDashboard();
+        })
+        .catch(function (e) {
+          state.token = '';
+          try { sessionStorage.removeItem(TOKEN_KEY); } catch (e2) {}
+          setLoginBusy(false);
+          showLogin('登录状态已失效：' + friendlyError(e));
+        });
+    } else {
+      showLogin('');
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
