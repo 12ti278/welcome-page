@@ -782,6 +782,7 @@
     .admin-entry{right:10px; bottom:10px; font-size:10px; padding:6px 9px; letter-spacing:1px;}
   }
 </style>
+<link rel="stylesheet" href="paper-crumple.css">
 </head>
 <body>
 
@@ -935,7 +936,13 @@ var MODS = {
   evidence: { num:'04', name:'过程证据', img:'5e1338cb48c7a7a75e04f9943fbd9220.jpg',
     desc:'放置需求、原型与问题解决记录等过程性材料。',
     html:'<div class="flux-hero" data-flux="evidence" aria-hidden="true"><span class="flux-cap"><span>EVIDENCE FLOW</span><b>过程证据 · 路径轨迹</b></span></div>' +
-         '<figure class="ev-band"><img src="assets/mountain-meadow.webp" alt="高山草甸与针叶林" loading="lazy"><figcaption><b>山脊与草甸</b><span>成果看得见，路径藏在山背后。</span></figcaption></figure>' +
+         '<figure class="paper-band">' +
+           '<div class="paper-stage-wrap">' +
+             '<span class="paper-hint" aria-hidden="true">按住纸张揉皱 · 松手还原</span>' +
+             '<div class="paper-stage" data-paper="evidence"><img class="paper-static" src="assets/mountain-meadow.webp" alt="高山草甸与针叶林" loading="lazy"></div>' +
+           '</div>' +
+           '<figcaption class="paper-cap"><b>山脊与草甸</b><span>成果看得见，路径藏在山背后。</span></figcaption>' +
+         '</figure>' +
          '<div class="block"><p class="b-title">🔮 塔罗秘仪 · 过程证据</p><p class="b-text">从需求研究、产品需求、技术设计到问题解决，完整记录塔罗项目从 0 到 1 的全过程。</p><div class="tags"><span>需求研究</span><span>PRD</span><span>技术设计</span><span>问题解决</span></div><a class="entry" href="tarot-evidence.html">查看完整过程证据 →</a></div>' +
          '<div class="block"><p class="b-title">💬 全栈问答社区 · 过程证据</p><p class="b-text">全栈问答社区开发全过程记录：需求研究、产品需求、技术设计、问题解决记录、UI 风格迭代。</p><div class="tags"><span>全栈</span><span>MySQL事务</span><span>JWT鉴权</span><span>UI迭代</span></div><a class="entry" href="qa-community-evidence.html">查看完整过程证据 →</a></div>' +
          '<div class="block"><p class="b-title">🌐 幻境回廊 · 过程证据</p><p class="b-text">博客网站从 0 到 1 的完整记录：需求研究、产品设计、视觉设计、技术实现、项目成果。</p><div class="tags"><span>复古核</span><span>视觉设计</span><span>p5.js</span><span>静态站</span></div><a class="entry" href="blog-evidence.html">查看完整过程证据 →</a></div>' +
@@ -1026,6 +1033,17 @@ function hjFluxHero(k){
   return '';
 }
 
+function hjPaperBand(k){
+  if (k === 'evidence') return '<figure class="paper-band">' +
+    '<div class="paper-stage-wrap">' +
+      '<span class="paper-hint" aria-hidden="true">按住纸张揉皱 · 松手还原</span>' +
+      '<div class="paper-stage" data-paper="evidence"><img class="paper-static" src="assets/mountain-meadow.webp" alt="高山草甸与针叶林" loading="lazy"></div>' +
+    '</div>' +
+    '<figcaption class="paper-cap"><b>山脊与草甸</b><span>成果看得见，路径藏在山背后。</span></figcaption>' +
+  '</figure>';
+  return '';
+}
+
 function hjBuildProjects(list){
   return hjFluxHero('projects') + list.filter(function(p){
     return p && p.enabled !== false && p.title;
@@ -1082,9 +1100,10 @@ function hjApplySiteData(data){
     if (typeof m.name === 'string' && m.name) MODS[k].name = m.name;
     if (typeof m.desc === 'string' && m.desc) MODS[k].desc = m.desc;
     if (typeof m.html === 'string' && m.html){
-      // 项目成果 / 过程证据：保留流体线横幅，即使正文被后台整体改写
+      // 项目成果 / 过程证据：保留流体线横幅；过程证据另保留可揉皱的纸样
       var keepHero = (k === 'projects' || k === 'evidence') && m.html.indexOf('flux-hero') < 0;
-      MODS[k].html = (keepHero ? hjFluxHero(k) : '') + m.html;
+      var keepPaper = k === 'evidence' && m.html.indexOf('paper-band') < 0;
+      MODS[k].html = (keepHero ? hjFluxHero(k) : '') + (keepPaper ? hjPaperBand(k) : '') + m.html;
     }
     if (typeof m.action === 'string' && m.action) MODS[k].action = m.action;
   });
@@ -2043,6 +2062,88 @@ function unmountModuleFlux(){
   }
 }
 
+/* PaperCrumple：按需加载 three.js 版本，打开「过程证据」时才初始化 */
+var __hjPaper = null;
+var __paperToken = 0;
+var __paperModPromise = null;
+function loadPaperModule(){
+  if (window.HJPaperCrumple) return Promise.resolve(window.HJPaperCrumple);
+  if (!__paperModPromise){
+    __paperModPromise = import('./paper-crumple.js').then(function(mod){
+      if (!window.HJPaperCrumple && mod && mod.create) window.HJPaperCrumple = mod;
+      return window.HJPaperCrumple;
+    }).catch(function(err){
+      __paperModPromise = null;
+      throw err;
+    });
+  }
+  return __paperModPromise;
+}
+function paperStaticFallback(host){
+  host.classList.add('paper-unavailable');
+  host.classList.remove('paper-crumple');
+  host.style.height = '';
+  host.removeAttribute('data-status');
+  if (!host.querySelector('.paper-static')){
+    host.innerHTML = '<img class="paper-static" src="assets/mountain-meadow.webp" alt="高山草甸与针叶林">';
+  }
+  var parent = host.parentNode;
+  var hint = parent && parent.querySelector('.paper-hint');
+  if (hint) hint.textContent = '静态预览 · 动效不可用';
+}
+function mountModulePaper(key){
+  unmountModulePaper();
+  if (key !== 'evidence') return;
+  var host = document.querySelector('#modContent [data-paper]');
+  if (!host) return;
+  var token = __paperToken;
+  var boxW = host.clientWidth || 600;
+  var paperW = Math.max(220, Math.min(300, boxW - 120));
+  var paperH = Math.round(paperW * 1.5);
+  var sceneH = Math.max(340, Math.min(440, paperH + 40));
+  loadPaperModule().then(function(mod){
+    if (token !== __paperToken || !host.isConnected) return;
+    __hjPaper = mod.create(host, {
+      src: 'assets/mountain-meadow.webp',
+      alt: '高山草甸与针叶林',
+      width: paperW,
+      height: paperH,
+      sceneHeight: sceneH,
+      imageFit: 'cover',
+      releaseBehavior: 'restore',
+      crumpleAmount: 0.85,
+      crumpleDuration: 0.55,
+      releaseDuration: 0.4,
+      foldCount: 7,
+      foldSharpness: 0.62,
+      wrinkleDepth: 0.7,
+      creaseStrength: 0.2,
+      paperColor: '#f6f1e3',
+      roughness: 0.9,
+      paperTexture: 0.1,
+      lightIntensity: 1.8,
+      lightAngle: -35,
+      shadow: true,
+      shadowOpacity: 0.16,
+      draggable: true,
+      dragRotation: 10,
+      dragRadius: 180,
+      returnToOrigin: true,
+      rotation: -1.2,
+      seed: 11,
+      detail: 64,
+      onError: function(){ paperStaticFallback(host); }
+    });
+  }).catch(function(){ paperStaticFallback(host); });
+}
+function unmountModulePaper(){
+  __paperToken++;
+  if (__hjPaper){
+    try { __hjPaper.destroy(); } catch (e) {}
+    __hjPaper = null;
+  }
+}
+
 function openModal(key){
   var m = MODS[key];
   if (!m) return;
@@ -2068,11 +2169,12 @@ function openModal(key){
   } else {
     removeReviewFx();
   }
-  if (key === 'projects' || key === 'evidence'){
-    setTimeout(function(){ mountModuleFlux(key); }, 80);
-  } else {
-    unmountModuleFlux();
-  }
+  setTimeout(function(){
+    if (key === 'projects' || key === 'evidence') mountModuleFlux(key);
+    else unmountModuleFlux();
+    if (key === 'evidence') mountModulePaper(key);
+    else unmountModulePaper();
+  }, 80);
 
   var acts = document.getElementById('modActions');
   acts.innerHTML = '';
@@ -2098,6 +2200,7 @@ function closeModal(){
   removeAboutSpark();
   removeReviewFx();
   unmountModuleFlux();
+  unmountModulePaper();
   var sheet = document.querySelector('#modal .modal-sheet');
   if (sheet) sheet.classList.remove('review-sheet');
   history.replaceState(null, '', location.pathname);
